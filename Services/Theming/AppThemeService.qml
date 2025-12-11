@@ -49,8 +49,23 @@ Singleton {
       Logger.e("AppThemeService", "No wallpaper found");
       return;
     }
+    
     const mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
-    TemplateProcessor.processWallpaperColors(wp, mode);
+    
+    // If it's a video, use the thumbnail for color generation
+    if (VideoWallpaperService.isVideoFile(wp)) {
+      Logger.i("AppThemeService", "Wallpaper is video, generating colors from thumbnail");
+      VideoWallpaperService.generateThumbnail(wp, function(thumbnailPath) {
+        if (thumbnailPath) {
+          Logger.i("AppThemeService", "Using thumbnail for matugen:", thumbnailPath);
+          TemplateProcessor.processWallpaperColors(thumbnailPath, mode);
+        } else {
+          Logger.e("AppThemeService", "Failed to generate thumbnail for video wallpaper");
+        }
+      });
+    } else {
+      TemplateProcessor.processWallpaperColors(wp, mode);
+    }
   }
 
   function generateFromPredefinedScheme(schemeData) {

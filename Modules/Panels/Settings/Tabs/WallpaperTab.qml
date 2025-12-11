@@ -424,6 +424,47 @@ ColumnLayout {
   }
 
   NDivider {
+    visible: Settings.data.wallpaper.enabled
+    Layout.fillWidth: true
+    Layout.topMargin: Style.marginL
+    Layout.bottomMargin: Style.marginL
+  }
+
+  // Video Wallpaper Settings
+  ColumnLayout {
+    visible: Settings.data.wallpaper.enabled
+    spacing: Style.marginL
+    Layout.fillWidth: true
+
+    NHeader {
+      label: I18n.tr("settings.wallpaper.video.section.label")
+      description: I18n.tr("settings.wallpaper.video.section.description")
+    }
+
+    NToggle {
+      label: I18n.tr("settings.wallpaper.video.muted.label")
+      description: I18n.tr("settings.wallpaper.video.muted.description")
+      checked: Settings.data.wallpaper.videoMuted ?? true
+      onToggled: checked => VideoWallpaperService.setMuted(checked)
+    }
+
+    NToggle {
+      label: I18n.tr("settings.wallpaper.video.pause-fullscreen.label")
+      description: I18n.tr("settings.wallpaper.video.pause-fullscreen.description")
+      checked: Settings.data.wallpaper.videoPauseOnFullscreen ?? true
+      onToggled: checked => VideoWallpaperService.setPauseOnFullscreen(checked)
+    }
+
+    NText {
+      text: I18n.tr("settings.wallpaper.video.info")
+      color: Color.mOnSurfaceVariant
+      pointSize: Style.fontSizeS
+      wrapMode: Text.WordWrap
+      Layout.fillWidth: true
+    }
+  }
+
+  NDivider {
     Layout.fillWidth: true
     Layout.topMargin: Style.marginL
     Layout.bottomMargin: Style.marginL

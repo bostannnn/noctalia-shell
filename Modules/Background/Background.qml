@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
+import "." as Background
 
 Variants {
   id: backgroundVariants
@@ -67,6 +68,11 @@ Variants {
         target: WallpaperService
         function onWallpaperChanged(screenName, path) {
           if (screenName === modelData.name) {
+            // Skip image loading for video files - VideoWallpaperService handles those
+            if (VideoWallpaperService.isVideoFile(path)) {
+              Logger.d("Background", "Skipping image load for video:", path)
+              return;
+            }
             // Update wallpaper display
             // Set wallpaper immediately on startup
             futureWallpaper = path;
@@ -211,6 +217,39 @@ Variants {
 
           fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/wp_fade.frag.qsb")
         }
+      }
+
+      // Video wallpaper overlay
+      Loader {
+        id: videoWallpaperLoader
+        anchors.fill: parent
+        active: VideoWallpaperService.hasVideoWallpaper(modelData.name)
+        z: 10
+
+        property string videoPath: VideoWallpaperService.getVideoWallpaper(modelData.name)
+
+        Connections {
+          target: VideoWallpaperService
+          function onVideoWallpaperChanged(screenName, path) {
+            if (screenName === modelData.name) {
+              videoWallpaperLoader.active = (path && path !== "")
+              videoWallpaperLoader.videoPath = path || ""
+            }
+          }
+        }
+
+        sourceComponent: Background.VideoWallpaper {
+          screenName: modelData.name
+          active: videoWallpaperLoader.active
+          videoSource: videoWallpaperLoader.videoPath
+        }
+      }
+
+      // Hide static wallpaper shader when video is playing
+      Binding {
+        target: shaderLoader
+        property: "opacity"
+        value: videoWallpaperLoader.active ? 0 : 1
       }
 
       // Wipe transition shader component
@@ -378,6 +417,12 @@ Variants {
         }
 
         const wallpaperPath = WallpaperService.getWallpaper(modelData.name);
+
+        // Skip image loading for video files
+        if (VideoWallpaperService.isVideoFile(wallpaperPath)) {
+          Logger.d("Background", "Initial wallpaper is video, skipping image load:", wallpaperPath)
+          return;
+        }
 
         futureWallpaper = wallpaperPath;
         performStartupTransition();

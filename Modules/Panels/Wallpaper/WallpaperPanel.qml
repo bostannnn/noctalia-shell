@@ -582,8 +582,32 @@ SmartPanel {
       if (targetScreen === null) {
         return;
       }
-      wallpapersList = WallpaperService.getWallpapersList(targetScreen.name);
-      Logger.d("WallpaperPanel", "Got", wallpapersList.length, "wallpapers for screen", targetScreen.name);
+      var rawList = WallpaperService.getWallpapersList(targetScreen.name);
+      Logger.d("WallpaperPanel", "Got", rawList.length, "wallpapers for screen", targetScreen.name);
+
+      // Sort videos first, then images (alphabetically within each group)
+      var videos = [];
+      var images = [];
+      for (var i = 0; i < rawList.length; i++) {
+        if (VideoWallpaperService.isVideoFile(rawList[i])) {
+          videos.push(rawList[i]);
+        } else {
+          images.push(rawList[i]);
+        }
+      }
+      
+      // Sort each group alphabetically by filename
+      var sortByName = function(a, b) {
+        var nameA = a.split('/').pop().toLowerCase();
+        var nameB = b.split('/').pop().toLowerCase();
+        return nameA.localeCompare(nameB);
+      };
+      videos.sort(sortByName);
+      images.sort(sortByName);
+      
+      // Combine: videos first, then images
+      wallpapersList = videos.concat(images);
+      Logger.d("WallpaperPanel", "Sorted:", videos.length, "videos,", images.length, "images");
 
       // Pre-compute basenames once for better performance
       wallpapersWithNames = wallpapersList.map(function (p) {
@@ -724,21 +748,78 @@ SmartPanel {
           property string wallpaperPath: modelData
           property bool isSelected: (wallpaperPath === currentWallpaper)
           property string filename: wallpaperPath.split('/').pop()
+          property bool isVideo: VideoWallpaperService.isVideoFile(wallpaperPath)
+          property string thumbnailPath: ""
+          property bool thumbnailReady: false
 
           width: wallpaperGridView.itemSize
           spacing: Style.marginXS
+
+          // Generate thumbnail for video files
+          Component.onCompleted: {
+            if (isVideo && VideoWallpaperService.isInitialized) {
+              loadThumbnail()
+            } else if (isVideo) {
+              thumbnailRetryTimer.start()
+            }
+          }
+          
+          function loadThumbnail() {
+            VideoWallpaperService.generateThumbnail(wallpaperPath, function(path) {
+              if (path) {
+                thumbnailPath = "file://" + path
+                thumbnailReady = true
+              }
+            }, "preview")
+          }
+          
+          Timer {
+            id: thumbnailRetryTimer
+            interval: 500
+            onTriggered: {
+              if (wallpaperItem.isVideo && VideoWallpaperService.isInitialized) {
+                wallpaperItem.loadThumbnail()
+              }
+            }
+          }
 
           Rectangle {
             id: imageContainer
             Layout.fillWidth: true
             Layout.preferredHeight: Math.round(wallpaperGridView.itemSize * 0.67)
-            color: Color.transparent
+            color: Color.mSurface
 
+            // Image preview (for images)
             NImageCached {
               id: img
               imagePath: wallpaperPath
               cacheFolder: Settings.cacheDirImagesWallpapers
               anchors.fill: parent
+              visible: !wallpaperItem.isVideo
+            }
+
+            // Video thumbnail
+            Image {
+              id: videoThumbnail
+              source: wallpaperItem.thumbnailPath
+              anchors.fill: parent
+              fillMode: Image.PreserveAspectCrop
+              visible: wallpaperItem.isVideo && wallpaperItem.thumbnailReady
+              asynchronous: true
+            }
+
+            // Video placeholder while thumbnail generates
+            Rectangle {
+              anchors.fill: parent
+              color: Color.mSurfaceVariant
+              visible: wallpaperItem.isVideo && !wallpaperItem.thumbnailReady
+
+              NIcon {
+                anchors.centerIn: parent
+                icon: "movie"
+                pointSize: 32
+                color: Color.mOnSurfaceVariant
+              }
             }
 
             Rectangle {
@@ -785,6 +866,26 @@ SmartPanel {
                 NumberAnimation {
                   duration: Style.animationFast
                 }
+              }
+            }
+
+            // Video play icon badge (small, in corner)
+            Rectangle {
+              anchors.bottom: parent.bottom
+              anchors.left: parent.left
+              anchors.margins: Style.marginS
+              width: 24
+              height: 24
+              radius: 4
+              color: Color.mSurface
+              opacity: 0.85
+              visible: wallpaperItem.isVideo
+
+              NIcon {
+                anchors.centerIn: parent
+                icon: "player-play"
+                pointSize: 14
+                color: Color.mOnSurface
               }
             }
 

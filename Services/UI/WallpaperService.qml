@@ -276,6 +276,14 @@ Singleton {
     // Save to cache file with debounce
     saveTimer.restart();
 
+    // Check if this is a video wallpaper and notify VideoWallpaperService
+    if (typeof VideoWallpaperService !== 'undefined' && VideoWallpaperService.isVideoFile(path)) {
+      VideoWallpaperService.setVideoWallpaper(screenName, path);
+    } else if (typeof VideoWallpaperService !== 'undefined') {
+      // Clear video wallpaper if switching to an image
+      VideoWallpaperService.clearVideoWallpaper(screenName);
+    }
+
     // Emit signal for this specific wallpaper change
     root.wallpaperChanged(screenName, path);
 
@@ -401,7 +409,7 @@ Singleton {
     import Quickshell.Io
     Process {
     id: process
-    command: ["find", "-L", "` + directory + `", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.gif", "-o", "-iname", "*.pnm", "-o", "-iname", "*.bmp", ")"]
+    command: ["find", "-L", "` + directory + `", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.gif", "-o", "-iname", "*.pnm", "-o", "-iname", "*.bmp", "-o", "-iname", "*.mp4", "-o", "-iname", "*.webm", "-o", "-iname", "*.mkv", "-o", "-iname", "*.avi", "-o", "-iname", "*.mov", "-o", "-iname", "*.ogv", "-o", "-iname", "*.m4v", ")"]
     stdout: StdioCollector {}
     stderr: StdioCollector {}
     }
@@ -465,7 +473,7 @@ Singleton {
       property string currentDirectory: root.getMonitorDirectory(screenName)
 
       folder: "file://" + currentDirectory
-      nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.gif", "*.pnm", "*.bmp"]
+      nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.gif", "*.pnm", "*.bmp", "*.mp4", "*.webm", "*.mkv", "*.avi", "*.mov", "*.ogv", "*.m4v"]
       showDirs: false
       sortField: FolderListModel.Name
 
@@ -539,6 +547,18 @@ Singleton {
       }
 
       Logger.d("Wallpaper", "Loaded wallpapers from cache file:", Object.keys(root.currentWallpapers).length, "screens");
+      
+      // Notify VideoWallpaperService about any video wallpapers from cache
+      if (typeof VideoWallpaperService !== 'undefined') {
+        for (var screenName in root.currentWallpapers) {
+          var path = root.currentWallpapers[screenName];
+          if (VideoWallpaperService.isVideoFile(path)) {
+            Logger.i("Wallpaper", "Restoring video wallpaper for", screenName, ":", path);
+            VideoWallpaperService.setVideoWallpaper(screenName, path);
+          }
+        }
+      }
+      
       root.isInitialized = true;
     }
 

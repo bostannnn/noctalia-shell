@@ -2212,6 +2212,21 @@
           "label": "Automation"
         }
       },
+      "video": {
+        "section": {
+          "label": "Video Wallpaper",
+          "description": "Configure video wallpaper playback settings."
+        },
+        "muted": {
+          "label": "Mute audio",
+          "description": "Mute audio playback for video wallpapers."
+        },
+        "pause-fullscreen": {
+          "label": "Pause when fullscreen",
+          "description": "Pause video playback when a fullscreen application is active."
+        },
+        "info": "Video wallpapers use GPU resources. For best performance, use hardware-accelerated formats like H.264 or VP9."
+      },
       "look-feel": {
         "edge-smoothness": {
           "description": "Applies a soft, feathered effect to the edge of transitions.",
@@ -2498,8 +2513,12 @@
     "wallpaper-selector": "Wallpaper selector",
     "widget-settings": "Widget settings"
   },
+  "video-wallpaper": {
+    "error": "Failed to load video",
+    "loading": "Loading video..."
+  },
   "wallpaper": {
-    "configure-directory": "Configure your wallpaper directory with images.",
+    "configure-directory": "Configure your wallpaper directory with images and videos.",
     "fill-modes": {
       "center": "Center",
       "crop": "Crop (Fill)",
