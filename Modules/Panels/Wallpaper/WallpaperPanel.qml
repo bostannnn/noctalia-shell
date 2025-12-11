@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "../../../Helpers/FuzzySort.js" as FuzzySort
 import qs.Commons
 import qs.Modules.MainScreen
@@ -12,10 +13,10 @@ import qs.Widgets
 SmartPanel {
   id: root
 
-  preferredWidth: 800 * Style.uiScaleRatio
-  preferredHeight: 600 * Style.uiScaleRatio
+  preferredWidth: 900 * Style.uiScaleRatio
+  preferredHeight: 700 * Style.uiScaleRatio
   preferredWidthRatio: 0.5
-  preferredHeightRatio: 0.45
+  preferredHeightRatio: 0.7
 
   // Positioning
   readonly property string panelPosition: {
@@ -115,6 +116,7 @@ SmartPanel {
     }
     property var currentScreen: Quickshell.screens[currentScreenIndex]
     property string filterText: ""
+    property string mediaFilter: "all"  // "all", "images", "videos"
     property alias screenRepeater: screenRepeater
 
     Component.onCompleted: {
@@ -467,6 +469,62 @@ SmartPanel {
               }
             }
           }
+
+          // Media type filter buttons (only for local wallpapers)
+          RowLayout {
+            Layout.fillWidth: true
+            spacing: Style.marginS
+            visible: !Settings.data.wallpaper.useWallhaven
+
+            NText {
+              text: I18n.tr("wallpaper.panel.filter.label")
+              pointSize: Style.fontSizeS
+              color: Color.mOnSurfaceVariant
+            }
+
+            NButton {
+              text: I18n.tr("wallpaper.panel.filter.all")
+              backgroundColor: wallpaperPanel.mediaFilter === "all" ? Color.mPrimary : Color.mSurfaceVariant
+              textColor: wallpaperPanel.mediaFilter === "all" ? Color.mOnPrimary : Color.mOnSurfaceVariant
+              onClicked: {
+                wallpaperPanel.mediaFilter = "all"
+                for (var i = 0; i < screenRepeater.count; i++) {
+                  let item = screenRepeater.itemAt(i)
+                  if (item && item.updateFiltered) item.updateFiltered()
+                }
+              }
+            }
+
+            NButton {
+              text: I18n.tr("wallpaper.panel.filter.videos")
+              icon: "movie"
+              backgroundColor: wallpaperPanel.mediaFilter === "videos" ? Color.mPrimary : Color.mSurfaceVariant
+              textColor: wallpaperPanel.mediaFilter === "videos" ? Color.mOnPrimary : Color.mOnSurfaceVariant
+              onClicked: {
+                wallpaperPanel.mediaFilter = "videos"
+                for (var i = 0; i < screenRepeater.count; i++) {
+                  let item = screenRepeater.itemAt(i)
+                  if (item && item.updateFiltered) item.updateFiltered()
+                }
+              }
+            }
+
+            NButton {
+              text: I18n.tr("wallpaper.panel.filter.images")
+              icon: "image"
+              backgroundColor: wallpaperPanel.mediaFilter === "images" ? Color.mPrimary : Color.mSurfaceVariant
+              textColor: wallpaperPanel.mediaFilter === "images" ? Color.mOnPrimary : Color.mOnSurfaceVariant
+              onClicked: {
+                wallpaperPanel.mediaFilter = "images"
+                for (var i = 0; i < screenRepeater.count; i++) {
+                  let item = screenRepeater.itemAt(i)
+                  if (item && item.updateFiltered) item.updateFiltered()
+                }
+              }
+            }
+
+            Item { Layout.fillWidth: true }
+          }
         }
       }
 
@@ -540,12 +598,32 @@ SmartPanel {
 
     // Expose updateFiltered as a proper function property
     function updateFiltered() {
+      // Start with full list
+      var baseList = wallpapersList;
+      
+      // Apply media type filter
+      if (wallpaperPanel.mediaFilter === "images") {
+        baseList = wallpapersList.filter(function(p) {
+          return !VideoWallpaperService.isVideoFile(p);
+        });
+      } else if (wallpaperPanel.mediaFilter === "videos") {
+        baseList = wallpapersList.filter(function(p) {
+          return VideoWallpaperService.isVideoFile(p);
+        });
+      }
+      
+      // Apply text search filter
       if (!wallpaperPanel.filterText || wallpaperPanel.filterText.trim().length === 0) {
-        filteredWallpapers = wallpapersList;
+        filteredWallpapers = baseList;
         return;
       }
 
-      const results = FuzzySort.go(wallpaperPanel.filterText.trim(), wallpapersWithNames, {
+      // Build search list from filtered base
+      var searchList = baseList.map(function(p) {
+        return { "path": p, "name": p.split('/').pop() };
+      });
+      
+      const results = FuzzySort.go(wallpaperPanel.filterText.trim(), searchList, {
                                      "key": 'name',
                                      "limit": 200
                                    });
@@ -621,6 +699,77 @@ SmartPanel {
       updateFiltered();
     }
 
+    // Delete wallpaper function
+    function deleteWallpaper(path) {
+      var deleteProcess = Qt.createQmlObject(`
+        import QtQuick
+        import Quickshell.Io
+        Process {
+          command: ["gio", "trash", "${path.replace(/"/g, '\\"')}"]
+        }
+      `, parent, "DeleteWallpaper");
+
+      deleteProcess.exited.connect(function(exitCode) {
+        if (exitCode === 0) {
+          Logger.i("WallpaperPanel", "Moved to trash:", path);
+          ToastService.showNotice(I18n.tr("wallpaper.panel.deleted"), "");
+        } else {
+          // Fallback to rm if gio trash fails
+          var rmProcess = Qt.createQmlObject(`
+            import QtQuick
+            import Quickshell.Io
+            Process {
+              command: ["rm", "${path.replace(/"/g, '\\"')}"]
+            }
+          `, parent, "DeleteWallpaperRm");
+
+          rmProcess.exited.connect(function(rmExitCode) {
+            if (rmExitCode === 0) {
+              Logger.i("WallpaperPanel", "Deleted:", path);
+              ToastService.showNotice(I18n.tr("wallpaper.panel.deleted"), "");
+            } else {
+              Logger.e("WallpaperPanel", "Failed to delete:", path);
+              ToastService.showWarning(I18n.tr("wallpaper.panel.delete-failed"), "");
+            }
+            rmProcess.destroy();
+          });
+
+          rmProcess.running = true;
+        }
+        WallpaperService.refreshWallpapersList();
+        deleteProcess.destroy();
+      });
+
+      deleteProcess.running = true;
+    }
+
+    // Context menu for wallpaper items
+    Menu {
+      id: wallpaperContextMenu
+      property string wallpaperToDelete: ""
+
+      MenuItem {
+        text: I18n.tr("wallpaper.panel.context.delete")
+        icon.name: "trash"
+        onTriggered: {
+          if (wallpaperContextMenu.wallpaperToDelete) {
+            deleteWallpaper(wallpaperContextMenu.wallpaperToDelete)
+          }
+        }
+      }
+
+      MenuItem {
+        text: I18n.tr("wallpaper.panel.context.open-folder")
+        icon.name: "folder-open"
+        onTriggered: {
+          if (wallpaperContextMenu.wallpaperToDelete) {
+            var folder = wallpaperContextMenu.wallpaperToDelete.substring(0, wallpaperContextMenu.wallpaperToDelete.lastIndexOf('/'))
+            Qt.openUrlExternally("file://" + folder)
+          }
+        }
+      }
+    }
+
     ColumnLayout {
       anchors.fill: parent
       spacing: Style.marginM
@@ -652,11 +801,11 @@ SmartPanel {
           }
         }
 
-        property int columns: (screen.width > 1920) ? 5 : 4
+        property int columns: 4
         property int itemSize: cellWidth
 
         cellWidth: Math.floor((width - leftMargin - rightMargin) / columns)
-        cellHeight: Math.floor(itemSize * 0.7) + Style.marginXS + Style.fontSizeXS + Style.marginM
+        cellHeight: Math.floor(itemSize * 0.63) + Style.marginXS + Style.fontSizeXS + Style.marginM
 
         leftMargin: Style.marginS
         rightMargin: Style.marginS
@@ -786,13 +935,13 @@ SmartPanel {
           Rectangle {
             id: imageContainer
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(wallpaperGridView.itemSize * 0.67)
+            Layout.preferredHeight: Math.round(wallpaperGridView.itemSize * 0.6)
             color: Color.mSurface
 
             // Image preview (for images)
             NImageCached {
               id: img
-              imagePath: wallpaperPath
+              imagePath: wallpaperItem.isVideo ? "" : wallpaperPath
               cacheFolder: Settings.cacheDirImagesWallpapers
               anchors.fill: parent
               visible: !wallpaperItem.isVideo
@@ -902,6 +1051,18 @@ SmartPanel {
                   WallpaperService.changeWallpaper(wallpaperPath, undefined);
                 } else {
                   WallpaperService.changeWallpaper(wallpaperPath, targetScreen.name);
+                }
+              }
+            }
+
+            // Right-click for context menu
+            MouseArea {
+              anchors.fill: parent
+              acceptedButtons: Qt.RightButton
+              onClicked: function(mouse) {
+                if (mouse.button === Qt.RightButton) {
+                  wallpaperContextMenu.wallpaperToDelete = wallpaperPath
+                  wallpaperContextMenu.popup()
                 }
               }
             }
@@ -1062,11 +1223,11 @@ SmartPanel {
 
           model: wallpapers || []
 
-          property int columns: (screen.width > 1920) ? 5 : 4
+          property int columns: 4
           property int itemSize: cellWidth
 
           cellWidth: Math.floor((width - leftMargin - rightMargin) / columns)
-          cellHeight: Math.floor(itemSize * 0.7) + Style.marginXS + (Settings.data.wallpaper.hideWallpaperFilenames ? 0 : Style.fontSizeXS + Style.marginM)
+          cellHeight: Math.floor(itemSize * 0.63) + Style.marginXS + (Settings.data.wallpaper.hideWallpaperFilenames ? 0 : Style.fontSizeXS + Style.marginM)
 
           leftMargin: Style.marginS
           rightMargin: Style.marginS
@@ -1160,7 +1321,7 @@ SmartPanel {
             Rectangle {
               id: imageContainer
               Layout.fillWidth: true
-              Layout.preferredHeight: Math.round(wallhavenGridView.itemSize * 0.67)
+              Layout.preferredHeight: Math.round(wallhavenGridView.itemSize * 0.6)
               color: Color.transparent
 
               Image {
@@ -1171,8 +1332,8 @@ SmartPanel {
                 asynchronous: true
                 cache: true
                 smooth: true
-                sourceSize.width: Math.round(wallhavenGridView.itemSize * 0.67)
-                sourceSize.height: Math.round(wallhavenGridView.itemSize * 0.67)
+                sourceSize.width: Math.round(wallhavenGridView.itemSize * 0.6)
+                sourceSize.height: Math.round(wallhavenGridView.itemSize * 0.6)
               }
 
               Rectangle {

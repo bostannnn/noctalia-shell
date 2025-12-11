@@ -740,6 +740,36 @@ if (VideoWallpaperService.isVideoFile(wp)) {
 
 ---
 
+## RandomWallpaper Bar Widget
+
+A bar widget that shuffles your wallpaper randomly.
+
+### Features
+- **Click** - Immediately shuffle to a random wallpaper
+- **Right-click** - Context menu with options:
+  - Shuffle now
+  - Enable/disable auto-shuffle (uses the interval from wallpaper settings)
+- **Visual indicator** - Button is highlighted when auto-shuffle is enabled
+
+### How to add to your bar
+
+1. Right-click on the bar
+2. Click "Add widget"
+3. Select "RandomWallpaper"
+
+Or manually add to your `settings.json`:
+```json
+{
+  "bar": {
+    "widgets": {
+      "right": ["RandomWallpaper", "Clock", ...]
+    }
+  }
+}
+```
+
+---
+
 ## Troubleshooting
 
 ### Video doesn't play

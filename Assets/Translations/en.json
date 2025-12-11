@@ -530,6 +530,8 @@
     "play": "Play",
     "previous": "Previous",
     "random-wallpaper": "Random wallpaper",
+    "enable-auto-shuffle": "Enable auto shuffle",
+    "disable-auto-shuffle": "Disable auto shuffle",
     "toggle-mute": "Toggle mute",
     "widget-settings": "Widget settings"
   },
@@ -2464,7 +2466,7 @@
     "hidden-files-hide": "Hidden files",
     "hidden-files-show": "Hidden files",
     "home": "Home directory",
-    "input-muted": "Toggle input mute",
+    "input-muted": "Microphone",
     "keep-awake": "Keep Awake",
     "keyboard-layout": "{layout} keyboard layout",
     "list-view": "List view",
@@ -2488,7 +2490,7 @@
     "open-settings": "Settings",
     "open-tray-dropdown": "System tray",
     "open-wallpaper-selector": "Wallpaper selector",
-    "output-muted": "Toggle output mute",
+    "output-muted": "Audio output",
     "pause": "Pause",
     "play": "Play",
     "power-profile": "{profile} power profile",
@@ -2498,6 +2500,8 @@
     "refresh-devices": "Refresh devices",
     "refresh-wallhaven": "Refresh Wallhaven results",
     "refresh-wallpaper-list": "Refresh wallpaper list",
+    "random-wallpaper": "Random wallpaper",
+    "random-wallpaper-auto": "Random wallpaper (auto: every {interval}s)",
     "remove-widget": "Remove widget",
     "screen-recorder-not-installed": "Screen recorder (not installed)",
     "search": "Search",
@@ -2531,6 +2535,18 @@
       "apply-all-monitors": {
         "description": "Apply the selected wallpaper to all monitors.",
         "label": "Apply to all monitors"
+      },
+      "context": {
+        "delete": "Move to trash",
+        "open-folder": "Open folder"
+      },
+      "deleted": "Wallpaper moved to trash",
+      "delete-failed": "Failed to delete wallpaper",
+      "filter": {
+        "label": "Show:",
+        "all": "All",
+        "images": "Images",
+        "videos": "Videos"
       },
       "categories": {
         "anime": "Anime",

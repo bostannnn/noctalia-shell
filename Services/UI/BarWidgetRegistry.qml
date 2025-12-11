@@ -28,6 +28,7 @@ Singleton {
                            "NoctaliaPerformance": noctaliaPerformanceComponent,
                            "NotificationHistory": notificationHistoryComponent,
                            "PowerProfile": powerProfileComponent,
+                           "RandomWallpaper": randomWallpaperComponent,
                            "ScreenRecorder": screenRecorderComponent,
                            "SessionMenu": sessionMenuComponent,
                            "Spacer": spacerComponent,
@@ -297,6 +298,9 @@ Singleton {
   }
   property Component powerProfileComponent: Component {
     PowerProfile {}
+  }
+  property Component randomWallpaperComponent: Component {
+    RandomWallpaper {}
   }
   property Component sessionMenuComponent: Component {
     SessionMenu {}
