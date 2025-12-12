@@ -9,6 +9,7 @@ This fork adds video wallpaper support and wallpaper picker improvements.
 - Powered by `mpvpaper` for playback
 - Random `swww` transitions between videos
 - Mute toggle in wallpaper settings
+- **Auto-pause when fullscreen app is active** (saves GPU resources when gaming)
 - Matugen color extraction from video thumbnails
 
 ### Wallpaper Picker Improvements
