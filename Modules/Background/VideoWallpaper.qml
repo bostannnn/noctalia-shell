@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
@@ -19,57 +18,17 @@ Item {
     property bool transitioning: false
     property bool videoReady: false
     property bool hasError: false
-    
-    // Desktop focus detection - true when a window is focused on this screen
-    property bool hasWindowFocused: false
 
     readonly property int transitionDuration: Settings.data.wallpaper.transitionDuration || 800
     readonly property var transitionTypes: ["fade", "left", "right", "top", "bottom", "wipe", "grow", "center", "outer", "wave"]
-    
-    // Check if video should be playing
-    readonly property bool shouldPlay: root.active && root.currentVideo !== "" && !root.transitioning && !root.isPaused
-    readonly property bool isPaused: VideoWallpaperService.pauseOnFullscreen && root.hasWindowFocused
 
     visible: active && (currentVideo !== "" || transitioning)
-
-    // Check if any fullscreen window exists
-    function checkFullscreen() {
-        fullscreenCheckProc.running = true
-    }
-    
-    Process {
-        id: fullscreenCheckProc
-        command: ["hyprctl", "activewindow", "-j"]
-        stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var json = JSON.parse(data)
-                    // fullscreen: 0 = not fullscreen, 1 = fullscreen, 2 = maximized
-                    if (json && json.fullscreen && json.fullscreen > 0) {
-                        root.hasWindowFocused = true
-                    } else {
-                        root.hasWindowFocused = false
-                    }
-                } catch (e) {
-                    root.hasWindowFocused = false
-                }
-            }
-        }
-    }
-    
-    // Check periodically
-    Timer {
-        interval: 1000
-        running: root.active && VideoWallpaperService.pauseOnFullscreen
-        repeat: true
-        onTriggered: root.checkFullscreen()
-    }
 
     // Loading/error indicator
     Rectangle {
         anchors.fill: parent
         color: Color.mSurface
-        visible: root.hasError || (!root.videoReady && root.currentVideo !== "" && !root.transitioning && !root.isPaused)
+        visible: root.hasError || (!root.videoReady && root.currentVideo !== "" && !root.transitioning)
         opacity: 0.9
         z: 50
 
@@ -79,7 +38,7 @@ Item {
             pointSize: 48
             color: Color.mOnSurfaceVariant
             RotationAnimation on rotation {
-                running: !root.hasError && !root.videoReady && !root.isPaused
+                running: !root.hasError && !root.videoReady
                 from: 0; to: 360; duration: 1000; loops: Animation.Infinite
             }
         }
@@ -95,36 +54,27 @@ Item {
         }
     }
 
-    // mpvpaper playback - use Loader to properly restart process
-    Loader {
-        id: mpvLoader
-        active: root.shouldPlay && root.currentVideo !== ""
+    // mpvpaper playback process
+    Process {
+        id: mpvProc
         
-        sourceComponent: Process {
-            id: mpvProc
-            
-            property string opts: ["loop", "panscan=1.0", VideoWallpaperService.isMuted ? "no-audio" : "volume=30"].join(" ")
+        property string opts: ["loop", "panscan=1.0", VideoWallpaperService.isMuted ? "no-audio" : "volume=30"].join(" ")
 
-            command: ["mpvpaper", "-o", opts, root.screenName, root.currentVideo]
-            running: true
+        command: root.currentVideo && root.active && !root.transitioning 
+            ? ["mpvpaper", "-o", opts, root.screenName, root.currentVideo] 
+            : []
 
-            onStarted: { root.videoReady = true; root.hasError = false }
-            onExited: (code, status) => {
-                root.videoReady = false
-                if (code !== 0 && root.active && !root.transitioning && !root.isPaused) root.hasError = true
-            }
-        }
-    }
-    
-    // Kill mpvpaper when loader deactivates
-    onShouldPlayChanged: {
-        if (!shouldPlay && mpvLoader.item && mpvLoader.item.running) {
-            mpvLoader.item.signal(15)
+        running: root.active && root.currentVideo !== "" && !root.transitioning
+
+        onStarted: { root.videoReady = true; root.hasError = false }
+        onExited: (code, status) => {
+            root.videoReady = false
+            if (code !== 0 && root.active && !root.transitioning) root.hasError = true
         }
     }
 
     function doTransition(newVideo) {
-        if (mpvLoader.item && mpvLoader.item.running) mpvLoader.item.signal(15)
+        if (mpvProc.running) mpvProc.signal(15)
         
         transitioning = true
         pendingVideo = newVideo
@@ -164,17 +114,15 @@ Item {
     }
 
     onActiveChanged: {
-        if (!active && mpvLoader.item && mpvLoader.item.running) mpvLoader.item.signal(15)
+        if (!active && mpvProc.running) mpvProc.signal(15)
         if (active && videoSource && !currentVideo) currentVideo = videoSource
-        if (active) checkFullscreen()
     }
 
     Component.onCompleted: {
         if (active && videoSource) currentVideo = videoSource
-        checkFullscreen()
     }
 
     Component.onDestruction: {
-        if (mpvLoader.item && mpvLoader.item.running) mpvLoader.item.signal(15)
+        if (mpvProc.running) mpvProc.signal(15)
     }
 }

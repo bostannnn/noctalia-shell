@@ -1124,6 +1124,10 @@
           "niri": {
             "description": "Write {filepath}. Requires niri v25.11+",
             "description-missing": "Requires {app} to be installed"
+          },
+          "hyprland": {
+            "description": "Write {filepath}. Source it in your hyprland.conf",
+            "description-missing": "Requires {app} to be installed"
           }
         },
         "misc": {

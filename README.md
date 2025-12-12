@@ -1,6 +1,6 @@
 # Noctalia Shell Fork - Changes from Upstream
 
-This fork adds video wallpaper support and wallpaper picker improvements.
+This fork adds video wallpaper support, Hyprland border theming, and wallpaper picker improvements.
 
 ## Features Added
 
@@ -9,8 +9,39 @@ This fork adds video wallpaper support and wallpaper picker improvements.
 - Powered by `mpvpaper` for playback
 - Random `swww` transitions between videos
 - Mute toggle in wallpaper settings
-- **Auto-pause when fullscreen app is active** (saves GPU resources when gaming)
 - Matugen color extraction from video thumbnails
+
+### Hyprland Border Theming
+- Auto-generated border colors from wallpaper
+- Gradient animated borders with primary/secondary colors
+- **File auto-created** at `~/.config/hypr/noctalia.conf` when enabled
+- Auto-reloads Hyprland when colors change
+- Enable in Settings → Color Scheme → Compositors → Hyprland
+
+#### Hyprland Setup
+
+Add to your `hyprland.nix` (Home Manager):
+
+```nix
+wayland.windowManager.hyprland = {
+  enable = true;
+  extraConfig = ''
+    source = ~/.config/hypr/noctalia.conf
+  '';
+  settings = {
+    general = {
+      # Fallback colors (noctalia.conf will override these)
+      "col.active_border" = "rgba(bd93f9ee) rgba(ff79c6ee) 45deg";
+      "col.inactive_border" = "rgba(595959aa)";
+    };
+    animations = {
+      animation = [
+        "borderangle,1,100,default,loop"  # Animated gradient
+      ];
+    };
+  };
+};
+```
 
 ### Wallpaper Picker Improvements
 - **Media filters**: Filter by All / Videos / Images
@@ -51,9 +82,12 @@ wayland.windowManager.hyprland.settings = {
 - `Modules/Background/Background.qml` - Video wallpaper loader
 - `Modules/Panels/Wallpaper/WallpaperPanel.qml` - Filters, delete, UI changes
 - `Services/UI/WallpaperService.qml` - Video file detection
-- `Services/Theming/AppThemeService.qml` - Video thumbnail colors
+- `Services/Theming/AppThemeService.qml` - Video thumbnail colors, Hyprland init
+- `Services/Theming/TemplateRegistry.qml` - Hyprland template with auto-reload
+- `Services/System/ProgramCheckerService.qml` - Hyprland availability check
+- `Modules/Panels/Settings/Tabs/ColorScheme/ColorSchemeTab.qml` - Hyprland toggle
 - `Assets/Translations/en.json` - New translations
-- `Assets/Settings/settings-default.json` - Video settings
+- `Assets/settings-default.json` - Video & Hyprland settings
 - `shell.qml` - VideoWallpaperService initialization
 
 ## Upstream Repository

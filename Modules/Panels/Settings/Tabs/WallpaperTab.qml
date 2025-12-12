@@ -448,13 +448,6 @@ ColumnLayout {
       onToggled: checked => VideoWallpaperService.setMuted(checked)
     }
 
-    NToggle {
-      label: I18n.tr("settings.wallpaper.video.pause-fullscreen.label")
-      description: I18n.tr("settings.wallpaper.video.pause-fullscreen.description")
-      checked: Settings.data.wallpaper.videoPauseOnFullscreen ?? true
-      onToggled: checked => VideoWallpaperService.setPauseOnFullscreen(checked)
-    }
-
     NText {
       text: I18n.tr("settings.wallpaper.video.info")
       color: Color.mOnSurfaceVariant

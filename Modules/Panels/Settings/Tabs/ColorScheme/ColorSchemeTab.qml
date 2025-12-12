@@ -600,6 +600,24 @@ ColumnLayout {
                      }
                    }
       }
+
+      NCheckbox {
+        label: "Hyprland"
+        description: ProgramCheckerService.hyprlandAvailable ? I18n.tr("settings.color-scheme.templates.compositors.hyprland.description", {
+                                                                     "filepath": "~/.config/hypr/noctalia.conf"
+                                                                   }) : I18n.tr("settings.color-scheme.templates.compositors.hyprland.description-missing", {
+                                                                                  "app": "Hyprland"
+                                                                                })
+        checked: Settings.data.templates.hyprland
+        enabled: ProgramCheckerService.hyprlandAvailable
+        opacity: ProgramCheckerService.hyprlandAvailable ? 1.0 : 0.6
+        onToggled: checked => {
+                     if (ProgramCheckerService.hyprlandAvailable) {
+                       Settings.data.templates.hyprland = checked;
+                       AppThemeService.generate();
+                     }
+                   }
+      }
     }
 
     // Terminal Emulators

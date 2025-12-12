@@ -571,6 +571,7 @@ Singleton {
       property bool cava: false
       property bool emacs: false
       property bool niri: false
+      property bool hyprland: false
       property bool enableUserTemplates: false
     }
 

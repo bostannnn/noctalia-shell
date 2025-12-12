@@ -382,6 +382,7 @@
     "cava": false,
     "emacs": false,
     "niri": false,
+    "hyprland": false,
     "enableUserTemplates": false
   },
   "nightLight": {

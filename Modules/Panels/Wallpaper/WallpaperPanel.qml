@@ -916,8 +916,8 @@ SmartPanel {
           function loadThumbnail() {
             VideoWallpaperService.generateThumbnail(wallpaperPath, function(path) {
               if (path) {
-                thumbnailPath = "file://" + path
-                thumbnailReady = true
+                wallpaperItem.thumbnailPath = "file://" + path
+                wallpaperItem.thumbnailReady = true
               }
             }, "preview")
           }

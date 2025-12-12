@@ -258,6 +258,18 @@ Singleton {
         }
       ],
       "postProcess": () => `${colorsApplyScript} niri`
+    },
+    {
+      "id": "hyprland",
+      "name": "Hyprland",
+      "category": "compositors",
+      "input": "hyprland.conf",
+      "outputs": [
+        {
+          "path": "~/.config/hypr/noctalia.conf"
+        }
+      ],
+      "postProcess": () => `hyprctl reload`
     }
   ]
 
