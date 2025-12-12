@@ -914,10 +914,12 @@ SmartPanel {
           }
           
           function loadThumbnail() {
+            var itemRef = wallpaperItem
             VideoWallpaperService.generateThumbnail(wallpaperPath, function(path) {
-              if (path) {
-                wallpaperItem.thumbnailPath = "file://" + path
-                wallpaperItem.thumbnailReady = true
+              // Check if delegate still exists (wasn't recycled)
+              if (path && itemRef && itemRef.wallpaperPath) {
+                itemRef.thumbnailPath = "file://" + path
+                itemRef.thumbnailReady = true
               }
             }, "preview")
           }
@@ -926,7 +928,7 @@ SmartPanel {
             id: thumbnailRetryTimer
             interval: 500
             onTriggered: {
-              if (wallpaperItem.isVideo && VideoWallpaperService.isInitialized) {
+              if (wallpaperItem && wallpaperItem.isVideo && VideoWallpaperService.isInitialized) {
                 wallpaperItem.loadThumbnail()
               }
             }

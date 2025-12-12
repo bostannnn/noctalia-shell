@@ -10,6 +10,17 @@ Singleton {
   id: root
 
   readonly property string colorsApplyScript: Quickshell.shellDir + '/Bin/colors-apply.sh'
+  
+  // Debounce timer to prevent rapid-fire generation
+  property bool generationPending: false
+  Timer {
+    id: generateDebounce
+    interval: 100
+    onTriggered: {
+      root.generationPending = false
+      root.doGenerate()
+    }
+  }
 
   Connections {
     target: WallpaperService
@@ -88,6 +99,14 @@ HYPREOF
   }
 
   function generate() {
+    // Debounce to prevent rapid-fire generation
+    if (!generationPending) {
+      generationPending = true
+      generateDebounce.restart()
+    }
+  }
+  
+  function doGenerate() {
     if (Settings.data.colorSchemes.useWallpaperColors) {
       generateFromWallpaper();
     } else {

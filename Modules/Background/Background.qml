@@ -223,10 +223,10 @@ Variants {
       Loader {
         id: videoWallpaperLoader
         anchors.fill: parent
-        active: VideoWallpaperService.hasVideoWallpaper(modelData.name)
+        active: VideoWallpaperService.isInitialized && VideoWallpaperService.hasVideoWallpaper(modelData.name) || false
         z: 10
 
-        property string videoPath: VideoWallpaperService.getVideoWallpaper(modelData.name)
+        property string videoPath: VideoWallpaperService.getVideoWallpaper(modelData.name) || ""
 
         Connections {
           target: VideoWallpaperService

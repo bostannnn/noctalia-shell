@@ -129,9 +129,16 @@ Singleton {
         }
     }
 
-    Connections {
-        target: Settings.data.wallpaper
-        function onVideoMutedChanged() { root.isMuted = Settings.data.wallpaper.videoMuted ?? true }
-        function onVideoPauseOnFullscreenChanged() { root.pauseOnFullscreen = Settings.data.wallpaper.videoPauseOnFullscreen ?? true }
+    // Settings sync - watch for external changes via property bindings
+    Binding {
+        target: root
+        property: "isMuted"
+        value: Settings.data.wallpaper.videoMuted ?? true
+    }
+    
+    Binding {
+        target: root
+        property: "pauseOnFullscreen"
+        value: Settings.data.wallpaper.videoPauseOnFullscreen ?? true
     }
 }
