@@ -93,8 +93,9 @@ wayland.windowManager.hyprland.settings = {
 - `Modules/Background/Background.qml` - Video wallpaper loader
 - `Modules/Panels/Wallpaper/WallpaperPanel.qml` - Filters, delete, UI changes
 - `Services/UI/WallpaperService.qml` - Video file detection
-- `Services/Theming/AppThemeService.qml` - Video thumbnail colors, Hyprland init
-- `Services/Theming/TemplateProcessor.qml` - Random scheme selection
+- `Services/UI/BarService.qml` - Fixed null widget instance errors
+- `Services/Theming/AppThemeService.qml` - Video thumbnail colors, Hyprland init, debounce
+- `Services/Theming/TemplateProcessor.qml` - Random scheme selection, concurrent guard
 - `Services/Theming/TemplateRegistry.qml` - Hyprland template with auto-reload
 - `Services/System/ProgramCheckerService.qml` - Hyprland availability check
 - `Modules/Panels/Settings/Tabs/ColorScheme/ColorSchemeTab.qml` - Hyprland toggle, Random scheme option
