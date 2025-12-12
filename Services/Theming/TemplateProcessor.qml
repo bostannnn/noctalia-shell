@@ -4,7 +4,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-import Quickshell.Io
 import qs.Commons
 import qs.Services.System
 import qs.Services.Theming
@@ -63,7 +62,8 @@ Singleton {
     if (!content)
       return;
     const wp = wallpaperPath.replace(/'/g, "'\\''");
-    const script = buildMatugenScript(content, wp, mode);
+    const schemeType = getResolvedSchemeType();
+    const script = buildMatugenScript(content, wp, mode, schemeType);
 
     generateProcess.generator = "matugen";
     generateProcess.command = ["bash", "-lc", script];
@@ -81,7 +81,8 @@ Singleton {
     let script = processAllTemplates(colors, mode);
 
     // Add user templates if enabled (requirement #1)
-    script += buildUserTemplateCommandForPredefined(schemeData, mode);
+    const schemeType = getResolvedSchemeType();
+    script += buildUserTemplateCommandForPredefined(schemeData, mode, schemeType);
 
     generateProcess.generator = "predefined";
     generateProcess.command = ["bash", "-lc", script];
@@ -212,17 +213,16 @@ Singleton {
     return false;
   }
 
-  function buildMatugenScript(content, wallpaper, mode) {
+  function buildMatugenScript(content, wallpaper, mode, schemeType) {
     const delimiter = "MATUGEN_CONFIG_EOF_" + Math.random().toString(36).substr(2, 9);
     const pathEsc = dynamicConfigPath.replace(/'/g, "'\\''");
     const wpDelimiter = "WALLPAPER_PATH_EOF_" + Math.random().toString(36).substr(2, 9);
-    const schemeType = getResolvedSchemeType();
 
     // Use heredoc for wallpaper path to avoid all escaping issues
     let script = `cat > '${pathEsc}' << '${delimiter}'\n${content}\n${delimiter}\n`;
     script += `NOCTALIA_WP_PATH=$(cat << '${wpDelimiter}'\n${wallpaper}\n${wpDelimiter}\n)\n`;
     script += `matugen image "$NOCTALIA_WP_PATH" --config '${pathEsc}' --mode ${mode} --type ${schemeType}`;
-    script += buildUserTemplateCommand("$NOCTALIA_WP_PATH", mode);
+    script += buildUserTemplateCommand("$NOCTALIA_WP_PATH", mode, schemeType);
 
     return script + "\n";
   }
@@ -451,12 +451,11 @@ Singleton {
   // ================================================================================
   // USER TEMPLATES, advanced usage
   // ================================================================================
-  function buildUserTemplateCommand(input, mode) {
+  function buildUserTemplateCommand(input, mode, schemeType) {
     if (!Settings.data.templates.enableUserTemplates)
       return "";
 
     const userConfigPath = getUserConfigPath();
-    const schemeType = getResolvedSchemeType();
     let script = "\n# Execute user config if it exists\n";
     script += `if [ -f '${userConfigPath}' ]; then\n`;
     // If input is a shell variable (starts with $), use double quotes to allow expansion
@@ -468,14 +467,13 @@ Singleton {
     return script;
   }
 
-  function buildUserTemplateCommandForPredefined(schemeData, mode) {
+  function buildUserTemplateCommandForPredefined(schemeData, mode, schemeType) {
     if (!Settings.data.templates.enableUserTemplates)
       return "";
 
     const userConfigPath = getUserConfigPath();
     const colors = schemeData[mode];
     const palette = ColorPaletteGenerator.generatePalette(colors, Settings.data.colorSchemes.darkMode, false);
-    const schemeType = getResolvedSchemeType();
 
     const tempJsonPath = Settings.cacheDir + "predefined-colors.json";
     const tempJsonPathEsc = tempJsonPath.replace(/'/g, "'\\''");

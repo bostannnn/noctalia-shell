@@ -1,6 +1,6 @@
 # Noctalia Shell Fork - Changes from Upstream
 
-This fork adds video wallpaper support, Hyprland border theming, and wallpaper picker improvements.
+This fork adds video wallpaper support, Hyprland border theming, random color schemes, and wallpaper picker improvements.
 
 ## Features Added
 
@@ -13,7 +13,7 @@ This fork adds video wallpaper support, Hyprland border theming, and wallpaper p
 
 ### Hyprland Border Theming
 - Auto-generated border colors from wallpaper
-- Gradient animated borders with primary/secondary colors
+- 4-color gradient animated borders (primary → secondary → tertiary → primary_container)
 - **File auto-created** at `~/.config/hypr/noctalia.conf` on startup
 - Auto-reloads Hyprland when colors change
 - Enable in Settings → Color Scheme → Compositors → Hyprland
@@ -31,7 +31,7 @@ wayland.windowManager.hyprland = {
   settings = {
     general = {
       # Fallback colors (noctalia.conf will override these)
-      "col.active_border" = "rgba(bd93f9ee) rgba(ff79c6ee) 45deg";
+      "col.active_border" = "rgba(bd93f9ee) rgba(ff79c6ee) rgba(8be9fdee) rgba(50fa7bee) 45deg";
       "col.inactive_border" = "rgba(595959aa)";
     };
     animations = {
@@ -41,6 +41,17 @@ wayland.windowManager.hyprland = {
     };
   };
 };
+```
+
+### Random Color Scheme
+- Select "Random" as matugen scheme type
+- Automatically picks a different scheme with each wallpaper change
+- Cycles through: Content, Expressive, Fidelity, Fruit Salad, Monochrome, Neutral, Rainbow, Tonal Spot
+- Set in Settings → Color Scheme → Matugen scheme type → Random
+
+In NixOS config:
+```nix
+programs.noctalia.settings.colorSchemes.matugenSchemeType = "random";
 ```
 
 ### Wallpaper Picker Improvements
@@ -83,9 +94,10 @@ wayland.windowManager.hyprland.settings = {
 - `Modules/Panels/Wallpaper/WallpaperPanel.qml` - Filters, delete, UI changes
 - `Services/UI/WallpaperService.qml` - Video file detection
 - `Services/Theming/AppThemeService.qml` - Video thumbnail colors, Hyprland init
+- `Services/Theming/TemplateProcessor.qml` - Random scheme selection
 - `Services/Theming/TemplateRegistry.qml` - Hyprland template with auto-reload
 - `Services/System/ProgramCheckerService.qml` - Hyprland availability check
-- `Modules/Panels/Settings/Tabs/ColorScheme/ColorSchemeTab.qml` - Hyprland toggle
+- `Modules/Panels/Settings/Tabs/ColorScheme/ColorSchemeTab.qml` - Hyprland toggle, Random scheme option
 - `Assets/Translations/en.json` - New translations
 - `Assets/settings-default.json` - Video & Hyprland settings
 - `shell.qml` - VideoWallpaperService initialization
