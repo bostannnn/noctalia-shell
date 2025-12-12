@@ -21,8 +21,8 @@ import qs.Modules.LockScreen
 import qs.Modules.MainScreen
 import qs.Modules.Notification
 import qs.Modules.OSD
+import qs.Modules.Overview
 import qs.Modules.Toast
-import qs.Services.Compositor
 import qs.Services.Control
 import qs.Services.Hardware
 import qs.Services.Location
@@ -109,7 +109,9 @@ ShellRoot {
         checkSetupWizard();
       }
 
+      Overview {}
       Background {}
+      WorkspaceOverview {}
       AllScreens {}
       Dock {}
       Notification {}

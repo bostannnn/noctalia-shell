@@ -447,14 +447,6 @@ Singleton {
       property double deadOpacity: 0.6
     }
 
-    // overview
-    property JsonObject overview: JsonObject {
-      property bool enabled: true
-      property int rows: 2
-      property int columns: 5
-      property real scale: 0.16
-    }
-
     // network
     property JsonObject network: JsonObject {
       property bool wifiEnabled: true
