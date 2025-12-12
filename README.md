@@ -14,7 +14,7 @@ This fork adds video wallpaper support, Hyprland border theming, and wallpaper p
 ### Hyprland Border Theming
 - Auto-generated border colors from wallpaper
 - Gradient animated borders with primary/secondary colors
-- **File auto-created** at `~/.config/hypr/noctalia.conf` when enabled
+- **File auto-created** at `~/.config/hypr/noctalia.conf` on startup
 - Auto-reloads Hyprland when colors change
 - Enable in Settings → Color Scheme → Compositors → Hyprland
 

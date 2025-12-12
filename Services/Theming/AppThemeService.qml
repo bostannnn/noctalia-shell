@@ -82,10 +82,9 @@ HYPREOF
   function init() {
     Logger.i("AppThemeService", "Service started");
     
-    // Create default hyprland config if enabled
-    if (Settings.data.templates.hyprland) {
-      hyprlandInitProc.running = true;
-    }
+    // Always create default hyprland config if it doesn't exist
+    // This prevents "source globbing error" in hyprland.conf
+    hyprlandInitProc.running = true;
   }
 
   function generate() {
