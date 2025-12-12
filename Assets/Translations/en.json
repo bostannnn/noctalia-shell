@@ -1039,6 +1039,7 @@
       "color-source": {
         "matugen-scheme-type": {
           "description": {
+            "random": "Randomly selects a different scheme with each wallpaper change",
             "scheme-content": "Derives colors that closely match the underlying image",
             "scheme-expressive": "Vibrant palette with playful saturation",
             "scheme-fidelity": "High-fidelity palette that preserves source hues",

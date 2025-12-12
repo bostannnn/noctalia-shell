@@ -280,6 +280,10 @@ ColumnLayout {
 
     model: [
       {
+        "key": "random",
+        "name": "Random"
+      },
+      {
         "key": "scheme-content",
         "name": "Content"
       },

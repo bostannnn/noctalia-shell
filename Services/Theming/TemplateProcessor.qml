@@ -30,6 +30,30 @@ Singleton {
                                           "wezterm": "~/.config/wezterm/colors/Noctalia.toml"
                                         })
 
+  // Available matugen scheme types for random selection
+  readonly property var availableSchemes: [
+    "scheme-content",
+    "scheme-expressive",
+    "scheme-fidelity",
+    "scheme-fruit-salad",
+    "scheme-monochrome",
+    "scheme-neutral",
+    "scheme-rainbow",
+    "scheme-tonal-spot"
+  ]
+
+  // Get the actual scheme type, resolving "random" to a random scheme
+  function getResolvedSchemeType() {
+    const schemeType = Settings.data.colorSchemes.matugenSchemeType;
+    if (schemeType === "random") {
+      const randomIndex = Math.floor(Math.random() * availableSchemes.length);
+      const selected = availableSchemes[randomIndex];
+      Logger.i("TemplateProcessor", "Random scheme selected: " + selected);
+      return selected;
+    }
+    return schemeType;
+  }
+
   /**
   * Process wallpaper colors using matugen CLI
   * Dual-path architecture (wallpaper uses matugen CLI)
@@ -192,11 +216,12 @@ Singleton {
     const delimiter = "MATUGEN_CONFIG_EOF_" + Math.random().toString(36).substr(2, 9);
     const pathEsc = dynamicConfigPath.replace(/'/g, "'\\''");
     const wpDelimiter = "WALLPAPER_PATH_EOF_" + Math.random().toString(36).substr(2, 9);
+    const schemeType = getResolvedSchemeType();
 
     // Use heredoc for wallpaper path to avoid all escaping issues
     let script = `cat > '${pathEsc}' << '${delimiter}'\n${content}\n${delimiter}\n`;
     script += `NOCTALIA_WP_PATH=$(cat << '${wpDelimiter}'\n${wallpaper}\n${wpDelimiter}\n)\n`;
-    script += `matugen image "$NOCTALIA_WP_PATH" --config '${pathEsc}' --mode ${mode} --type ${Settings.data.colorSchemes.matugenSchemeType}`;
+    script += `matugen image "$NOCTALIA_WP_PATH" --config '${pathEsc}' --mode ${mode} --type ${schemeType}`;
     script += buildUserTemplateCommand("$NOCTALIA_WP_PATH", mode);
 
     return script + "\n";
@@ -431,12 +456,13 @@ Singleton {
       return "";
 
     const userConfigPath = getUserConfigPath();
+    const schemeType = getResolvedSchemeType();
     let script = "\n# Execute user config if it exists\n";
     script += `if [ -f '${userConfigPath}' ]; then\n`;
     // If input is a shell variable (starts with $), use double quotes to allow expansion
     // Otherwise, use single quotes for safety with file paths
     const inputQuoted = input.startsWith("$") ? `"${input}"` : `'${input.replace(/'/g, "'\\''")}'`;
-    script += `  matugen image ${inputQuoted} --config '${userConfigPath}' --mode ${mode} --type ${Settings.data.colorSchemes.matugenSchemeType}\n`;
+    script += `  matugen image ${inputQuoted} --config '${userConfigPath}' --mode ${mode} --type ${schemeType}\n`;
     script += "fi";
 
     return script;
@@ -449,6 +475,7 @@ Singleton {
     const userConfigPath = getUserConfigPath();
     const colors = schemeData[mode];
     const palette = ColorPaletteGenerator.generatePalette(colors, Settings.data.colorSchemes.darkMode, false);
+    const schemeType = getResolvedSchemeType();
 
     const tempJsonPath = Settings.cacheDir + "predefined-colors.json";
     const tempJsonPathEsc = tempJsonPath.replace(/'/g, "'\\''");
@@ -460,7 +487,7 @@ Singleton {
                                "colors": palette
                              }, null, 2) + "\n";
     script += "EOF\n";
-    script += `  matugen json '${tempJsonPathEsc}' --config '${userConfigPath}' --mode ${mode} --type ${Settings.data.colorSchemes.matugenSchemeType}\n`;
+    script += `  matugen json '${tempJsonPathEsc}' --config '${userConfigPath}' --mode ${mode} --type ${schemeType}\n`;
     script += "fi";
 
     return script;
