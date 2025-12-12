@@ -58,6 +58,12 @@ Singleton {
   * Dual-path architecture (wallpaper uses matugen CLI)
   */
   function processWallpaperColors(wallpaperPath, mode) {
+    // Prevent concurrent execution
+    if (generateProcess.running) {
+      Logger.d("TemplateProcessor", "Skipping - generation already in progress");
+      return;
+    }
+    
     const content = buildMatugenConfig();
     if (!content)
       return;
@@ -75,6 +81,12 @@ Singleton {
   * Dual-path architecture (predefined uses sed scripts)
   */
   function processPredefinedScheme(schemeData, mode) {
+    // Prevent concurrent execution
+    if (generateProcess.running) {
+      Logger.d("TemplateProcessor", "Skipping predefined - generation already in progress");
+      return;
+    }
+    
     handleTerminalThemes(mode);
 
     const colors = schemeData[mode];

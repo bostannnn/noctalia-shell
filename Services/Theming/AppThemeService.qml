@@ -13,12 +13,19 @@ Singleton {
   
   // Debounce timer to prevent rapid-fire generation
   property bool generationPending: false
+  property string pendingWallpaper: ""
+  
   Timer {
     id: generateDebounce
-    interval: 100
+    interval: 500
     onTriggered: {
       root.generationPending = false
-      root.doGenerate()
+      if (root.pendingWallpaper !== "") {
+        root.doGenerateFromWallpaper(root.pendingWallpaper)
+        root.pendingWallpaper = ""
+      } else {
+        root.doGenerate()
+      }
     }
   }
 
@@ -28,7 +35,10 @@ Singleton {
     // When the wallpaper changes, regenerate with Matugen if necessary
     function onWallpaperChanged(screenName, path) {
       if (screenName === Screen.name && Settings.data.colorSchemes.useWallpaperColors) {
-        generateFromWallpaper();
+        // Debounce wallpaper-triggered generation - always restart timer
+        root.pendingWallpaper = path
+        root.generationPending = true
+        generateDebounce.restart()
       }
     }
   }
@@ -100,6 +110,7 @@ HYPREOF
 
   function generate() {
     // Debounce to prevent rapid-fire generation
+    root.pendingWallpaper = ""
     if (!generationPending) {
       generationPending = true
       generateDebounce.restart()
@@ -108,7 +119,7 @@ HYPREOF
   
   function doGenerate() {
     if (Settings.data.colorSchemes.useWallpaperColors) {
-      generateFromWallpaper();
+      doGenerateFromWallpaper("");
     } else {
       // applyScheme will trigger template generation via schemeReader.onLoaded
       ColorSchemeService.applyScheme(Settings.data.colorSchemes.predefinedScheme);
@@ -116,7 +127,12 @@ HYPREOF
   }
 
   function generateFromWallpaper() {
-    const wp = WallpaperService.getWallpaper(Screen.name);
+    // Public function - uses debounce
+    generate();
+  }
+  
+  function doGenerateFromWallpaper(wpPath) {
+    const wp = wpPath || WallpaperService.getWallpaper(Screen.name);
     if (!wp) {
       Logger.e("AppThemeService", "No wallpaper found");
       return;
