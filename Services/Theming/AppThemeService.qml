@@ -50,6 +50,8 @@ $noctalia_outline = rgb(6272a4)
 $noctalia_error = rgb(ff5555)
 $noctalia_active_border1 = rgba(bd93f9ee)
 $noctalia_active_border2 = rgba(ff79c6ee)
+$noctalia_active_border3 = rgba(8be9fdee)
+$noctalia_active_border4 = rgba(50fa7bee)
 $noctalia_inactive_border = rgba(44475aaa)
 $noctalia_bg = rgb(282a36)
 $noctalia_bg_dim = rgb(21222c)
@@ -57,12 +59,12 @@ $noctalia_text = rgb(f8f8f2)
 $noctalia_text_secondary = rgb(6272a4)
 
 general {
-    col.active_border = $noctalia_active_border1 $noctalia_active_border2 45deg
+    col.active_border = $noctalia_active_border1 $noctalia_active_border2 $noctalia_active_border3 $noctalia_active_border4 45deg
     col.inactive_border = $noctalia_inactive_border
 }
 
 group {
-    col.border_active = $noctalia_active_border1 $noctalia_active_border2 45deg
+    col.border_active = $noctalia_active_border1 $noctalia_active_border2 $noctalia_active_border3 45deg
     col.border_inactive = $noctalia_inactive_border
     
     groupbar {
