@@ -19,6 +19,40 @@ Scope {
   // Only active on Hyprland
   property bool isActive: CompositorService.isHyprland
 
+  // Fullscreen background layer - covers entire screen including bar area
+  Variants {
+    id: backgroundVariants
+    model: isActive ? Quickshell.screens : []
+
+    PanelWindow {
+      id: bgWindow
+      required property var modelData
+      screen: modelData
+      visible: OverviewService.isOpen
+
+      WlrLayershell.namespace: "noctalia-overview-bg"
+      WlrLayershell.layer: WlrLayer.Top
+      WlrLayershell.exclusionMode: ExclusionMode.Ignore
+      color: Qt.rgba(Color.mSurface.r, Color.mSurface.g, Color.mSurface.b, 0.85)
+
+      // Use screen dimensions directly to cover full screen
+      implicitWidth: screen?.width ?? 1920
+      implicitHeight: screen?.height ?? 1080
+
+      anchors {
+        top: true
+        left: true
+      }
+
+      // Click anywhere on background to close
+      MouseArea {
+        anchors.fill: parent
+        onClicked: OverviewService.close()
+      }
+    }
+  }
+
+  // Main overview UI layer
   Variants {
     id: overviewVariants
     model: isActive ? Quickshell.screens : []
@@ -139,18 +173,6 @@ Scope {
             Hyprland.dispatch("workspace " + targetId);
             event.accepted = true;
           }
-        }
-      }
-
-      // Semi-transparent background
-      Rectangle {
-        anchors.fill: parent
-        color: Qt.rgba(Color.mSurface.r, Color.mSurface.g, Color.mSurface.b, 0.85)
-        visible: OverviewService.isOpen
-
-        MouseArea {
-          anchors.fill: parent
-          onClicked: OverviewService.close()
         }
       }
 
