@@ -1,8 +1,44 @@
 # Noctalia Shell Fork - Changes from Upstream
 
-This fork adds video wallpaper support, Hyprland border theming, random color schemes, and wallpaper picker improvements.
+This fork adds workspace overview, video wallpaper support, Hyprland border theming, random color schemes, and wallpaper picker improvements.
 
 ## Features Added
+
+### Workspace Overview (NEW)
+- 2×5 grid showing all workspaces with live window previews
+- Live window capture using ScreencopyView
+- Fullscreen background overlay (covers entire screen including bar)
+- Drag windows between workspaces
+- Middle-click to close windows
+- Keyboard navigation: arrows/hjkl to move, 1-0 to jump, Escape/Enter to close
+
+#### Keybinds Setup
+
+**NixOS users** - use `noctalia-shell` wrapper:
+```nix
+wayland.windowManager.hyprland.settings = {
+  bindr = [
+    "SUPER, SUPER_L, exec, noctalia-shell ipc call launcher toggle"
+  ];
+  bind = [
+    "$mainMod, Tab, exec, noctalia-shell ipc call overview toggle"
+    "$mainMod, W, exec, noctalia-shell ipc call wallpaper toggle"
+  ];
+};
+```
+
+**Non-NixOS users** - use `qs -c`:
+```bash
+# In your hyprland.conf
+bindr = SUPER, SUPER_L, exec, qs -c noctalia-shell ipc call launcher toggle
+bind = $mainMod, Tab, exec, qs -c noctalia-shell ipc call overview toggle
+bind = $mainMod, W, exec, qs -c noctalia-shell ipc call wallpaper toggle
+```
+
+#### Available IPC Commands
+- `overview toggle` / `overview open` / `overview close` - Workspace overview
+- `launcher toggle` - App launcher
+- `wallpaper toggle` - Wallpaper picker
 
 ### Video Wallpaper Support
 - Play video files as wallpapers (MP4, WebM, MKV, AVI, MOV, OGV, M4V)
@@ -87,7 +123,13 @@ wayland.windowManager.hyprland.settings = {
 
 ### New Files
 - `Services/UI/VideoWallpaperService.qml` - Video state management & thumbnails
+- `Services/UI/OverviewService.qml` - Workspace overview state management
+- `Services/Compositor/HyprlandDataService.qml` - Hyprland window/monitor data provider
 - `Modules/Background/VideoWallpaper.qml` - mpvpaper playback component
+- `Modules/Overview/WorkspaceOverview.qml` - Main overview module with dual-layer architecture
+- `Modules/Overview/OverviewWidget.qml` - Workspace grid with window previews
+- `Modules/Overview/OverviewWindow.qml` - Individual window preview component
+- `Modules/Overview/qmldir` - Module definition
 
 ### Modified Files
 - `Modules/Background/Background.qml` - Video wallpaper loader
@@ -101,7 +143,7 @@ wayland.windowManager.hyprland.settings = {
 - `Modules/Panels/Settings/Tabs/ColorScheme/ColorSchemeTab.qml` - Hyprland toggle, Random scheme option
 - `Assets/Translations/en.json` - New translations
 - `Assets/settings-default.json` - Video & Hyprland settings
-- `shell.qml` - VideoWallpaperService initialization
+- `shell.qml` - VideoWallpaperService and Overview initialization
 
 ## Upstream Repository
 https://github.com/noctalia-dev/noctalia-shell
