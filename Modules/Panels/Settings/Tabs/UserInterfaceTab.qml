@@ -364,11 +364,10 @@ ColumnLayout {
 
     NToggle {
       label: I18n.tr("settings.general.screen-corners.show-corners.label")
-      description: Settings.data.general.screenBorderEnabled 
-                   ? "Forced on while Screen Border is enabled"
+      description: (Settings.data.general.screenBorderEnabled && !Settings.data.general.showScreenCorners)
+                   ? "⚠ Recommended to enable with Screen Border"
                    : I18n.tr("settings.general.screen-corners.show-corners.description")
       checked: Settings.data.general.showScreenCorners
-      enabled: !Settings.data.general.screenBorderEnabled
       onToggled: checked => Settings.data.general.showScreenCorners = checked
     }
 
@@ -442,17 +441,13 @@ ColumnLayout {
     NToggle {
       Layout.fillWidth: true
       label: "Enable Screen Border"
-      description: "Shows a colored border strip around the screen edges. Disables floating bar."
+      description: Settings.data.bar.floating 
+                   ? "⚠ Floating bar may not look right with screen border"
+                   : "Shows a colored border strip around the screen edges"
       checked: Settings.data.general.screenBorderEnabled
       onToggled: checked => {
         Settings.data.general.screenBorderEnabled = checked;
-        if (checked) {
-          // Disable floating bar when screen border is enabled
-          Settings.data.bar.floating = false;
-          // Enable screen corners
-          Settings.data.general.showScreenCorners = true;
-        }
-        // Gaps are updated automatically by ScreenBorder.qml via property binding
+        // No forced changes - user controls all settings independently
       }
     }
 

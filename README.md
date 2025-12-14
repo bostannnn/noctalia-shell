@@ -124,8 +124,8 @@ Add to `hyprland.nix`:
 | `screenBorderColor` | string | `"#1e1e2e"` | Custom color (when theme color disabled) |
 
 **Note:** When screen border is enabled:
-- Floating bar is automatically disabled
-- Screen corners are automatically enabled
+- Shows warning if used with floating bar (not recommended)
+- Shows warning if screen corners are disabled (recommended to enable)
 - Hyprland gaps are managed via `~/.config/noctalia/hypr-gaps.conf`
 
 ## NixOS Home Manager Settings

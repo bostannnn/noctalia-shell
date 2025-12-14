@@ -116,14 +116,12 @@ ColumnLayout {
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("settings.bar.appearance.floating.label")
-    description: (Settings.data.general.screenBorderEnabled ?? false)
-                 ? "Disabled when Screen Border is enabled"
+    description: (Settings.data.general.screenBorderEnabled && Settings.data.bar.floating)
+                 ? "⚠ May not look right with Screen Border enabled"
                  : I18n.tr("settings.bar.appearance.floating.description")
-    checked: Settings.data.bar.floating && !(Settings.data.general.screenBorderEnabled ?? false)
-    enabled: !(Settings.data.general.screenBorderEnabled ?? false)
+    checked: Settings.data.bar.floating
     onToggled: checked => {
                  Settings.data.bar.floating = checked;
-                 // Gaps are updated automatically by ScreenBorder.qml via property binding
                }
   }
 
