@@ -268,3 +268,5 @@ function generateSurfaceVariant(backgroundColor, step, isDarkMode) {
   const newRgb = hslToRgb(hsl.h, hsl.s, hsl.l);
   return rgbToHex(newRgb.r, newRgb.g, newRgb.b);
 }
+
+

@@ -1,4 +1,3 @@
-
 [colors]
 foreground=575279
 background=faf4ed
@@ -21,3 +20,5 @@ bright7=575279
 selection-foreground=575279
 selection-background=dfdad9
 cursor=faf4ed 575279
+
+

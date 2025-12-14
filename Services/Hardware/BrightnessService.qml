@@ -343,3 +343,5 @@ Singleton {
     Component.onCompleted: initBrightness()
   }
 }
+
+

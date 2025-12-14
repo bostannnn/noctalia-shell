@@ -86,3 +86,4 @@ void main() {
     // Mix the two textures based on progress value
     fragColor = mix(color1, color2, ubuf.progress) * ubuf.qt_Opacity;
 }
+

@@ -91,3 +91,5 @@ environment.systemPackages = with pkgs; [
 - Per-monitor video wallpaper support
 - Automatic thumbnail generation for video picker
 - Hardware-accelerated playback (when GStreamer VAAPI is available)
+
+

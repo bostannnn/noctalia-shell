@@ -29,3 +29,5 @@ selection_fg = "{{colors.on_surface_variant.default.hex}}"
 
 [metadata]
 name = "Noctalia"
+
+

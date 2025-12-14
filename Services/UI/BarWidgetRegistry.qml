@@ -423,3 +423,5 @@ Singleton {
     return Object.keys(pluginWidgets);
   }
 }
+
+

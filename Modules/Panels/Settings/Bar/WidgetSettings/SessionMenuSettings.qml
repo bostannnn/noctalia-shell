@@ -53,3 +53,5 @@ ColumnLayout {
     onSelected: key => root.valueColorName = key
   }
 }
+
+

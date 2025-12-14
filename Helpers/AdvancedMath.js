@@ -150,3 +150,5 @@ function getAvailableFunctions() {
         "pi, e - mathematical constants"
     ];
 }
+
+

@@ -71,3 +71,5 @@ for shader in "${SHADERS_TO_COMPILE[@]}"; do
 done
 
 echo "Shader compilation complete."
+
+

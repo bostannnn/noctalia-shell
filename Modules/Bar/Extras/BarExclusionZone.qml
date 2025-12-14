@@ -16,7 +16,7 @@ PanelWindow {
 
   readonly property string barPosition: Settings.data.bar.position || "top"
   readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
-  readonly property bool barFloating: Settings.data.bar.floating || false
+  readonly property bool barFloating: (Settings.data.bar.floating || false) && !(Settings.data.general.screenBorderEnabled ?? false)
   readonly property real barMarginH: barFloating ? Settings.data.bar.marginHorizontal * Style.marginXL : 0
   readonly property real barMarginV: barFloating ? Settings.data.bar.marginVertical * Style.marginXL : 0
 
@@ -71,3 +71,5 @@ PanelWindow {
     Logger.d("BarExclusionZone", "  Size:", width, "x", height, "implicitWidth:", implicitWidth, "implicitHeight:", implicitHeight);
   }
 }
+
+

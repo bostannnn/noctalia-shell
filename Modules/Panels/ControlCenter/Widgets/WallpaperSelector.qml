@@ -13,3 +13,5 @@ NIconButtonHot {
   onClicked: PanelService.getPanel("wallpaperPanel", screen)?.toggle()
   onRightClicked: WallpaperService.setRandomWallpaper()
 }
+
+

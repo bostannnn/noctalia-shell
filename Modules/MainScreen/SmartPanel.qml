@@ -1260,3 +1260,5 @@ Item {
     PanelService.registerPanel(root);
   }
 }
+
+

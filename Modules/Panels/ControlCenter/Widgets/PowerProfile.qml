@@ -17,3 +17,5 @@ NIconButtonHot {
   tooltipText: I18n.tr("quickSettings.powerProfile.tooltip.action")
   onClicked: PowerProfileService.cycleProfile()
 }
+
+

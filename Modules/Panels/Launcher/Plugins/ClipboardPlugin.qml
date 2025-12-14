@@ -271,3 +271,5 @@ Item {
     return ClipboardService.getImageData ? ClipboardService.getImageData(clipboardId) : null;
   }
 }
+
+

@@ -873,3 +873,4 @@ done
 
 # Run main function
 main "$target_lang"
+

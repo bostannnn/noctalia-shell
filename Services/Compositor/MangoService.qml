@@ -674,3 +674,5 @@ Item {
     Quickshell.execDetached(["mmsg", "-s", "-q"]);
   }
 }
+
+

@@ -31,3 +31,5 @@ ColumnLayout {
     richTextEnabled: root.enableDescriptionRichText
   }
 }
+
+

@@ -13,3 +13,5 @@ NIconButtonHot {
   onClicked: PanelService.getPanel("bluetoothPanel", screen)?.toggle(this)
   onRightClicked: BluetoothService.setBluetoothEnabled(!BluetoothService.enabled)
 }
+
+

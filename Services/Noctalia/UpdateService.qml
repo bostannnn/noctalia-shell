@@ -379,3 +379,5 @@ Singleton {
     debouncedSaveChangelogState();
   }
 }
+
+

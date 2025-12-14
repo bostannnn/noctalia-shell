@@ -28,3 +28,5 @@ NIconButton {
   colorBorderHover: Color.transparent
   onClicked: PowerProfileService.cycleProfile()
 }
+
+

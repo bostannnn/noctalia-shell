@@ -77,3 +77,5 @@ ColumnLayout {
     onToggled: checked => root.valueColorizeIcons = checked
   }
 }
+
+

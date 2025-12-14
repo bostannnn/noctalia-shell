@@ -22,3 +22,5 @@ Singleton {
     notify(message, description, "", "error", duration);
   }
 }
+
+

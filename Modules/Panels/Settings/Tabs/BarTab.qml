@@ -12,6 +12,8 @@ ColumnLayout {
   id: root
   spacing: Style.marginL
 
+  // Note: Gaps are handled by ScreenBorder.qml which watches floating bar changes
+
   // Helper functions to update arrays immutably
   function addMonitor(list, name) {
     const arr = (list || []).slice();
@@ -114,10 +116,14 @@ ColumnLayout {
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("settings.bar.appearance.floating.label")
-    description: I18n.tr("settings.bar.appearance.floating.description")
-    checked: Settings.data.bar.floating
+    description: (Settings.data.general.screenBorderEnabled ?? false)
+                 ? "Disabled when Screen Border is enabled"
+                 : I18n.tr("settings.bar.appearance.floating.description")
+    checked: Settings.data.bar.floating && !(Settings.data.general.screenBorderEnabled ?? false)
+    enabled: !(Settings.data.general.screenBorderEnabled ?? false)
     onToggled: checked => {
                  Settings.data.bar.floating = checked;
+                 // Gaps are updated automatically by ScreenBorder.qml via property binding
                }
   }
 
@@ -130,9 +136,9 @@ ColumnLayout {
     onToggled: checked => Settings.data.bar.outerCorners = checked
   }
 
-  // Floating bar options - only show when floating is enabled
+  // Floating bar options - only show when floating is enabled and screen border is disabled
   ColumnLayout {
-    visible: Settings.data.bar.floating
+    visible: Settings.data.bar.floating && !(Settings.data.general.screenBorderEnabled ?? false)
     spacing: Style.marginS
     Layout.fillWidth: true
 
@@ -493,3 +499,5 @@ ColumnLayout {
     showToastOnSave: false
   }
 }
+
+

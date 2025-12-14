@@ -32,3 +32,5 @@ mkShellNoCC {
     kdePackages.qtdeclarative # qmlfmt, qmllint, qmlls and etc; Qt6
   ];
 }
+
+

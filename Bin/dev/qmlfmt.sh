@@ -24,3 +24,5 @@ echo "Formatting ${#all_files[@]} files..."
 printf '%s\0' "${all_files[@]}" | \
     xargs -0 -P "${QMLFMT_JOBS:-$(nproc)}" -I {} bash -c 'format_file "$@"' _ {} \
     && echo "Done" || { echo "Errors occurred" >&2; exit 1; }
+
+

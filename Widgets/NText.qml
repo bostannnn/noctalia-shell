@@ -28,3 +28,5 @@ Text {
 
   textFormat: richTextEnabled ? Text.RichText : Text.PlainText
 }
+
+

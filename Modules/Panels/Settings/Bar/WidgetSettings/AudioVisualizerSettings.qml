@@ -70,3 +70,5 @@ ColumnLayout {
     onToggled: checked => valueHideWhenIdle = checked
   }
 }
+
+

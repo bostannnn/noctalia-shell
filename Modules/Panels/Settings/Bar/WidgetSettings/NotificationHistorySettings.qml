@@ -37,3 +37,5 @@ ColumnLayout {
     onToggled: checked => valueHideWhenZero = checked
   }
 }
+
+

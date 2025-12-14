@@ -126,3 +126,5 @@ background = { name = "{{colors.primary.default.hex}}", opacity = 0.2 }
 [colors.loading]
 bar = "{{colors.primary.default.hex}}"
 spinner = "{{colors.primary.default.hex}}"
+
+

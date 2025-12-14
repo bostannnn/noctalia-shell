@@ -38,3 +38,5 @@ void main() {
     
     fragColor = vec4(ubuf.targetColor.rgb * intensity, tex.a) * ubuf.qt_Opacity;
 }
+
+

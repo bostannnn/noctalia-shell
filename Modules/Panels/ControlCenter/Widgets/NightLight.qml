@@ -32,3 +32,5 @@ NIconButtonHot {
     settingsPanel.open();
   }
 }
+
+

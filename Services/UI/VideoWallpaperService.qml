@@ -142,3 +142,5 @@ Singleton {
         value: Settings.data.wallpaper.videoPauseOnFullscreen ?? true
     }
 }
+
+

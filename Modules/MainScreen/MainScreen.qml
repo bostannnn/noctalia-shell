@@ -324,7 +324,7 @@ PanelWindow {
       // Bar background positioning properties
       readonly property string barPosition: Settings.data.bar.position || "top"
       readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
-      readonly property bool barFloating: Settings.data.bar.floating || false
+      readonly property bool barFloating: (Settings.data.bar.floating || false) && !(Settings.data.general.screenBorderEnabled ?? false)
       readonly property real barMarginH: barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0
       readonly property real barMarginV: barFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0
       readonly property real attachmentOverlap: 1 // Attachment overlap to fix hairline gap with fractional scaling
@@ -406,6 +406,16 @@ PanelWindow {
         }
         return -1;
       }
+    }
+
+    /**
+    *  Screen Border (caelestia-style border around entire screen)
+    */
+    ScreenBorder {
+      id: screenBorder
+      anchors.fill: parent
+      bar: barPlaceholder.barItem
+      z: -1  // Behind everything including AllBackgrounds
     }
 
     /**
@@ -516,3 +526,5 @@ PanelWindow {
     onActivated: PanelService.openedPanel.onCtrlPPressed()
   }
 }
+
+

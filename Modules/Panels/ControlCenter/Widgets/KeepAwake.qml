@@ -12,3 +12,5 @@ NIconButtonHot {
   tooltipText: I18n.tr("quickSettings.keepAwake.tooltip.action")
   onClicked: IdleInhibitorService.manualToggle()
 }
+
+

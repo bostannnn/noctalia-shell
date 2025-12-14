@@ -77,3 +77,5 @@ ColumnLayout {
     visible: valueLabelMode === "name"
   }
 }
+
+

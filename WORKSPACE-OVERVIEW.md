@@ -64,3 +64,5 @@ These can be moved to `Settings.qml` for user configuration if desired.
 ## Credits
 
 Based on [quickshell-overview](https://github.com/Shanu-Kumawat/quickshell-overview) by Shanu Kumawat, adapted for noctalia-shell's architecture and theming system.
+
+

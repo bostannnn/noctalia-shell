@@ -444,3 +444,5 @@ SmartPanel {
     Settings.data.bar.position = selectedBarPosition;
   }
 }
+
+

@@ -14,3 +14,5 @@ NIconButtonHot {
   onClicked: PanelService.getPanel("notificationHistoryPanel", screen)?.toggle(this)
   onRightClicked: NotificationService.doNotDisturb = !NotificationService.doNotDisturb
 }
+
+

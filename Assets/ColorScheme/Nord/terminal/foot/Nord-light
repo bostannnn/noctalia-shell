@@ -1,4 +1,3 @@
-
 [colors]
 foreground=414858
 background=e5e9f0
@@ -21,3 +20,5 @@ bright7=eceff4
 selection-foreground=4c556a
 selection-background=d8dee9
 cursor=3b4252 7bb3c3
+
+

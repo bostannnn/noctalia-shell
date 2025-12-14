@@ -99,3 +99,5 @@ PanelWindow {
   // Expose the dialog container for external use
   readonly property alias dialogParent: dialogContainer
 }
+
+

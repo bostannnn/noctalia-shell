@@ -828,3 +828,5 @@ User clicks video in picker
 │    → Start new mpvpaper │
 └─────────────────────────┘
 ```
+
+

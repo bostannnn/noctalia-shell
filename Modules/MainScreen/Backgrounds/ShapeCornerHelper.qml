@@ -72,3 +72,5 @@ Singleton {
     return width < radius * 2 || height < radius * 2;
   }
 }
+
+

@@ -114,3 +114,5 @@ Singleton {
   }
   readonly property color capsuleColor: Settings.data.bar.showCapsule ? Qt.alpha(Color.mSurfaceVariant, Settings.data.bar.capsuleOpacity) : Color.transparent
 }
+
+

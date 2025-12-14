@@ -270,3 +270,5 @@ Singleton {
     colorsWriter.writeAdapter();
   }
 }
+
+

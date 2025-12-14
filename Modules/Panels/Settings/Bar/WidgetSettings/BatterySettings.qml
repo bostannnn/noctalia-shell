@@ -169,3 +169,5 @@ ColumnLayout {
     onToggled: checked => valueShowNoctaliaPerformance = checked
   }
 }
+
+

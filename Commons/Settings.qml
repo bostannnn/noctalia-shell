@@ -223,6 +223,14 @@ Singleton {
       property real dimmerOpacity: 0.6
       property bool showScreenCorners: false
       property bool forceBlackScreenCorners: false
+      
+      // Screen border (caelestia-style border around entire screen)
+      property bool screenBorderEnabled: false
+      property int screenBorderThickness: 10
+      property int screenBorderRounding: 25
+      property bool screenBorderUseThemeColor: true
+      property string screenBorderColor: "#1e1e2e"
+      property int screenBorderMargin: 10  // Gap between border and windows
       property real scaleRatio: 1.0
       property real radiusRatio: 1.0
       property real iRadiusRatio: 1.0
@@ -775,3 +783,5 @@ Singleton {
     return (widgetAfter !== widgetBefore);
   }
 }
+
+

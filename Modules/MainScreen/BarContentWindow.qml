@@ -62,3 +62,5 @@ PanelWindow {
     screen: barWindow.screen
   }
 }
+
+

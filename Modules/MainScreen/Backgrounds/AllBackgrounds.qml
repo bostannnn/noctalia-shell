@@ -55,7 +55,12 @@ Item {
         bar: root.bar
         shapeContainer: backgroundsShape
         windowRoot: root.windowRoot
-        backgroundColor: Qt.alpha(Color.mSurface, Settings.data.bar.backgroundOpacity)
+        // When screen border is enabled, use border color (solid) to blend seamlessly
+        backgroundColor: (Settings.data.general.screenBorderEnabled ?? false)
+                         ? ((Settings.data.general.screenBorderUseThemeColor ?? true)
+                            ? Color.mSurface
+                            : (Settings.data.general.screenBorderColor ?? Color.mSurface))
+                         : Qt.alpha(Color.mSurface, Settings.data.bar.backgroundOpacity)
       }
 
       /**
@@ -182,10 +187,13 @@ Item {
       }
     }
 
-    // Apply shadow to the cached layer
+    // Apply shadow to the cached layer (disabled when screen border is active)
     NDropShadow {
       anchors.fill: parent
       source: backgroundsShape
+      visible: !(Settings.data.general.screenBorderEnabled ?? false)
     }
   }
 }
+
+

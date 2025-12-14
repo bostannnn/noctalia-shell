@@ -465,3 +465,5 @@ Singleton {
     cpuTempReader.reload();
   }
 }
+
+

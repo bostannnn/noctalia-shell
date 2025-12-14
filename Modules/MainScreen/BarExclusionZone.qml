@@ -68,3 +68,5 @@ PanelWindow {
     Logger.d("BarExclusionZone", "Created for screen:", screen?.name);
   }
 }
+
+

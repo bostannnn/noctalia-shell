@@ -13,3 +13,5 @@ QtObject {
   // Migration components
   property Component migration26Component: Migration26 {}
 }
+
+

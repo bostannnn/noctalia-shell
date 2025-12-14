@@ -91,3 +91,4 @@ void main() {
     float finalAlpha = color.a * alpha * itemOpacity * ubuf.qt_Opacity;
     fragColor = vec4(color.rgb * finalAlpha, finalAlpha);
 }
+

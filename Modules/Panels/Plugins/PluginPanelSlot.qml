@@ -188,3 +188,5 @@ SmartPanel {
     PanelService.registerPanel(root);
   }
 }
+
+

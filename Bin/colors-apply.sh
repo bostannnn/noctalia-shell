@@ -289,3 +289,5 @@ niri)
 esac
 
 echo "✅ Command sent for $APP_NAME."
+
+

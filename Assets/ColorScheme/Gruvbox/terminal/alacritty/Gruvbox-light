@@ -31,3 +31,4 @@ foreground = '#3c3836'
 [colors.selection]
 background = '#3c3836'
 text = '#fbf1c7'
+

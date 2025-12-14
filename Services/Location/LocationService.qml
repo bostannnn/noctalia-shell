@@ -279,3 +279,5 @@ Singleton {
     return 32 + celsius * 1.8;
   }
 }
+
+

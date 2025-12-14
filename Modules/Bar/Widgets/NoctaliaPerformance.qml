@@ -30,3 +30,5 @@ NIconButton {
     PowerProfileService.toggleNoctaliaPerformance();
   }
 }
+
+

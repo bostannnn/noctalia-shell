@@ -123,3 +123,4 @@ void main() {
     
     fragColor *= ubuf.qt_Opacity;
 }
+

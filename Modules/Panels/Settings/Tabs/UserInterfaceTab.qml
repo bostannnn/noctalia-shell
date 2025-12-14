@@ -364,8 +364,11 @@ ColumnLayout {
 
     NToggle {
       label: I18n.tr("settings.general.screen-corners.show-corners.label")
-      description: I18n.tr("settings.general.screen-corners.show-corners.description")
+      description: Settings.data.general.screenBorderEnabled 
+                   ? "Forced on while Screen Border is enabled"
+                   : I18n.tr("settings.general.screen-corners.show-corners.description")
       checked: Settings.data.general.showScreenCorners
+      enabled: !Settings.data.general.screenBorderEnabled
       onToggled: checked => Settings.data.general.showScreenCorners = checked
     }
 
@@ -422,4 +425,137 @@ ColumnLayout {
     Layout.topMargin: Style.marginL
     Layout.bottomMargin: Style.marginL
   }
+
+  // Screen Border Section (caelestia-style)
+  ColumnLayout {
+    spacing: Style.marginL
+    Layout.fillWidth: true
+
+    // Note: Gaps are handled by ScreenBorder.qml which writes to hypr-gaps.conf
+    // and reacts to Settings changes automatically
+
+    NHeader {
+      label: "Screen Border"
+      description: "Add a decorative border around the entire screen (caelestia-style)"
+    }
+
+    NToggle {
+      Layout.fillWidth: true
+      label: "Enable Screen Border"
+      description: "Shows a colored border strip around the screen edges. Disables floating bar."
+      checked: Settings.data.general.screenBorderEnabled
+      onToggled: checked => {
+        Settings.data.general.screenBorderEnabled = checked;
+        if (checked) {
+          // Disable floating bar when screen border is enabled
+          Settings.data.bar.floating = false;
+          // Enable screen corners
+          Settings.data.general.showScreenCorners = true;
+        }
+        // Gaps are updated automatically by ScreenBorder.qml via property binding
+      }
+    }
+
+    ColumnLayout {
+      visible: Settings.data.general.screenBorderEnabled
+      spacing: Style.marginM
+      Layout.fillWidth: true
+
+      // Border thickness
+      NSpinBox {
+        Layout.fillWidth: true
+        label: "Border Thickness"
+        description: "Width of the border in pixels (also sets window gaps)"
+        minimum: 1
+        maximum: 50
+        value: Settings.data.general.screenBorderThickness
+        stepSize: 1
+        suffix: "px"
+        onValueChanged: {
+          Settings.data.general.screenBorderThickness = value;
+          // Gaps are updated automatically by ScreenBorder.qml via property binding
+        }
+      }
+
+      // Border rounding
+      NSpinBox {
+        Layout.fillWidth: true
+        label: "Corner Rounding"
+        description: "Radius of the rounded corners"
+        minimum: 0
+        maximum: 100
+        value: Settings.data.general.screenBorderRounding
+        stepSize: 1
+        suffix: "px"
+        onValueChanged: Settings.data.general.screenBorderRounding = value
+      }
+
+      // Window margin
+      NSpinBox {
+        Layout.fillWidth: true
+        label: "Window Margin"
+        description: "Gap between the border and windows"
+        minimum: 0
+        maximum: 50
+        value: Settings.data.general.screenBorderMargin
+        stepSize: 1
+        suffix: "px"
+        onValueChanged: {
+          Settings.data.general.screenBorderMargin = value;
+        }
+      }
+
+      // Use theme color toggle
+      NToggle {
+        Layout.fillWidth: true
+        label: "Use Theme Color"
+        description: "Match border color to current theme surface color"
+        checked: Settings.data.general.screenBorderUseThemeColor
+        onToggled: checked => Settings.data.general.screenBorderUseThemeColor = checked
+      }
+
+      // Custom color input (visible when not using theme color)
+      RowLayout {
+        Layout.fillWidth: true
+        visible: !Settings.data.general.screenBorderUseThemeColor
+        spacing: Style.marginM
+
+        NLabel {
+          label: "Border Color"
+          description: "Custom border color (hex format)"
+          Layout.fillWidth: true
+        }
+
+        Rectangle {
+          width: 32
+          height: 32
+          radius: Style.iRadiusS
+          color: Settings.data.general.screenBorderColor
+          border.color: Color.mOutline
+          border.width: Style.borderS
+        }
+
+        NTextInput {
+          id: borderColorInput
+          Layout.preferredWidth: 100
+          text: Settings.data.general.screenBorderColor
+          placeholderText: "#1e1e2e"
+          onEditingFinished: {
+            // Validate hex color
+            if (/^#[0-9A-Fa-f]{6}$/.test(text)) {
+              Settings.data.general.screenBorderColor = text;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  NDivider {
+    Layout.fillWidth: true
+    Layout.topMargin: Style.marginL
+    Layout.bottomMargin: Style.marginL
+  }
 }
+
+

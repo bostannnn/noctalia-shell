@@ -73,3 +73,5 @@ void main() {
     float finalAlpha = ubuf.qt_Opacity * cornerMask;
     fragColor = vec4(blended * finalAlpha, finalAlpha);
 }
+
+

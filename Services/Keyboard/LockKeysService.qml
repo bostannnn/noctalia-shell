@@ -96,3 +96,5 @@ scroll=0; cat /sys/class/leds/input*::scrolllock/brightness 2>/dev/null | grep -
     stateCheckProcess.running = true;
   }
 }
+
+

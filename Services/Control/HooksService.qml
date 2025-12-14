@@ -69,3 +69,5 @@ Singleton {
     Logger.i("HooksService", "Service started");
   }
 }
+
+

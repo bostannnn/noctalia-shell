@@ -177,3 +177,5 @@ Item {
     onMiddleClicked: root.openExternalMixer()
   }
 }
+
+

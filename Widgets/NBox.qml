@@ -11,3 +11,5 @@ Rectangle {
   border.color: Color.mOutline
   border.width: Style.borderS
 }
+
+

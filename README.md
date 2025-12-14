@@ -1,8 +1,15 @@
 # Noctalia Shell Fork
 
-This fork adds workspace overview, video wallpaper support, Hyprland border theming, random color schemes, and wallpaper picker improvements.
+This fork adds workspace overview, video wallpaper support, Hyprland border theming, random color schemes, screen border (caelestia-style), and wallpaper picker improvements.
 
 ## Features
+
+### Screen Border (Caelestia-Style)
+- Decorative colored border around the entire screen
+- Uses matugen theme colors or custom color
+- Configurable thickness, corner rounding, and window margin
+- Automatically manages Hyprland gaps for proper window placement
+- Settings → User Interface → Screen Border
 
 ### Workspace Overview
 - 2×5 grid showing all workspaces with live window previews
@@ -76,19 +83,75 @@ bind = $mainMod, W, exec, qs -c noctalia-shell ipc call wallpaper toggle
 Add to `hyprland.nix`:
 
 ```nix
-wayland.windowManager.hyprland = {
-  enable = true;
-  extraConfig = ''
-    source = ~/.config/hypr/noctalia.conf
+{ config, inputs, pkgs, lib, ... }:
+{
+  # Create noctalia gaps config if it doesn't exist (for screen border feature)
+  home.activation.createNoctaliaGapsConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [ ! -f "$HOME/.config/noctalia/hypr-gaps.conf" ]; then
+      mkdir -p "$HOME/.config/noctalia"
+      echo "general:gaps_out = 0" > "$HOME/.config/noctalia/hypr-gaps.conf"
+    fi
   '';
-  settings = {
-    general = {
-      "col.active_border" = "rgba(bd93f9ee) rgba(ff79c6ee) rgba(8be9fdee) rgba(50fa7bee) 45deg";
-      "col.inactive_border" = "rgba(595959aa)";
+
+  wayland.windowManager.hyprland = {
+    enable = true;
+    extraConfig = ''
+      source = ~/.config/hypr/noctalia.conf
+      source = ~/.config/noctalia/hypr-gaps.conf
+    '';
+    settings = {
+      general = {
+        # Fallback colors (noctalia.conf will override these)
+        "col.active_border" = "rgba(bd93f9ee) rgba(ff79c6ee) rgba(8be9fdee) rgba(50fa7bee) 45deg";
+        "col.inactive_border" = "rgba(595959aa)";
+        # Note: gaps_out is managed by noctalia when screen border is enabled
+      };
+      animations.animation = [ "borderangle,1,100,default,loop" ];
     };
-    animations.animation = [ "borderangle,1,100,default,loop" ];
   };
-};
+}
+```
+
+## Screen Border Settings
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `screenBorderEnabled` | bool | `false` | Enable caelestia-style screen border |
+| `screenBorderThickness` | int | `10` | Border width in pixels |
+| `screenBorderRounding` | int | `25` | Corner radius of the cutout |
+| `screenBorderMargin` | int | `10` | Gap between border and windows |
+| `screenBorderUseThemeColor` | bool | `true` | Use matugen theme color |
+| `screenBorderColor` | string | `"#1e1e2e"` | Custom color (when theme color disabled) |
+
+**Note:** When screen border is enabled:
+- Floating bar is automatically disabled
+- Screen corners are automatically enabled
+- Hyprland gaps are managed via `~/.config/noctalia/hypr-gaps.conf`
+
+## NixOS Home Manager Settings
+
+Example `noctalia-settings.nix`:
+
+```nix
+{ pkgs, inputs, ... }:
+{
+  programs.noctalia-shell = {
+    enable = true;
+    settings = {
+      general = {
+        # Screen Border settings
+        screenBorderEnabled = true;
+        screenBorderThickness = 10;
+        screenBorderRounding = 25;
+        screenBorderMargin = 10;
+        screenBorderUseThemeColor = true;
+        screenBorderColor = "#1e1e2e";
+        # ... other settings
+      };
+      # ... other sections
+    };
+  };
+}
 ```
 
 ## Upstream

@@ -20,3 +20,4 @@ cursor-color = {{colors.on_surface.default.hex}}
 cursor-text = {{colors.surface.default.hex}}
 selection-background = {{colors.tertiary.default.hex}}
 selection-foreground = {{colors.on_tertiary.default.hex}}
+

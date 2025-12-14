@@ -138,3 +138,5 @@ print(f"\nSorting {len(all_events)} total events...", file=sys.stderr)
 all_events.sort(key=lambda x: x['start'])
 print("Done! Outputting JSON...", file=sys.stderr)
 print(json.dumps(all_events))
+
+

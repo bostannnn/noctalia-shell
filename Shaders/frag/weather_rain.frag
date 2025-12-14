@@ -82,3 +82,5 @@ void main() {
     float finalAlpha = col.a * ubuf.qt_Opacity * cornerMask;
     fragColor = vec4(col.rgb * finalAlpha, finalAlpha);
 }
+
+

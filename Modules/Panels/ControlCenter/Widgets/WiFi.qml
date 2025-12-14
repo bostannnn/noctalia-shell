@@ -33,3 +33,5 @@ NIconButtonHot {
   onClicked: PanelService.getPanel("wifiPanel", screen)?.toggle(this)
   onRightClicked: NetworkService.setWifiEnabled(!Settings.data.network.wifiEnabled)
 }
+
+

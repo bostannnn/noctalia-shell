@@ -26,7 +26,7 @@ Item {
   // Bar positioning properties
   readonly property string barPosition: Settings.data.bar.position || "top"
   readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
-  readonly property bool barFloating: Settings.data.bar.floating || false
+  readonly property bool barFloating: (Settings.data.bar.floating || false) && !(Settings.data.general.screenBorderEnabled ?? false)
 
   // Fill the parent (the Loader)
   anchors.fill: parent
@@ -355,3 +355,5 @@ Item {
     }
   }
 }
+
+
