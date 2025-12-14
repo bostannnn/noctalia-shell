@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import qs.Commons
-import qs.Services.Compositor
 import qs.Services.UI
 import "." as Background
 
@@ -19,76 +19,51 @@ Variants {
     sourceComponent: PanelWindow {
       id: root
 
-      // Internal state management
-      property string transitionType: "fade"
-      property real transitionProgress: 0
-      property bool isStartupTransition: true
-
-      readonly property real edgeSmoothness: Settings.data.wallpaper.transitionEdgeSmoothness
-      readonly property var allTransitions: WallpaperService.allTransitions
-      readonly property bool transitioning: transitionAnimation.running
-
-      // Wipe direction: 0=left, 1=right, 2=up, 3=down
-      property real wipeDirection: 0
-
-      // Disc
-      property real discCenterX: 0.5
-      property real discCenterY: 0.5
-
-      // Stripe
-      property real stripesCount: 16
-      property real stripesAngle: 0
-
+      // Track what we're ACTUALLY displaying
+      property string lastDisplayedSource: ""
+      property bool lastDisplayedWasVideo: false
+      
+      // Cached video thumbnail for smooth transitions FROM video
+      property string cachedVideoThumbnail: ""
+      
       // Used to debounce wallpaper changes
       property string futureWallpaper: ""
+      
+      // Track the wallpaper we're currently transitioning to
+      property string transitionTarget: ""
+      
+      // Transition state
+      property bool transitioning: false
+      
+      // swww daemon status
+      property bool swwwReady: false
 
-      // Fillmode default is "crop"
-      property real fillMode: WallpaperService.getFillModeUniform()
-      property vector4d fillColor: Qt.vector4d(Settings.data.wallpaper.fillColor.r, Settings.data.wallpaper.fillColor.g, Settings.data.wallpaper.fillColor.b, 1.0)
+      // swww transition types
+      readonly property var swwwTransitions: ["fade", "left", "right", "top", "bottom", "wipe", "grow", "center", "outer", "wave"]
 
-      Component.onCompleted: setWallpaperInitial()
+      Component.onCompleted: checkSwwwDaemon()
 
       Component.onDestruction: {
-        transitionAnimation.stop();
         debounceTimer.stop();
-        shaderLoader.active = false;
-        currentWallpaper.source = "";
-        nextWallpaper.source = "";
-      }
-
-      Connections {
-        target: Settings.data.wallpaper
-        function onFillModeChanged() {
-          fillMode = WallpaperService.getFillModeUniform();
-        }
+        swwwProc.running = false;
+        swwwCheckProc.running = false;
       }
 
       // External state management
       Connections {
         target: WallpaperService
         function onWallpaperChanged(screenName, path) {
-          if (screenName === modelData.name) {
-            // Skip image loading for video files - VideoWallpaperService handles those
-            if (VideoWallpaperService.isVideoFile(path)) {
-              Logger.d("Background", "Skipping image load for video:", path)
-              return;
-            }
-            // Update wallpaper display
-            // Set wallpaper immediately on startup
-            futureWallpaper = path;
-            debounceTimer.restart();
-          }
-        }
-      }
-
-      Connections {
-        target: CompositorService
-        function onDisplayScalesChanged() {
-          // Recalculate image sizes without interrupting startup transition
-          if (isStartupTransition) {
+          if (screenName !== modelData.name) return;
+          
+          // Skip for video files - VideoWallpaper handles those
+          if (VideoWallpaperService.isVideoFile(path)) {
+            Logger.d("Background", "Video wallpaper requested:", path)
             return;
           }
-          recalculateImageSizes();
+          
+          // Queue image transition
+          futureWallpaper = path;
+          debounceTimer.restart();
         }
       }
 
@@ -110,120 +85,140 @@ Variants {
         interval: 333
         running: false
         repeat: false
-        onTriggered: {
-          changeWallpaper();
-        }
+        onTriggered: doTransition()
       }
 
-      Image {
-        id: currentWallpaper
-
-        property bool dimensionsCalculated: false
-
-        source: ""
-        smooth: true
-        mipmap: false
-        visible: false
-        cache: false
-        asynchronous: true
-        sourceSize: undefined
-        onStatusChanged: {
-          if (status === Image.Error) {
-            Logger.w("Current wallpaper failed to load:", source);
-          } else if (status === Image.Ready && !dimensionsCalculated) {
-            dimensionsCalculated = true;
-            const optimalSize = calculateOptimalWallpaperSize(implicitWidth, implicitHeight);
-            if (optimalSize !== false) {
-              sourceSize = optimalSize;
-            }
+      // Check if swww-daemon is running
+      Process {
+        id: swwwCheckProc
+        onExited: (code, status) => {
+          if (code !== 0) {
+            Logger.e("Background", "swww-daemon not running! Start with: swww-daemon &")
+            root.swwwReady = false;
+            return;
           }
-        }
-        onSourceChanged: {
-          dimensionsCalculated = false;
-          sourceSize = undefined;
+          root.swwwReady = true;
+          setWallpaperInitial();
         }
       }
 
-      Image {
-        id: nextWallpaper
-
-        property bool dimensionsCalculated: false
-
-        source: ""
-        smooth: true
-        mipmap: false
-        visible: false
-        cache: false
-        asynchronous: true
-        sourceSize: undefined
-        onStatusChanged: {
-          if (status === Image.Error) {
-            Logger.w("Next wallpaper failed to load:", source);
-          } else if (status === Image.Ready && !dimensionsCalculated) {
-            dimensionsCalculated = true;
-            const optimalSize = calculateOptimalWallpaperSize(implicitWidth, implicitHeight);
-            if (optimalSize !== false) {
-              sourceSize = optimalSize;
-            }
+      // swww transition process
+      Process {
+        id: swwwProc
+        onExited: (code, status) => {
+          if (code !== 0) {
+            Logger.w("Background", "swww transition failed with code:", code)
           }
-        }
-        onSourceChanged: {
-          dimensionsCalculated = false;
-          sourceSize = undefined;
-        }
-      }
-
-      // Dynamic shader loader - only loads the active transition shader
-      Loader {
-        id: shaderLoader
-        anchors.fill: parent
-        active: true
-
-        sourceComponent: {
-          switch (transitionType) {
-          case "wipe":
-            return wipeShaderComponent;
-          case "disc":
-            return discShaderComponent;
-          case "stripes":
-            return stripesShaderComponent;
-          case "fade":
-          case "none":
-          default:
-            return fadeShaderComponent;
+          
+          root.lastDisplayedSource = root.transitionTarget;
+          root.lastDisplayedWasVideo = false;
+          root.cachedVideoThumbnail = "";
+          root.transitioning = false;
+          Logger.d("Background", "swww transition complete, now showing:", root.transitionTarget)
+          
+          // Check if futureWallpaper changed during transition
+          if (root.futureWallpaper !== "" && root.futureWallpaper !== root.transitionTarget) {
+            Logger.d("Background", "Wallpaper changed during transition, starting new transition")
+            Qt.callLater(doTransition);
           }
+          
+          root.transitionTarget = "";
         }
       }
 
-      // Fade or None transition shader component
-      Component {
-        id: fadeShaderComponent
-        ShaderEffect {
-          anchors.fill: parent
+      function checkSwwwDaemon() {
+        swwwCheckProc.command = ["swww", "query"];
+        swwwCheckProc.running = true;
+      }
 
-          property variant source1: currentWallpaper
-          property variant source2: nextWallpaper
-          property real progress: root.transitionProgress
-
-          // Fill mode properties
-          property real fillMode: root.fillMode
-          property vector4d fillColor: root.fillColor
-          property real imageWidth1: source1.sourceSize.width
-          property real imageHeight1: source1.sourceSize.height
-          property real imageWidth2: source2.sourceSize.width
-          property real imageHeight2: source2.sourceSize.height
-          property real screenWidth: width
-          property real screenHeight: height
-
-          fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/wp_fade.frag.qsb")
+      function getTransitionType() {
+        var t = Settings.data.wallpaper.transitionType || "fade";
+        if (t === "random") {
+          t = swwwTransitions[Math.floor(Math.random() * swwwTransitions.length)];
         }
+        // Map custom types to swww equivalents
+        if (t === "disc") t = "center";
+        if (t === "stripes") t = "wipe";
+        return t;
+      }
+
+      function doTransition() {
+        if (!futureWallpaper || futureWallpaper === "") return;
+        if (!swwwReady) {
+          Logger.w("Background", "swww not ready, skipping transition")
+          return;
+        }
+        
+        // If already transitioning to this target, skip
+        if (transitioning && transitionTarget === futureWallpaper) {
+          Logger.d("Background", "Already transitioning to:", futureWallpaper)
+          return;
+        }
+        
+        // If transitioning to something else, let it finish (onExited will start new one)
+        if (transitioning) {
+          Logger.d("Background", "Transition in progress, will queue:", futureWallpaper)
+          return;
+        }
+        
+        var transitionType = getTransitionType();
+        var duration = (Settings.data.wallpaper.transitionDuration || 800) / 1000;
+        
+        transitionTarget = futureWallpaper;
+        
+        if (transitionType === "none") {
+          swwwProc.command = ["swww", "img", futureWallpaper,
+            "--transition-type", "none",
+            "--outputs", modelData.name];
+        } else {
+          swwwProc.command = ["swww", "img", futureWallpaper,
+            "--transition-type", transitionType,
+            "--transition-duration", duration.toFixed(1),
+            "--transition-fps", "60",
+            "--outputs", modelData.name];
+        }
+        
+        Logger.d("Background", "swww transition to:", futureWallpaper, "type:", transitionType)
+        root.transitioning = true;
+        swwwProc.running = true;
+      }
+
+      function setWallpaperInitial() {
+        // Wait for service to be ready
+        if (!WallpaperService || !WallpaperService.isInitialized) {
+          Qt.callLater(setWallpaperInitial);
+          return;
+        }
+
+        const wallpaperPath = WallpaperService.getWallpaper(modelData.name);
+        
+        // Check for null/empty path
+        if (!wallpaperPath || wallpaperPath === "") {
+          Logger.d("Background", "No initial wallpaper set")
+          return;
+        }
+
+        // Skip for video files
+        if (VideoWallpaperService.isVideoFile(wallpaperPath)) {
+          Logger.d("Background", "Initial wallpaper is video, skipping")
+          return;
+        }
+
+        // Set initial wallpaper without transition
+        futureWallpaper = wallpaperPath;
+        transitionTarget = wallpaperPath;
+        root.transitioning = true;
+        swwwProc.command = ["swww", "img", wallpaperPath,
+          "--transition-type", "none",
+          "--outputs", modelData.name];
+        swwwProc.running = true;
       }
 
       // Video wallpaper overlay
       Loader {
         id: videoWallpaperLoader
         anchors.fill: parent
-        active: VideoWallpaperService.isInitialized && VideoWallpaperService.hasVideoWallpaper(modelData.name) || false
+        active: (VideoWallpaperService.isInitialized && VideoWallpaperService.hasVideoWallpaper(modelData.name)) || false
         z: 10
 
         property string videoPath: VideoWallpaperService.getVideoWallpaper(modelData.name) || ""
@@ -239,330 +234,30 @@ Variants {
         }
 
         sourceComponent: Background.VideoWallpaper {
+          id: videoWallpaper
           screenName: modelData.name
           active: videoWallpaperLoader.active
           videoSource: videoWallpaperLoader.videoPath
-        }
-      }
-
-      // Hide static wallpaper shader when video is playing
-      Binding {
-        target: shaderLoader
-        property: "opacity"
-        value: videoWallpaperLoader.active ? 0 : 1
-      }
-
-      // Wipe transition shader component
-      Component {
-        id: wipeShaderComponent
-        ShaderEffect {
-          anchors.fill: parent
-
-          property variant source1: currentWallpaper
-          property variant source2: nextWallpaper
-          property real progress: root.transitionProgress
-          property real smoothness: root.edgeSmoothness
-          property real direction: root.wipeDirection
-
-          // Fill mode properties
-          property real fillMode: root.fillMode
-          property vector4d fillColor: root.fillColor
-          property real imageWidth1: source1.sourceSize.width
-          property real imageHeight1: source1.sourceSize.height
-          property real imageWidth2: source2.sourceSize.width
-          property real imageHeight2: source2.sourceSize.height
-          property real screenWidth: width
-          property real screenHeight: height
-
-          fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/wp_wipe.frag.qsb")
-        }
-      }
-
-      // Disc reveal transition shader component
-      Component {
-        id: discShaderComponent
-        ShaderEffect {
-          anchors.fill: parent
-
-          property variant source1: currentWallpaper
-          property variant source2: nextWallpaper
-          property real progress: root.transitionProgress
-          property real smoothness: root.edgeSmoothness
-          property real aspectRatio: root.width / root.height
-          property real centerX: root.discCenterX
-          property real centerY: root.discCenterY
-
-          // Fill mode properties
-          property real fillMode: root.fillMode
-          property vector4d fillColor: root.fillColor
-          property real imageWidth1: source1.sourceSize.width
-          property real imageHeight1: source1.sourceSize.height
-          property real imageWidth2: source2.sourceSize.width
-          property real imageHeight2: source2.sourceSize.height
-          property real screenWidth: width
-          property real screenHeight: height
-
-          fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/wp_disc.frag.qsb")
-        }
-      }
-
-      // Diagonal stripes transition shader component
-      Component {
-        id: stripesShaderComponent
-        ShaderEffect {
-          anchors.fill: parent
-
-          property variant source1: currentWallpaper
-          property variant source2: nextWallpaper
-          property real progress: root.transitionProgress
-          property real smoothness: root.edgeSmoothness
-          property real aspectRatio: root.width / root.height
-          property real stripeCount: root.stripesCount
-          property real angle: root.stripesAngle
-
-          // Fill mode properties
-          property real fillMode: root.fillMode
-          property vector4d fillColor: root.fillColor
-          property real imageWidth1: source1.sourceSize.width
-          property real imageHeight1: source1.sourceSize.height
-          property real imageWidth2: source2.sourceSize.width
-          property real imageHeight2: source2.sourceSize.height
-          property real screenWidth: width
-          property real screenHeight: height
-
-          fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/wp_stripes.frag.qsb")
-        }
-      }
-
-      // Animation for the transition progress
-      NumberAnimation {
-        id: transitionAnimation
-        target: root
-        property: "transitionProgress"
-        from: 0.0
-        to: 1.0
-        // The stripes shader feels faster visually, we make it a bit slower here.
-        duration: transitionType == "stripes" ? Settings.data.wallpaper.transitionDuration * 1.6 : Settings.data.wallpaper.transitionDuration
-        easing.type: Easing.InOutCubic
-        onFinished: {
-          // Assign new image to current BEFORE clearing to prevent flicker
-          const tempSource = nextWallpaper.source;
-          currentWallpaper.source = tempSource;
-          transitionProgress = 0.0;
-
-          // Now clear nextWallpaper after currentWallpaper has the new source
-          // Force complete cleanup to free texture memory (~18-25MB per monitor)
-          Qt.callLater(() => {
-                         nextWallpaper.source = "";
-                         nextWallpaper.sourceSize = undefined;
-                         Qt.callLater(() => {
-                                        currentWallpaper.asynchronous = true;
-                                      });
-                       });
-        }
-      }
-
-      // ------------------------------------------------------
-      function calculateOptimalWallpaperSize(wpWidth, wpHeight) {
-        const compositorScale = CompositorService.getDisplayScale(modelData.name);
-        const screenWidth = modelData.width * compositorScale;
-        const screenHeight = modelData.height * compositorScale;
-        if (wpWidth <= screenWidth || wpHeight <= screenHeight || wpWidth <= 0 || wpHeight <= 0) {
-          // Do not resize if wallpaper is smaller than one of the screen dimension
-          return;
-        }
-
-        const imageAspectRatio = wpWidth / wpHeight;
-        var dim = Qt.size(0, 0);
-        if (screenWidth >= screenHeight) {
-          const w = Math.min(screenWidth, wpWidth);
-          dim = Qt.size(Math.round(w), Math.round(w / imageAspectRatio));
-        } else {
-          const h = Math.min(screenHeight, wpHeight);
-          dim = Qt.size(Math.round(h * imageAspectRatio), Math.round(h));
-        }
-
-        Logger.d("Background", `Wallpaper resized on ${modelData.name} ${screenWidth}x${screenHeight} @ ${compositorScale}x`, "src:", wpWidth, wpHeight, "dst:", dim.width, dim.height);
-        return dim;
-      }
-
-      // ------------------------------------------------------
-      function recalculateImageSizes() {
-        // Re-evaluate and apply optimal sourceSize for both images when ready
-        if (currentWallpaper.status === Image.Ready) {
-          const optimal = calculateOptimalWallpaperSize(currentWallpaper.implicitWidth, currentWallpaper.implicitHeight);
-          if (optimal !== undefined && optimal !== false) {
-            currentWallpaper.sourceSize = optimal;
-          } else {
-            currentWallpaper.sourceSize = undefined;
+          
+          // Capture values at component creation (not live bindings)
+          Component.onCompleted: {
+            previousSource = root.lastDisplayedSource;
+            previousWasVideo = root.lastDisplayedWasVideo;
+          }
+          
+          // Cache thumbnail for smooth transitions FROM video
+          onThumbnailReady: function(thumbnailPath) {
+            root.cachedVideoThumbnail = thumbnailPath;
+            Logger.d("Background", "Video thumbnail cached:", thumbnailPath)
+          }
+          
+          // Track when video actually starts playing
+          onVideoStarted: {
+            root.lastDisplayedWasVideo = true;
+            root.lastDisplayedSource = videoWallpaperLoader.videoPath;
+            Logger.d("Background", "Video now playing, updated lastDisplayed")
           }
         }
-
-        if (nextWallpaper.status === Image.Ready) {
-          const optimal2 = calculateOptimalWallpaperSize(nextWallpaper.implicitWidth, nextWallpaper.implicitHeight);
-          if (optimal2 !== undefined && optimal2 !== false) {
-            nextWallpaper.sourceSize = optimal2;
-          } else {
-            nextWallpaper.sourceSize = undefined;
-          }
-        }
-      }
-
-      // ------------------------------------------------------
-      function setWallpaperInitial() {
-        // On startup, defer assigning wallpaper until the service cache is ready, retries every tick
-        if (!WallpaperService || !WallpaperService.isInitialized) {
-          Qt.callLater(setWallpaperInitial);
-          return;
-        }
-
-        const wallpaperPath = WallpaperService.getWallpaper(modelData.name);
-
-        // Skip image loading for video files
-        if (VideoWallpaperService.isVideoFile(wallpaperPath)) {
-          Logger.d("Background", "Initial wallpaper is video, skipping image load:", wallpaperPath)
-          return;
-        }
-
-        futureWallpaper = wallpaperPath;
-        performStartupTransition();
-      }
-
-      // ------------------------------------------------------
-      function setWallpaperImmediate(source) {
-        transitionAnimation.stop();
-        transitionProgress = 0.0;
-
-        // Clear nextWallpaper completely to free texture memory
-        nextWallpaper.source = "";
-        nextWallpaper.sourceSize = undefined;
-
-        currentWallpaper.source = "";
-
-        Qt.callLater(() => {
-                       currentWallpaper.source = source;
-                     });
-      }
-
-      // ------------------------------------------------------
-      function setWallpaperWithTransition(source) {
-        if (source === currentWallpaper.source) {
-          return;
-        }
-
-        if (transitioning) {
-          // We are interrupting a transition - handle cleanup properly
-          transitionAnimation.stop();
-          transitionProgress = 0;
-
-          // Assign nextWallpaper to currentWallpaper BEFORE clearing to prevent flicker
-          const newCurrentSource = nextWallpaper.source;
-          currentWallpaper.source = newCurrentSource;
-
-          // Now clear nextWallpaper after current has the new source
-          Qt.callLater(() => {
-                         nextWallpaper.source = "";
-
-                         // Now set the next wallpaper after a brief delay
-                         Qt.callLater(() => {
-                                        nextWallpaper.source = source;
-                                        currentWallpaper.asynchronous = false;
-                                        transitionAnimation.start();
-                                      });
-                       });
-          return;
-        }
-
-        nextWallpaper.source = source;
-        currentWallpaper.asynchronous = false;
-        transitionAnimation.start();
-      }
-
-      // ------------------------------------------------------
-      // Main method that actually trigger the wallpaper change
-      function changeWallpaper() {
-        // Get the transitionType from the settings
-        transitionType = Settings.data.wallpaper.transitionType;
-
-        if (transitionType == "random") {
-          var index = Math.floor(Math.random() * allTransitions.length);
-          transitionType = allTransitions[index];
-        }
-
-        // Ensure the transition type really exists
-        if (transitionType !== "none" && !allTransitions.includes(transitionType)) {
-          transitionType = "fade";
-        }
-
-        //Logger.i("Background", "New wallpaper: ", futureWallpaper, "On:", modelData.name, "Transition:", transitionType)
-        switch (transitionType) {
-        case "none":
-          setWallpaperImmediate(futureWallpaper);
-          break;
-        case "wipe":
-          wipeDirection = Math.random() * 4;
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        case "disc":
-          discCenterX = Math.random();
-          discCenterY = Math.random();
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        case "stripes":
-          stripesCount = Math.round(Math.random() * 20 + 4);
-          stripesAngle = Math.random() * 360;
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        default:
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        }
-      }
-
-      // ------------------------------------------------------
-      // Dedicated function for startup animation
-      function performStartupTransition() {
-        // Get the transitionType from the settings
-        transitionType = Settings.data.wallpaper.transitionType;
-
-        if (transitionType == "random") {
-          var index = Math.floor(Math.random() * allTransitions.length);
-          transitionType = allTransitions[index];
-        }
-
-        // Ensure the transition type really exists
-        if (transitionType !== "none" && !allTransitions.includes(transitionType)) {
-          transitionType = "fade";
-        }
-
-        // Apply transitionType so the shader loader picks the correct shader
-        this.transitionType = transitionType;
-
-        switch (transitionType) {
-        case "none":
-          setWallpaperImmediate(futureWallpaper);
-          break;
-        case "wipe":
-          wipeDirection = Math.random() * 4;
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        case "disc":
-          // Force center origin for elegant startup animation
-          discCenterX = 0.5;
-          discCenterY = 0.5;
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        case "stripes":
-          stripesCount = Math.round(Math.random() * 20 + 4);
-          stripesAngle = Math.random() * 360;
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        default:
-          setWallpaperWithTransition(futureWallpaper);
-          break;
-        }
-        // Mark startup transition complete
-        isStartupTransition = false;
       }
     }
   }

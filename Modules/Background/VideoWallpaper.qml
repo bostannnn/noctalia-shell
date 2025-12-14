@@ -11,6 +11,10 @@ Item {
     required property string screenName
     property string videoSource: ""
     property bool active: false
+    
+    // Previous display state (captured from Background.qml at creation)
+    property string previousSource: ""
+    property bool previousWasVideo: false
 
     // Internal state
     property string currentVideo: ""
@@ -18,9 +22,16 @@ Item {
     property bool transitioning: false
     property bool videoReady: false
     property bool hasError: false
+    
+    // Thumbnail of current video
+    property string currentThumbnail: ""
+    
+    // Signals for Background.qml
+    signal thumbnailReady(string thumbnailPath)
+    signal videoStarted()
 
     readonly property int transitionDuration: Settings.data.wallpaper.transitionDuration || 800
-    readonly property var transitionTypes: ["fade", "left", "right", "top", "bottom", "wipe", "grow", "center", "outer", "wave"]
+    readonly property var swwwTransitions: ["fade", "left", "right", "top", "bottom", "wipe", "grow", "center", "outer", "wave"]
 
     visible: active && (currentVideo !== "" || transitioning)
 
@@ -44,13 +55,48 @@ Item {
         }
     }
 
+    // swww sync process (sets swww to current state before transition)
+    Process {
+        id: swwwSyncProc
+        onExited: (code, status) => {
+            if (code !== 0) {
+                Logger.w("VideoWallpaper", "swww sync failed with code:", code)
+            }
+            // Check if we're still active and should continue
+            if (!root.active) {
+                resetState();
+                return;
+            }
+            doThumbnailTransition();
+        }
+    }
+
     // swww transition process
     Process {
         id: swwwProc
         onExited: (code, status) => {
-            root.currentVideo = root.pendingVideo
-            root.pendingVideo = ""
-            root.transitioning = false
+            if (code !== 0) {
+                Logger.w("VideoWallpaper", "swww transition failed with code:", code)
+            }
+            
+            // Check if we're still active
+            if (!root.active) {
+                resetState();
+                return;
+            }
+            
+            root.currentVideo = root.pendingVideo;
+            root.pendingVideo = "";
+            root.transitioning = false;
+            Logger.d("VideoWallpaper", "swww transition complete, now playing:", root.currentVideo)
+            
+            // Check if videoSource changed during transition - need another transition
+            if (root.videoSource !== "" && root.videoSource !== root.currentVideo) {
+                Logger.d("VideoWallpaper", "videoSource changed during transition, starting new transition")
+                Qt.callLater(function() {
+                    startTransition(root.videoSource, false);
+                });
+            }
         }
     }
 
@@ -66,63 +112,156 @@ Item {
 
         running: root.active && root.currentVideo !== "" && !root.transitioning
 
-        onStarted: { root.videoReady = true; root.hasError = false }
+        onStarted: { 
+            root.videoReady = true; 
+            root.hasError = false;
+            root.videoStarted();
+        }
         onExited: (code, status) => {
-            root.videoReady = false
-            if (code !== 0 && root.active && !root.transitioning) root.hasError = true
+            root.videoReady = false;
+            if (code !== 0 && root.active && !root.transitioning) root.hasError = true;
         }
     }
 
-    function doTransition(newVideo) {
-        if (mpvProc.running) mpvProc.signal(15)
+    // Reset all state
+    function resetState() {
+        transitioning = false;
+        pendingVideo = "";
+        currentVideo = "";
+        currentThumbnail = "";
+        videoReady = false;
+        hasError = false;
+        Logger.d("VideoWallpaper", "State reset")
+    }
+
+    // Get transition type from settings
+    function getTransitionType() {
+        var t = Settings.data.wallpaper.transitionType || "fade";
+        if (t === "random") {
+            t = swwwTransitions[Math.floor(Math.random() * swwwTransitions.length)];
+        }
+        // Map custom types to swww equivalents
+        if (t === "disc") t = "center";
+        if (t === "stripes") t = "wipe";
+        return t;
+    }
+
+    // Unified transition function
+    function startTransition(videoPath, needsSync) {
+        // Kill any running video
+        if (mpvProc.running) mpvProc.signal(15);
         
-        transitioning = true
-        pendingVideo = newVideo
+        // If already transitioning, just update the target
+        if (transitioning) {
+            Logger.d("VideoWallpaper", "Already transitioning, updating target to:", videoPath)
+            pendingVideo = videoPath;
+            return;
+        }
         
-        VideoWallpaperService.generateThumbnail(newVideo, function(thumb) {
-            if (thumb) {
-                var t = transitionTypes[Math.floor(Math.random() * transitionTypes.length)]
-                swwwProc.command = ["swww", "img", thumb,
-                    "--transition-type", t,
-                    "--transition-duration", (transitionDuration / 1000).toFixed(1),
-                    "--transition-fps", "60",
-                    "--outputs", root.screenName]
-                swwwProc.running = true
-            } else {
-                // Fallback: switch directly without transition
-                root.currentVideo = newVideo
-                root.pendingVideo = ""
-                root.transitioning = false
+        transitioning = true;
+        pendingVideo = videoPath;
+        
+        if (needsSync && root.previousSource !== "" && !root.previousWasVideo) {
+            // Sync swww with previous image first
+            Logger.d("VideoWallpaper", "Syncing swww with:", root.previousSource)
+            swwwSyncProc.command = ["swww", "img", root.previousSource,
+                "--transition-type", "none",
+                "--outputs", root.screenName];
+            swwwSyncProc.running = true;
+        } else {
+            // No sync needed, go directly to transition
+            doThumbnailTransition();
+        }
+    }
+    
+    // Generate thumbnail and do swww transition
+    function doThumbnailTransition() {
+        // Double-check we're still active
+        if (!root.active) {
+            resetState();
+            return;
+        }
+        
+        var targetVideo = pendingVideo;
+        
+        VideoWallpaperService.generateThumbnail(targetVideo, function(thumb) {
+            // Check if still active and target hasn't changed
+            if (!root.active) {
+                resetState();
+                return;
             }
-        }, "full")
+            
+            if (thumb) {
+                currentThumbnail = "file://" + thumb;
+                thumbnailReady(currentThumbnail);
+                
+                var t = getTransitionType();
+                var duration = (transitionDuration / 1000).toFixed(1);
+                
+                if (t === "none") {
+                    swwwProc.command = ["swww", "img", thumb,
+                        "--transition-type", "none",
+                        "--outputs", root.screenName];
+                } else {
+                    swwwProc.command = ["swww", "img", thumb,
+                        "--transition-type", t,
+                        "--transition-duration", duration,
+                        "--transition-fps", "60",
+                        "--outputs", root.screenName];
+                }
+                
+                Logger.d("VideoWallpaper", "swww transition to thumbnail:", thumb, "type:", t)
+                swwwProc.running = true;
+            } else {
+                // Fallback: start video directly without thumbnail transition
+                Logger.w("VideoWallpaper", "No thumbnail generated, starting video directly")
+                root.currentVideo = root.pendingVideo;
+                root.pendingVideo = "";
+                root.transitioning = false;
+            }
+        }, "full");
     }
 
     onVideoSourceChanged: {
-        if (!videoSource || videoSource === currentVideo) return
+        if (!active) return;
+        if (!videoSource || videoSource === "") return;
+        if (videoSource === currentVideo && !transitioning) return;
         
-        if (transitioning) {
-            // Update target, current transition will complete then mpvpaper plays this
-            pendingVideo = videoSource
-            return
-        }
+        Logger.d("VideoWallpaper", "videoSource changed to:", videoSource, "current:", currentVideo, "transitioning:", transitioning)
         
-        if (currentVideo === "") {
-            currentVideo = videoSource
+        if (currentVideo === "" && !transitioning) {
+            // First video - may need to sync with previous image
+            startTransition(videoSource, true);
         } else {
-            doTransition(videoSource)
+            // Video to video or update during transition
+            startTransition(videoSource, false);
         }
     }
 
     onActiveChanged: {
-        if (!active && mpvProc.running) mpvProc.signal(15)
-        if (active && videoSource && !currentVideo) currentVideo = videoSource
+        Logger.d("VideoWallpaper", "active changed to:", active)
+        
+        if (!active) {
+            // Becoming inactive - kill everything and reset
+            if (mpvProc.running) mpvProc.signal(15);
+            swwwProc.running = false;
+            swwwSyncProc.running = false;
+            resetState();
+        } else if (videoSource && videoSource !== "" && !currentVideo && !transitioning) {
+            // Becoming active with a video source
+            startTransition(videoSource, true);
+        }
     }
 
     Component.onCompleted: {
-        if (active && videoSource) currentVideo = videoSource
+        if (active && videoSource && videoSource !== "") {
+            startTransition(videoSource, true);
+        }
     }
 
     Component.onDestruction: {
-        if (mpvProc.running) mpvProc.signal(15)
+        if (mpvProc.running) mpvProc.signal(15);
+        swwwProc.running = false;
+        swwwSyncProc.running = false;
     }
 }
