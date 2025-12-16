@@ -66,8 +66,8 @@ Singleton {
         if (status === Image.Ready) {
           Quickshell.execDetached(["mkdir", "-p", Settings.cacheDirImagesNotifications]);
           grabToImage(result => {
-                        if (result.saveToFile(req.dest))
-                        updateImagePath(req.imageId, req.dest);
+                        if (result && result.saveToFile(req.dest))
+                          updateImagePath(req.imageId, req.dest);
                         processNextImage();
                       });
         } else if (status === Image.Error) {
