@@ -17,6 +17,10 @@ Singleton {
   property bool directoriesCreated: false
   property bool shouldOpenSetupWizard: false
 
+  // Read-only mode: settings file is managed externally (e.g., by Nix/home-manager)
+  // When true, GUI changes are not persisted to disk
+  property bool readOnlyMode: false
+
   /*
   Shell directories.
   - Default config directory: ~/.config/noctalia
@@ -55,6 +59,9 @@ Singleton {
     // Mark directories as created and trigger file loading
     directoriesCreated = true;
 
+    // Check if settings file is a symlink (managed by Nix/home-manager)
+    checkReadOnlyMode.running = true;
+
     // This should only be activated once when the settings structure has changed
     // Then it should be commented out again, regular users don't need to generate
     // default settings on every start
@@ -71,6 +78,22 @@ Singleton {
 
     // Set the adapter to the settingsFileView to trigger the real settings load
     settingsFileView.adapter = adapter;
+  }
+
+  // Check if settings file is a symlink (managed externally)
+  Process {
+    id: checkReadOnlyMode
+    command: ["test", "-L", settingsFile]
+    onExited: function(exitCode, exitStatus) {
+      // exitCode 0 means file IS a symlink
+      if (exitCode === 0) {
+        root.readOnlyMode = true;
+        Logger.i("Settings", "Settings file is a symlink - running in read-only mode (managed by Nix)");
+      } else {
+        root.readOnlyMode = false;
+        Logger.d("Settings", "Settings file is writable");
+      }
+    }
   }
 
   // Don't write settings to disk immediately
@@ -118,24 +141,10 @@ Singleton {
         // File doesn't exist, create it with default values
         writeAdapter();
 
-        // Also write to fallback if set
-        if (Quickshell.env("NOCTALIA_SETTINGS_FALLBACK")) {
-          settingsFallbackFileView.writeAdapter();
-        }
-
         // We started without settings, we should open the setupWizard
         root.shouldOpenSetupWizard = true;
       }
     }
-  }
-
-  // Fallback FileView for writing settings to alternate location
-  FileView {
-    id: settingsFallbackFileView
-    path: Quickshell.env("NOCTALIA_SETTINGS_FALLBACK") || ""
-    adapter: Quickshell.env("NOCTALIA_SETTINGS_FALLBACK") ? adapter : null
-    printErrors: false
-    watchChanges: false
   }
 
   JsonAdapter {
@@ -625,11 +634,13 @@ Singleton {
   // -----------------------------------------------------
   // Public function to trigger immediate settings saving
   function saveImmediate() {
-    settingsFileView.writeAdapter();
-    // Write to fallback location if set
-    if (Quickshell.env("NOCTALIA_SETTINGS_FALLBACK")) {
-      settingsFallbackFileView.writeAdapter();
+    // Don't write if in read-only mode (settings managed by Nix)
+    if (root.readOnlyMode) {
+      Logger.d("Settings", "Skipping save - read-only mode (managed by Nix)");
+      return;
     }
+
+    settingsFileView.writeAdapter();
     root.settingsSaved(); // Emit signal after saving
   }
 

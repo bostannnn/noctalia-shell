@@ -115,9 +115,6 @@ in {
         Service = {
           ExecStart = lib.getExe cfg.package;
           Restart = "on-failure";
-          Environment = [
-            "NOCTALIA_SETTINGS_FALLBACK=%h/.config/noctalia/gui-settings.json"
-          ];
         };
 
         Install.WantedBy = [ config.wayland.systemd.target ];

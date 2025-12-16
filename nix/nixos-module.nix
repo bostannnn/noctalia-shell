@@ -37,9 +37,6 @@ in {
       serviceConfig = {
         ExecStart = lib.getExe cfg.package;
         Restart = "on-failure";
-        Environment = [
-          "NOCTALIA_SETTINGS_FALLBACK=%h/.config/noctalia/gui-settings.json"
-        ];
       };
     };
 
