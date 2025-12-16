@@ -608,6 +608,11 @@
         "default": "Default",
         "mini": "Mini"
       },
+      "mode": {
+        "classic": "Classic",
+        "floating": "Floating",
+        "framed": "Framed (Screen Border)"
+      },
       "position": {
         "bottom": "Bottom",
         "left": "Left",
@@ -1009,6 +1014,40 @@
         "show-capsule": {
           "description": "Show widget backgrounds.",
           "label": "Show capsule"
+        },
+        "mode": {
+          "description": {
+            "classic": "Bar sits at screen edge",
+            "floating": "Bar floats with margins around it",
+            "framed": "Bar inside screen border (caelestia style)"
+          },
+          "label": "Bar mode"
+        },
+        "screen-border": {
+          "section": {
+            "description": "Configure the border that frames the screen",
+            "label": "Screen border settings"
+          },
+          "thickness": {
+            "description": "Width of the border in pixels",
+            "label": "Border thickness"
+          },
+          "rounding": {
+            "description": "Radius of the rounded corners",
+            "label": "Corner rounding"
+          },
+          "margin": {
+            "description": "Gap between the border and windows",
+            "label": "Window margin"
+          },
+          "use-theme-color": {
+            "description": "Match border color to current theme",
+            "label": "Use theme color"
+          },
+          "custom-color": {
+            "description": "Custom border color (hex)",
+            "label": "Border color"
+          }
         }
       },
       "monitors": {

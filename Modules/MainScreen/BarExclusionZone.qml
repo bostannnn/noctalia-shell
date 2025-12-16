@@ -12,7 +12,7 @@ import qs.Commons
 * Bar modes:
 *   - "classic": Normal exclusive zone behavior
 *   - "floating": Exclusive zone includes margin
-*   - "framed": No exclusive zone (gaps_out handles spacing)
+*   - "framed": No exclusive zone (BorderExclusionZones handles spacing via Wayland)
 */
 PanelWindow {
   id: root

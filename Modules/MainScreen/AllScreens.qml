@@ -132,7 +132,6 @@ Variants {
 
       sourceComponent: BorderExclusionZones {
         screen: modelData
-        bar: windowLoader.item
       }
 
       onLoaded: {

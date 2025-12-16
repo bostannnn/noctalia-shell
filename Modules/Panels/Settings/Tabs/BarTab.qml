@@ -116,26 +116,26 @@ ColumnLayout {
   // Bar Mode selector - replaces old floating toggle and screen border enable
   NComboBox {
     Layout.fillWidth: true
-    label: "Bar Mode"
+    label: I18n.tr("settings.bar.appearance.mode.label")
     description: {
       var mode = Settings.data.bar.mode ?? "classic";
-      if (mode === "classic") return "Bar sits at screen edge";
-      if (mode === "floating") return "Bar floats with margins around it";
-      if (mode === "framed") return "Bar inside screen border (caelestia style)";
+      if (mode === "classic") return I18n.tr("settings.bar.appearance.mode.description.classic");
+      if (mode === "floating") return I18n.tr("settings.bar.appearance.mode.description.floating");
+      if (mode === "framed") return I18n.tr("settings.bar.appearance.mode.description.framed");
       return "";
     }
     model: [
       {
         "key": "classic",
-        "name": "Classic"
+        "name": I18n.tr("options.bar.mode.classic")
       },
       {
         "key": "floating",
-        "name": "Floating"
+        "name": I18n.tr("options.bar.mode.floating")
       },
       {
         "key": "framed",
-        "name": "Framed (Screen Border)"
+        "name": I18n.tr("options.bar.mode.framed")
       }
     ]
     currentKey: Settings.data.bar.mode ?? "classic"
@@ -215,15 +215,15 @@ ColumnLayout {
     Layout.fillWidth: true
 
     NLabel {
-      label: "Screen Border Settings"
-      description: "Configure the border that frames the screen"
+      label: I18n.tr("settings.bar.appearance.screen-border.section.label")
+      description: I18n.tr("settings.bar.appearance.screen-border.section.description")
     }
 
     // Border thickness
     NSpinBox {
       Layout.fillWidth: true
-      label: "Border Thickness"
-      description: "Width of the border in pixels"
+      label: I18n.tr("settings.bar.appearance.screen-border.thickness.label")
+      description: I18n.tr("settings.bar.appearance.screen-border.thickness.description")
       minimum: 1
       maximum: 50
       value: Settings.data.general.screenBorderThickness ?? 10
@@ -235,8 +235,8 @@ ColumnLayout {
     // Border rounding
     NSpinBox {
       Layout.fillWidth: true
-      label: "Corner Rounding"
-      description: "Radius of the rounded corners"
+      label: I18n.tr("settings.bar.appearance.screen-border.rounding.label")
+      description: I18n.tr("settings.bar.appearance.screen-border.rounding.description")
       minimum: 0
       maximum: 100
       value: Settings.data.general.screenBorderRounding ?? 25
@@ -248,8 +248,8 @@ ColumnLayout {
     // Window margin
     NSpinBox {
       Layout.fillWidth: true
-      label: "Window Margin"
-      description: "Gap between the border and windows"
+      label: I18n.tr("settings.bar.appearance.screen-border.margin.label")
+      description: I18n.tr("settings.bar.appearance.screen-border.margin.description")
       minimum: 0
       maximum: 50
       value: Settings.data.general.screenBorderMargin ?? 10
@@ -261,8 +261,8 @@ ColumnLayout {
     // Use theme color toggle
     NToggle {
       Layout.fillWidth: true
-      label: "Use Theme Color"
-      description: "Match border color to current theme"
+      label: I18n.tr("settings.bar.appearance.screen-border.use-theme-color.label")
+      description: I18n.tr("settings.bar.appearance.screen-border.use-theme-color.description")
       checked: Settings.data.general.screenBorderUseThemeColor ?? true
       onToggled: checked => Settings.data.general.screenBorderUseThemeColor = checked
     }
@@ -274,8 +274,8 @@ ColumnLayout {
       spacing: Style.marginM
 
       NLabel {
-        label: "Border Color"
-        description: "Custom border color (hex)"
+        label: I18n.tr("settings.bar.appearance.screen-border.custom-color.label")
+        description: I18n.tr("settings.bar.appearance.screen-border.custom-color.description")
         Layout.fillWidth: true
       }
 

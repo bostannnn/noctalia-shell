@@ -39,127 +39,77 @@ Item {
   anchors.fill: parent
   visible: enabled && borderThickness > 0
 
-  // Margin from settings (gap between border edge and windows)
-  property int borderMargin: Settings.data.general.screenBorderMargin ?? 10
-  
   // Bar gap for classic/floating modes
   property int barGap: Settings.data.bar.gap ?? 10
-  
+
+  // Path to generated config file
+  readonly property string gapsConfigPath: Settings.configDir + "/hypr-gaps.conf"
+
   // Apply Hyprland gaps on startup and when settings change
   Component.onCompleted: {
     Logger.d("ScreenBorder", "Component completed, barMode=" + barMode);
     // Delay to ensure Settings are loaded
     startupTimer.start();
   }
-  
+
   Timer {
     id: startupTimer
     interval: 100
     onTriggered: {
       Logger.d("ScreenBorder", "Startup timer triggered");
-      root.applyHyprlandGapsOnStartup();
+      root.applyHyprlandGaps();
     }
   }
 
-  // Startup-specific function that writes config and reloads in sequence
-  function applyHyprlandGapsOnStartup() {
-    if (barMode === "framed") {
-      // Framed mode uses Wayland exclusion zones, just set gaps to 0
-      Quickshell.execDetached(["sh", "-c",
-        "mkdir -p '" + Settings.configDir + "' && " +
-        "echo 'general:gaps_out = 0' > '" + gapsConfigPath + "' && " +
-        "hyprctl reload"
-      ]);
-      Logger.d("ScreenBorder", "Startup: framed mode - gaps=0");
-    } else {
-      // Classic/floating: calculate gaps and apply with reload
-      var barHeight = Style.barHeight || 40;
-      var gap = barGap;
-
-      var top = gap;
-      var right = gap;
-      var bottom = gap;
-      var left = gap;
-
-      var barMargin = 0;
-      if (barMode === "floating") {
-        barMargin = Math.ceil((Settings.data.bar.marginHorizontal ?? 0.25) * (Style.marginXL || 16));
-      }
-
-      if (barPosition === "left") left = barHeight + barMargin + gap;
-      else if (barPosition === "right") right = barHeight + barMargin + gap;
-      else if (barPosition === "top") top = barHeight + barMargin + gap;
-      else if (barPosition === "bottom") bottom = barHeight + barMargin + gap;
-
-      var gapsValue = top + " " + right + " " + bottom + " " + left;
-
-      // Chain: write config, then reload (ensures config is written before reload reads it)
-      Quickshell.execDetached(["sh", "-c",
-        "mkdir -p '" + Settings.configDir + "' && " +
-        "echo 'general:gaps_out = " + gapsValue + "' > '" + gapsConfigPath + "' && " +
-        "hyprctl reload"
-      ]);
-
-      Logger.d("ScreenBorder", "Startup: " + barMode + " mode - gaps=" + gapsValue);
-    }
-  }
-  
   onBarModeChanged: {
     Logger.d("ScreenBorder", "barMode changed to: " + barMode);
-    updateHyprlandGaps();
+    applyHyprlandGaps();
   }
-  onBorderThicknessChanged: if (enabled) updateHyprlandGaps()
-  onBarPositionChanged: updateHyprlandGaps()
-  onBorderMarginChanged: if (enabled) updateHyprlandGaps()
-  onBarGapChanged: updateHyprlandGaps()
+  onBarPositionChanged: applyHyprlandGaps()
+  onBarGapChanged: applyHyprlandGaps()
 
-  // Path to generated config file
-  readonly property string gapsConfigPath: Settings.configDir + "/hypr-gaps.conf"
+  // Calculate and apply Hyprland gaps based on current bar mode
+  function applyHyprlandGaps() {
+    var gapsValue = calculateGapsValue();
 
-  function updateHyprlandGaps() {
-    Logger.d("ScreenBorder", "updateHyprlandGaps called, barMode=" + barMode);
+    // Write config and reload Hyprland
+    Quickshell.execDetached(["sh", "-c",
+      "mkdir -p '" + Settings.configDir + "' && " +
+      "echo 'general:gaps_out = " + gapsValue + "' > '" + gapsConfigPath + "' && " +
+      "hyprctl reload"
+    ]);
 
+    Logger.d("ScreenBorder", barMode + " mode - gaps=" + gapsValue);
+  }
+
+  // Calculate gaps value based on bar mode
+  function calculateGapsValue() {
     if (barMode === "framed") {
       // Framed mode: BorderExclusionZones handles spacing via Wayland
-      // Set gaps to 0 so hyprctl doesn't interfere
-      Quickshell.execDetached(["sh", "-c",
-        "mkdir -p '" + Settings.configDir + "' && " +
-        "echo 'general:gaps_out = 0' > '" + gapsConfigPath + "' && " +
-        "hyprctl reload"
-      ]);
-      Logger.d("ScreenBorder", "Framed mode - gaps=0");
-    } else {
-      // Classic and floating modes: gaps on all sides
-      var barHeight = Style.barHeight || 40;
-      var gap = barGap;
-
-      var top = gap;
-      var right = gap;
-      var bottom = gap;
-      var left = gap;
-
-      // Bar side gets bar height + gap (+ margin for floating)
-      var barMargin = 0;
-      if (barMode === "floating") {
-        barMargin = Math.ceil((Settings.data.bar.marginHorizontal ?? 0.25) * (Style.marginXL || 16));
-      }
-
-      if (barPosition === "left") left = barHeight + barMargin + gap;
-      else if (barPosition === "right") right = barHeight + barMargin + gap;
-      else if (barPosition === "top") top = barHeight + barMargin + gap;
-      else if (barPosition === "bottom") bottom = barHeight + barMargin + gap;
-
-      var gapsValue = top + " " + right + " " + bottom + " " + left;
-
-      // Chain: write config, then reload
-      Quickshell.execDetached(["sh", "-c",
-        "mkdir -p '" + Settings.configDir + "' && " +
-        "echo 'general:gaps_out = " + gapsValue + "' > '" + gapsConfigPath + "' && " +
-        "hyprctl reload"
-      ]);
-
-      Logger.d("ScreenBorder", barMode + " mode - gaps=" + gapsValue);
+      return "0";
     }
+
+    // Classic and floating modes: gaps on all sides
+    var barHeight = Style.barHeight || 40;
+    var gap = barGap;
+
+    var top = gap;
+    var right = gap;
+    var bottom = gap;
+    var left = gap;
+
+    // Bar side gets bar height + gap (+ margin for floating)
+    var floatingMargin = 0;
+    if (barMode === "floating") {
+      floatingMargin = Math.ceil((Settings.data.bar.marginHorizontal ?? 0.25) * (Style.marginXL || 16));
+    }
+
+    if (barPosition === "left") left = barHeight + floatingMargin + gap;
+    else if (barPosition === "right") right = barHeight + floatingMargin + gap;
+    else if (barPosition === "top") top = barHeight + floatingMargin + gap;
+    else if (barPosition === "bottom") bottom = barHeight + floatingMargin + gap;
+
+    return top + " " + right + " " + bottom + " " + left;
   }
 
   // The colored rectangle that fills the entire screen

@@ -16,10 +16,9 @@ import qs.Commons
  */
 Item {
   id: root
-  
+
   required property var screen
-  required property Item bar
-  
+
   // Only active in framed mode
   readonly property string barMode: Settings.data.bar.mode ?? "classic"
   readonly property bool enabled: barMode === "framed"
