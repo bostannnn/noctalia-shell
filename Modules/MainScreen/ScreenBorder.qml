@@ -4,20 +4,18 @@ import Quickshell
 import qs.Commons
 
 /**
- * ScreenBorder - Draws a colored border around the entire screen
+ * ScreenBorder - Draws a colored border around the entire screen (caelestia style)
  * 
- * Uses a mask technique from caelestia-dots/shell:
- * 1. Fill the entire screen with the border color
- * 2. Cut out the center (with rounded corners) using a mask
- * 3. Only the border strip remains visible
+ * Only active when bar.mode === "framed"
  * 
- * The border covers from screen edge to bar edge on the bar side,
- * and mirrors that margin on the opposite side for centering.
+ * Also manages Hyprland gaps for all bar modes:
+ *   - classic/floating: gaps provide margin between bar and windows
+ *   - framed: gaps handled by BorderExclusionZones (Wayland approach)
  */
 Item {
   id: root
 
-  // Reference to the bar for proper coverage
+  // Reference to the bar for position awareness
   property Item bar: null
   
   // Border configuration from Settings
@@ -26,81 +24,142 @@ Item {
   property color borderColor: (Settings.data.general.screenBorderUseThemeColor ?? true)
                               ? Color.mSurface 
                               : (Settings.data.general.screenBorderColor ?? Color.mSurface)
-  property bool enabled: Settings.data.general.screenBorderEnabled ?? false
+  
+  // Only enabled in framed mode
+  property string barMode: Settings.data.bar.mode ?? "classic"
+  property bool enabled: barMode === "framed"
   
   // Bar position awareness
   property string barPosition: Settings.data.bar?.position ?? "left"
+  property bool barIsVertical: barPosition === "left" || barPosition === "right"
+  
+  // Bar width for mask calculation (use bar's actual width or Style.barHeight)
+  property real barWidth: bar ? (barIsVertical ? bar.width : bar.height) : (Style.barHeight ?? 40)
 
   anchors.fill: parent
   visible: enabled && borderThickness > 0
 
+  // Margin from settings (gap between border edge and windows)
+  property int borderMargin: Settings.data.general.screenBorderMargin ?? 10
+  
+  // Bar gap for classic/floating modes
+  property int barGap: Settings.data.bar.gap ?? 10
+  
   // Apply Hyprland gaps on startup and when settings change
-  Component.onCompleted: Qt.callLater(updateHyprlandGaps)
-  onEnabledChanged: updateHyprlandGaps()
+  Component.onCompleted: {
+    Logger.d("ScreenBorder", "Component completed, barMode=" + barMode);
+    // Delay to ensure Settings are loaded
+    startupTimer.start();
+  }
+  
+  Timer {
+    id: startupTimer
+    interval: 100
+    onTriggered: {
+      Logger.d("ScreenBorder", "Startup timer triggered");
+      root.applyHyprlandGapsOnStartup();
+    }
+  }
+
+  // Startup-specific function that writes config and reloads in sequence
+  function applyHyprlandGapsOnStartup() {
+    if (barMode === "framed") {
+      // Framed mode uses Wayland exclusion zones, just set gaps to 0
+      Quickshell.execDetached(["sh", "-c",
+        "mkdir -p '" + Settings.configDir + "' && " +
+        "echo 'general:gaps_out = 0' > '" + gapsConfigPath + "' && " +
+        "hyprctl reload"
+      ]);
+      Logger.d("ScreenBorder", "Startup: framed mode - gaps=0");
+    } else {
+      // Classic/floating: calculate gaps and apply with reload
+      var barHeight = Style.barHeight || 40;
+      var gap = barGap;
+
+      var top = gap;
+      var right = gap;
+      var bottom = gap;
+      var left = gap;
+
+      var barMargin = 0;
+      if (barMode === "floating") {
+        barMargin = Math.ceil((Settings.data.bar.marginHorizontal ?? 0.25) * (Style.marginXL || 16));
+      }
+
+      if (barPosition === "left") left = barHeight + barMargin + gap;
+      else if (barPosition === "right") right = barHeight + barMargin + gap;
+      else if (barPosition === "top") top = barHeight + barMargin + gap;
+      else if (barPosition === "bottom") bottom = barHeight + barMargin + gap;
+
+      var gapsValue = top + " " + right + " " + bottom + " " + left;
+
+      // Chain: write config, then reload (ensures config is written before reload reads it)
+      Quickshell.execDetached(["sh", "-c",
+        "mkdir -p '" + Settings.configDir + "' && " +
+        "echo 'general:gaps_out = " + gapsValue + "' > '" + gapsConfigPath + "' && " +
+        "hyprctl reload"
+      ]);
+
+      Logger.d("ScreenBorder", "Startup: " + barMode + " mode - gaps=" + gapsValue);
+    }
+  }
+  
+  onBarModeChanged: {
+    Logger.d("ScreenBorder", "barMode changed to: " + barMode);
+    updateHyprlandGaps();
+  }
   onBorderThicknessChanged: if (enabled) updateHyprlandGaps()
   onBarPositionChanged: updateHyprlandGaps()
-
-  // Margin from settings
-  property int borderMargin: Settings.data.general.screenBorderMargin ?? 10
   onBorderMarginChanged: if (enabled) updateHyprlandGaps()
-
-  // Watch for floating bar changes (affects gaps when screen border is disabled)
-  property bool floatingBar: Settings.data.bar?.floating ?? false
-  onFloatingBarChanged: if (!enabled) updateHyprlandGaps()
+  onBarGapChanged: updateHyprlandGaps()
 
   // Path to generated config file
   readonly property string gapsConfigPath: Settings.configDir + "/hypr-gaps.conf"
 
   function updateHyprlandGaps() {
-    var gapsValue = "0";
-    
-    if (enabled) {
-      // Calculate gap for each side: top, right, bottom, left
-      // Use consistent margin on all sides for visual balance
-      var margin = borderMargin;
-      var barHeight = Style.barHeight || 48;
-      
-      var top = borderThickness + margin;
-      var right = borderThickness + margin;
-      var bottom = borderThickness + margin;
-      var left = borderThickness + margin;
-      
-      // Bar side: add bar height so windows are margin away from bar edge
-      if (barPosition === "left") {
-        left = borderThickness + barHeight + margin;
-      } else if (barPosition === "right") {
-        right = borderThickness + barHeight + margin;
-      } else if (barPosition === "top") {
-        top = borderThickness + barHeight + margin;
-      } else if (barPosition === "bottom") {
-        bottom = borderThickness + barHeight + margin;
-      }
-      
-      // Hyprland gaps_out format: top right bottom left
-      gapsValue = top + " " + right + " " + bottom + " " + left;
+    Logger.d("ScreenBorder", "updateHyprlandGaps called, barMode=" + barMode);
+
+    if (barMode === "framed") {
+      // Framed mode: BorderExclusionZones handles spacing via Wayland
+      // Set gaps to 0 so hyprctl doesn't interfere
+      Quickshell.execDetached(["sh", "-c",
+        "mkdir -p '" + Settings.configDir + "' && " +
+        "echo 'general:gaps_out = 0' > '" + gapsConfigPath + "' && " +
+        "hyprctl reload"
+      ]);
+      Logger.d("ScreenBorder", "Framed mode - gaps=0");
     } else {
-      // When screen border disabled, check if floating bar needs gaps
-      var floatingBarGap = (Settings.data.bar?.floating ?? false) ? 10 : 0;
-      if (floatingBarGap > 0) {
-        var barPos = Settings.data.bar?.position ?? "left";
-        var t = floatingBarGap, r = floatingBarGap, b = floatingBarGap, l = floatingBarGap;
-        var barSize = (Style.barHeight || 48) + 10;
-        if (barPos === "left") l = barSize;
-        else if (barPos === "right") r = barSize;
-        else if (barPos === "top") t = barSize;
-        else if (barPos === "bottom") b = barSize;
-        gapsValue = t + " " + r + " " + b + " " + l;
+      // Classic and floating modes: gaps on all sides
+      var barHeight = Style.barHeight || 40;
+      var gap = barGap;
+
+      var top = gap;
+      var right = gap;
+      var bottom = gap;
+      var left = gap;
+
+      // Bar side gets bar height + gap (+ margin for floating)
+      var barMargin = 0;
+      if (barMode === "floating") {
+        barMargin = Math.ceil((Settings.data.bar.marginHorizontal ?? 0.25) * (Style.marginXL || 16));
       }
+
+      if (barPosition === "left") left = barHeight + barMargin + gap;
+      else if (barPosition === "right") right = barHeight + barMargin + gap;
+      else if (barPosition === "top") top = barHeight + barMargin + gap;
+      else if (barPosition === "bottom") bottom = barHeight + barMargin + gap;
+
+      var gapsValue = top + " " + right + " " + bottom + " " + left;
+
+      // Chain: write config, then reload
+      Quickshell.execDetached(["sh", "-c",
+        "mkdir -p '" + Settings.configDir + "' && " +
+        "echo 'general:gaps_out = " + gapsValue + "' > '" + gapsConfigPath + "' && " +
+        "hyprctl reload"
+      ]);
+
+      Logger.d("ScreenBorder", barMode + " mode - gaps=" + gapsValue);
     }
-    
-    // Write to config file and reload hyprland
-    var configContent = "# Auto-generated by Noctalia Screen Border\n# Source this file in your hyprland.conf: source = ~/.config/noctalia/hypr-gaps.conf\ngeneral:gaps_out = " + gapsValue + "\n";
-    
-    // Write config file
-    Quickshell.execDetached(["sh", "-c", "mkdir -p '" + Settings.configDir + "' && echo '" + configContent + "' > '" + gapsConfigPath + "'"]);
-    
-    // Apply immediately with hyprctl keyword (for instant feedback)
-    Quickshell.execDetached(["hyprctl", "keyword", "general:gaps_out", gapsValue]);
   }
 
   // The colored rectangle that fills the entire screen
@@ -128,7 +187,8 @@ Item {
     }
   }
 
-  // Mask item - draws the "cutout" area (the screen center)
+  // Mask item - draws the "cutout" area
+  // IMPORTANT: The bar area is NOT cut out - it remains part of the border
   Item {
     id: borderMask
     anchors.fill: parent
@@ -138,39 +198,14 @@ Item {
     Rectangle {
       id: centerCutout
       
-      // Position: inset from all edges
-      // On the bar side: cutout starts at bar's far edge (covers bar area)
-      // On all other sides: normal border thickness
+      // The cutout leaves the bar area as part of the border
+      // All edges get borderThickness margin
+      // Bar side gets borderThickness + barWidth (bar sits inside the border)
       anchors.fill: parent
-      anchors.margins: root.borderThickness
-      
-      // Left margin: larger only if bar is on the left
-      anchors.leftMargin: {
-        if (root.barPosition === "left" && root.bar)
-          return root.bar.x + root.bar.width
-        return root.borderThickness
-      }
-      
-      // Right margin: larger only if bar is on the right
-      anchors.rightMargin: {
-        if (root.barPosition === "right" && root.bar)
-          return parent.width - root.bar.x
-        return root.borderThickness
-      }
-      
-      // Top margin: larger only if bar is on the top
-      anchors.topMargin: {
-        if (root.barPosition === "top" && root.bar)
-          return root.bar.y + root.bar.height
-        return root.borderThickness
-      }
-      
-      // Bottom margin: larger only if bar is on the bottom
-      anchors.bottomMargin: {
-        if (root.barPosition === "bottom" && root.bar)
-          return parent.height - root.bar.y
-        return root.borderThickness
-      }
+      anchors.topMargin: root.barPosition === "top" ? (root.borderThickness + root.barWidth) : root.borderThickness
+      anchors.rightMargin: root.barPosition === "right" ? (root.borderThickness + root.barWidth) : root.borderThickness
+      anchors.bottomMargin: root.barPosition === "bottom" ? (root.borderThickness + root.barWidth) : root.borderThickness
+      anchors.leftMargin: root.barPosition === "left" ? (root.borderThickness + root.barWidth) : root.borderThickness
       
       radius: root.borderRounding
       color: "white"  // Any opaque color works for mask

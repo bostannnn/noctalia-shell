@@ -113,16 +113,33 @@ ColumnLayout {
     }
   }
 
-  NToggle {
+  // Bar Mode selector - replaces old floating toggle and screen border enable
+  NComboBox {
     Layout.fillWidth: true
-    label: I18n.tr("settings.bar.appearance.floating.label")
-    description: (Settings.data.general.screenBorderEnabled && Settings.data.bar.floating)
-                 ? "⚠ May not look right with Screen Border enabled"
-                 : I18n.tr("settings.bar.appearance.floating.description")
-    checked: Settings.data.bar.floating
-    onToggled: checked => {
-                 Settings.data.bar.floating = checked;
-               }
+    label: "Bar Mode"
+    description: {
+      var mode = Settings.data.bar.mode ?? "classic";
+      if (mode === "classic") return "Bar sits at screen edge";
+      if (mode === "floating") return "Bar floats with margins around it";
+      if (mode === "framed") return "Bar inside screen border (caelestia style)";
+      return "";
+    }
+    model: [
+      {
+        "key": "classic",
+        "name": "Classic"
+      },
+      {
+        "key": "floating",
+        "name": "Floating"
+      },
+      {
+        "key": "framed",
+        "name": "Framed (Screen Border)"
+      }
+    ]
+    currentKey: Settings.data.bar.mode ?? "classic"
+    onSelected: key => Settings.data.bar.mode = key
   }
 
   NToggle {
@@ -130,13 +147,13 @@ ColumnLayout {
     label: I18n.tr("settings.bar.appearance.outer-corners.label")
     description: I18n.tr("settings.bar.appearance.outer-corners.description")
     checked: Settings.data.bar.outerCorners
-    visible: !Settings.data.bar.floating
+    visible: (Settings.data.bar.mode ?? "classic") === "classic"
     onToggled: checked => Settings.data.bar.outerCorners = checked
   }
 
-  // Floating bar options - only show when floating is enabled and screen border is disabled
+  // Floating bar options - only show when mode is "floating"
   ColumnLayout {
-    visible: Settings.data.bar.floating && !(Settings.data.general.screenBorderEnabled ?? false)
+    visible: (Settings.data.bar.mode ?? "classic") === "floating"
     spacing: Style.marginS
     Layout.fillWidth: true
 
@@ -186,6 +203,99 @@ ColumnLayout {
           value: Settings.data.bar.marginHorizontal
           onMoved: value => Settings.data.bar.marginHorizontal = value
           text: Math.ceil(Settings.data.bar.marginHorizontal * 100) + "%"
+        }
+      }
+    }
+  }
+
+  // Framed mode options - only show when mode is "framed"
+  ColumnLayout {
+    visible: (Settings.data.bar.mode ?? "classic") === "framed"
+    spacing: Style.marginM
+    Layout.fillWidth: true
+
+    NLabel {
+      label: "Screen Border Settings"
+      description: "Configure the border that frames the screen"
+    }
+
+    // Border thickness
+    NSpinBox {
+      Layout.fillWidth: true
+      label: "Border Thickness"
+      description: "Width of the border in pixels"
+      minimum: 1
+      maximum: 50
+      value: Settings.data.general.screenBorderThickness ?? 10
+      stepSize: 1
+      suffix: "px"
+      onValueChanged: Settings.data.general.screenBorderThickness = value
+    }
+
+    // Border rounding
+    NSpinBox {
+      Layout.fillWidth: true
+      label: "Corner Rounding"
+      description: "Radius of the rounded corners"
+      minimum: 0
+      maximum: 100
+      value: Settings.data.general.screenBorderRounding ?? 25
+      stepSize: 1
+      suffix: "px"
+      onValueChanged: Settings.data.general.screenBorderRounding = value
+    }
+
+    // Window margin
+    NSpinBox {
+      Layout.fillWidth: true
+      label: "Window Margin"
+      description: "Gap between the border and windows"
+      minimum: 0
+      maximum: 50
+      value: Settings.data.general.screenBorderMargin ?? 10
+      stepSize: 1
+      suffix: "px"
+      onValueChanged: Settings.data.general.screenBorderMargin = value
+    }
+
+    // Use theme color toggle
+    NToggle {
+      Layout.fillWidth: true
+      label: "Use Theme Color"
+      description: "Match border color to current theme"
+      checked: Settings.data.general.screenBorderUseThemeColor ?? true
+      onToggled: checked => Settings.data.general.screenBorderUseThemeColor = checked
+    }
+
+    // Custom color input (visible when not using theme color)
+    RowLayout {
+      Layout.fillWidth: true
+      visible: !(Settings.data.general.screenBorderUseThemeColor ?? true)
+      spacing: Style.marginM
+
+      NLabel {
+        label: "Border Color"
+        description: "Custom border color (hex)"
+        Layout.fillWidth: true
+      }
+
+      Rectangle {
+        width: 32
+        height: 32
+        radius: Style.iRadiusS
+        color: Settings.data.general.screenBorderColor ?? "#1e1e2e"
+        border.color: Color.mOutline
+        border.width: Style.borderS
+      }
+
+      NTextInput {
+        Layout.preferredWidth: 100
+        text: Settings.data.general.screenBorderColor ?? "#1e1e2e"
+        placeholderText: "#1e1e2e"
+        onEditingFinished: {
+          if (/^#[0-9A-Fa-f]{6}$/.test(text)) {
+            Settings.data.general.screenBorderColor = text;
+          }
         }
       }
     }
@@ -497,5 +607,6 @@ ColumnLayout {
     showToastOnSave: false
   }
 }
+
 
 

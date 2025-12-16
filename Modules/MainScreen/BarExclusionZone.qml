@@ -8,17 +8,28 @@ import qs.Commons
 *
 * This is a minimal window that works with the compositor to reserve space,
 * while the actual bar UI is rendered in MainScreen.
+*
+* Bar modes:
+*   - "classic": Normal exclusive zone behavior
+*   - "floating": Exclusive zone includes margin
+*   - "framed": No exclusive zone (gaps_out handles spacing)
 */
 PanelWindow {
   id: root
 
-  property bool exclusive: Settings.data.bar.exclusive !== undefined ? Settings.data.bar.exclusive : false
+  // Bar mode: "classic", "floating", or "framed"
+  readonly property string barMode: Settings.data.bar.mode ?? "classic"
+  readonly property bool isFloating: barMode === "floating"
+  readonly property bool isFramed: barMode === "framed"
+
+  // Exclusive zone is enabled by default for classic/floating, disabled for framed
+  // (BorderExclusionZones handles spacing in framed mode)
+  property bool exclusive: (Settings.data.bar.exclusive ?? true) && !isFramed
 
   readonly property string barPosition: Settings.data.bar.position || "top"
   readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
-  readonly property bool barFloating: Settings.data.bar.floating || false
-  readonly property real barMarginH: barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0
-  readonly property real barMarginV: barFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0
+  readonly property real barMarginH: isFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0
+  readonly property real barMarginV: isFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0
 
   // Invisible - just reserves space
   color: "transparent"
@@ -43,7 +54,7 @@ PanelWindow {
   implicitWidth: {
     if (barIsVertical) {
       // Vertical bar: reserve bar height + margin on the anchored edge only
-      if (barFloating) {
+      if (isFloating) {
         // For left bar, reserve left margin; for right bar, reserve right margin
         return Style.barHeight + barMarginH + 1;
       }
@@ -55,7 +66,7 @@ PanelWindow {
   implicitHeight: {
     if (!barIsVertical) {
       // Horizontal bar: reserve bar height + margin on the anchored edge only
-      if (barFloating) {
+      if (isFloating) {
         // For top bar, reserve top margin; for bottom bar, reserve bottom margin
         return Style.barHeight + barMarginV + 1;
       }
@@ -65,8 +76,6 @@ PanelWindow {
   }
 
   Component.onCompleted: {
-    Logger.d("BarExclusionZone", "Created for screen:", screen?.name);
+    Logger.d("BarExclusionZone", "Created for screen:", screen?.name, "mode:", barMode, "exclusive:", exclusive);
   }
 }
-
-

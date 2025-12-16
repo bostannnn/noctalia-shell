@@ -324,39 +324,51 @@ PanelWindow {
       // Bar background positioning properties
       readonly property string barPosition: Settings.data.bar.position || "top"
       readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
-      readonly property bool barFloating: (Settings.data.bar.floating || false) && !(Settings.data.general.screenBorderEnabled ?? false)
-      readonly property real barMarginH: barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0
-      readonly property real barMarginV: barFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0
+      
+      // Bar mode: "classic", "floating", or "framed"
+      readonly property string barMode: Settings.data.bar.mode ?? "classic"
+      readonly property bool isFloating: barMode === "floating"
+      readonly property bool isFramed: barMode === "framed"
+      
+      // Floating mode margins
+      readonly property real barMarginH: isFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0
+      readonly property real barMarginV: isFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0
+      
+      // Framed mode offset (bar sits inside border)
+      readonly property int borderThickness: Settings.data.general.screenBorderThickness ?? 10
+      readonly property int borderOffset: isFramed ? borderThickness : 0
+      
       readonly property real attachmentOverlap: 1 // Attachment overlap to fix hairline gap with fractional scaling
 
       // Expose bar dimensions directly on this Item for BarBackground
       // Use screen dimensions directly
       x: {
         if (barPosition === "right")
-          return screen.width - Style.barHeight - barMarginH - attachmentOverlap; // Extend left towards panels
-        return barMarginH;
+          return screen.width - Style.barHeight - barMarginH - attachmentOverlap - borderOffset;
+        return barMarginH + borderOffset;
       }
       y: {
         if (barPosition === "bottom")
-          return screen.height - Style.barHeight - barMarginV - attachmentOverlap;
-        return barMarginV;
+          return screen.height - Style.barHeight - barMarginV - attachmentOverlap - borderOffset;
+        return barMarginV + borderOffset;
       }
       width: {
         if (barIsVertical) {
           return Style.barHeight + attachmentOverlap;
         }
-        return screen.width - barMarginH * 2;
+        return screen.width - barMarginH * 2 - borderOffset * 2;
       }
       height: {
         if (barIsVertical) {
-          return screen.height - barMarginV * 2;
+          return screen.height - barMarginV * 2 - borderOffset * 2;
         }
         return Style.barHeight + attachmentOverlap;
       }
 
       // Corner states (same as Bar.qml)
+      // In floating and framed modes, all corners are rounded (state 0)
       readonly property int topLeftCornerState: {
-        if (barFloating)
+        if (isFloating || isFramed)
           return 0;
         if (barPosition === "top")
           return -1;
@@ -369,7 +381,7 @@ PanelWindow {
       }
 
       readonly property int topRightCornerState: {
-        if (barFloating)
+        if (isFloating || isFramed)
           return 0;
         if (barPosition === "top")
           return -1;
@@ -382,7 +394,7 @@ PanelWindow {
       }
 
       readonly property int bottomLeftCornerState: {
-        if (barFloating)
+        if (isFloating || isFramed)
           return 0;
         if (barPosition === "bottom")
           return -1;
@@ -395,7 +407,7 @@ PanelWindow {
       }
 
       readonly property int bottomRightCornerState: {
-        if (barFloating)
+        if (isFloating || isFramed)
           return 0;
         if (barPosition === "bottom")
           return -1;
@@ -526,5 +538,7 @@ PanelWindow {
     onActivated: PanelService.openedPanel.onCtrlPPressed()
   }
 }
+
+
 
 

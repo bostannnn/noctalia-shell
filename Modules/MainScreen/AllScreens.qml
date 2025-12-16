@@ -117,6 +117,28 @@ Variants {
         Logger.d("AllScreens", "PopupMenuWindow created for", modelData?.name);
       }
     }
+
+    // BorderExclusionZones - Wayland exclusive zones for framed bar mode
+    // Only active when bar.mode === "framed"
+    Loader {
+      active: {
+        if (!parent.windowLoaded || !parent.shouldBeActive)
+          return false;
+
+        // Only load in framed mode
+        return (Settings.data.bar.mode ?? "classic") === "framed";
+      }
+      asynchronous: false
+
+      sourceComponent: BorderExclusionZones {
+        screen: modelData
+        bar: windowLoader.item
+      }
+
+      onLoaded: {
+        Logger.d("AllScreens", "BorderExclusionZones created for", modelData?.name);
+      }
+    }
   }
 }
 

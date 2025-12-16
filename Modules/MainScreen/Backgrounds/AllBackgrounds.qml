@@ -49,18 +49,21 @@ Item {
       }
 
       /**
-      *  Bar
+      *  Bar - hidden in framed mode (ScreenBorder provides the background)
       */
       BarBackground {
         bar: root.bar
         shapeContainer: backgroundsShape
         windowRoot: root.windowRoot
-        // When screen border is enabled, use border color (solid) to blend seamlessly
-        backgroundColor: (Settings.data.general.screenBorderEnabled ?? false)
-                         ? ((Settings.data.general.screenBorderUseThemeColor ?? true)
-                            ? Color.mSurface
-                            : (Settings.data.general.screenBorderColor ?? Color.mSurface))
-                         : Qt.alpha(Color.mSurface, Settings.data.bar.backgroundOpacity)
+        // In framed mode, bar has no background (ScreenBorder provides it)
+        // Otherwise, use appropriate opacity
+        backgroundColor: {
+          var barMode = Settings.data.bar.mode ?? "classic";
+          if (barMode === "framed") {
+            return "transparent";
+          }
+          return Qt.alpha(Color.mSurface, Settings.data.bar.backgroundOpacity);
+        }
       }
 
       /**
@@ -187,13 +190,12 @@ Item {
       }
     }
 
-    // Apply shadow to the cached layer (disabled when screen border is active)
+    // Apply shadow to the cached layer (disabled in framed mode)
     NDropShadow {
       anchors.fill: parent
       source: backgroundsShape
-      visible: !(Settings.data.general.screenBorderEnabled ?? false)
+      visible: (Settings.data.bar.mode ?? "classic") !== "framed"
     }
   }
 }
-
 
