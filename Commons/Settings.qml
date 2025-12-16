@@ -243,6 +243,9 @@ Singleton {
       property bool screenBorderUseThemeColor: true
       property string screenBorderColor: "#1e1e2e"
       property int screenBorderMargin: 10  // Gap between border and windows
+      property bool screenBorderShadowEnabled: true
+      property int screenBorderShadowBlur: 15
+      property real screenBorderShadowOpacity: 0.7
       property real scaleRatio: 1.0
       property real radiusRatio: 1.0
       property real iRadiusRatio: 1.0

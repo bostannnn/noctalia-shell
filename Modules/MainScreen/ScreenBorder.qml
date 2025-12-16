@@ -22,8 +22,13 @@ Item {
   property int borderThickness: Settings.data.general.screenBorderThickness ?? 10
   property int borderRounding: Settings.data.general.screenBorderRounding ?? Math.round(25 * Settings.data.general.radiusRatio)
   property color borderColor: (Settings.data.general.screenBorderUseThemeColor ?? true)
-                              ? Color.mSurface 
+                              ? Color.mSurface
                               : (Settings.data.general.screenBorderColor ?? Color.mSurface)
+
+  // Shadow configuration
+  property bool shadowEnabled: Settings.data.general.screenBorderShadowEnabled ?? true
+  property int shadowBlur: Settings.data.general.screenBorderShadowBlur ?? 15
+  property real shadowOpacity: Settings.data.general.screenBorderShadowOpacity ?? 0.7
   
   // Only enabled in framed mode
   property string barMode: Settings.data.bar.mode ?? "classic"
@@ -112,28 +117,43 @@ Item {
     return top + " " + right + " " + bottom + " " + left;
   }
 
-  // The colored rectangle that fills the entire screen
-  Rectangle {
-    id: borderFill
+  // Container for shadow effect - wraps the masked border
+  // Shadow is applied to the entire masked border, creating an inner shadow effect
+  Item {
+    id: borderContainer
     anchors.fill: parent
-    color: root.borderColor
 
-    // Apply color animation for smooth theme transitions
-    Behavior on color {
-      ColorAnimation {
-        duration: Style.animationNormal
-        easing.type: Easing.OutQuad
-      }
+    // Apply shadow to the masked border
+    layer.enabled: root.shadowEnabled && root.enabled
+    layer.effect: MultiEffect {
+      shadowEnabled: true
+      blurMax: root.shadowBlur
+      shadowColor: Qt.alpha(Color.mShadow, root.shadowOpacity)
     }
 
-    // Enable layer for mask effect
-    layer.enabled: root.enabled
-    layer.effect: MultiEffect {
-      maskSource: borderMask
-      maskEnabled: true
-      maskInverted: true  // Invert mask - show only where mask is NOT drawn
-      maskThresholdMin: 0.5
-      maskSpreadAtMin: 1
+    // The colored rectangle that fills the entire screen
+    Rectangle {
+      id: borderFill
+      anchors.fill: parent
+      color: root.borderColor
+
+      // Apply color animation for smooth theme transitions
+      Behavior on color {
+        ColorAnimation {
+          duration: Style.animationNormal
+          easing.type: Easing.OutQuad
+        }
+      }
+
+      // Enable layer for mask effect
+      layer.enabled: root.enabled
+      layer.effect: MultiEffect {
+        maskSource: borderMask
+        maskEnabled: true
+        maskInverted: true  // Invert mask - show only where mask is NOT drawn
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1
+      }
     }
   }
 
