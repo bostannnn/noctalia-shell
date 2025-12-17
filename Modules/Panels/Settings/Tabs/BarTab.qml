@@ -84,6 +84,25 @@ ColumnLayout {
     onSelected: key => Settings.data.bar.density = key
   }
 
+  // Hide transparency options in framed mode (screen border provides background)
+  NToggle {
+    Layout.fillWidth: true
+    visible: (Settings.data.bar.mode ?? "classic") !== "framed"
+    label: I18n.tr("settings.bar.appearance.transparent.label")
+    description: I18n.tr("settings.bar.appearance.transparent.description")
+    checked: Settings.data.bar.transparent
+    onToggled: checked => Settings.data.bar.transparent = checked
+  }
+
+  NToggle {
+    Layout.fillWidth: true
+    visible: (Settings.data.bar.mode ?? "classic") !== "framed"
+    label: I18n.tr("settings.bar.appearance.show-outline.label")
+    description: I18n.tr("settings.bar.appearance.show-outline.description")
+    checked: Settings.data.bar.showOutline
+    onToggled: checked => Settings.data.bar.showOutline = checked
+  }
+
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("settings.bar.appearance.show-capsule.label")
