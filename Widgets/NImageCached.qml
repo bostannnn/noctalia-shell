@@ -79,8 +79,17 @@ Image {
     const normalizedCache = cachePath.replace(/^file:\/\//, "");
     const normalizedImage = imagePath.replace(/^file:\/\//, "");
 
+    // Debug logging
+    if (status === Image.Error) {
+      console.log("NImageCached Error loading, source:", normalizedSource);
+      console.log("NImageCached   cache:", normalizedCache);
+      console.log("NImageCached   image:", normalizedImage);
+      console.log("NImageCached   match cache?", normalizedSource === normalizedCache);
+    }
+
     if (normalizedSource === normalizedCache && status === Image.Error) {
       // Cached image was not available - check file size before trying original
+      Logger.w("NImageCached", "Cache miss, checking file size for:", normalizedImage);
       checkFileSizeAndLoad();
     } else if (normalizedSource === normalizedImage && status === Image.Error && !waitingForMagick) {
       // Original image failed to load (too large for Qt) - use ImageMagick fallback
