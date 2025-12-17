@@ -58,13 +58,13 @@ Item {
         bar: root.bar
         shapeContainer: backgroundsShape
         windowRoot: root.windowRoot
-// In framed mode or transparent mode, bar has no background
+        // In framed mode or transparent mode, bar has no background
         backgroundColor: {
           var barMode = Settings.data.bar.mode ?? "classic";
           if (barMode === "framed" || Settings.data.bar.transparent) {
             return "transparent";
           }
-          return Qt.alpha(Color.mSurface, Settings.data.bar.backgroundOpacity);
+          return panelBackgroundColor;
         }
       }
 

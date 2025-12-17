@@ -92,7 +92,7 @@ ShellRoot {
       Component.onCompleted: {
         Logger.i("Shell", "---------------------------");
         WallpaperService.init();
-VideoWallpaperService.init();
+        VideoWallpaperService.init();
         WallpaperCacheService.init();
         AppThemeService.init();
         ColorSchemeService.init();
@@ -112,7 +112,7 @@ VideoWallpaperService.init();
 
       Overview {}
       Background {}
-WorkspaceOverview {}
+      WorkspaceOverview {}
       DesktopWidgets {}
       AllScreens {}
       Dock {}

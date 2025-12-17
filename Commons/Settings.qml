@@ -27,7 +27,7 @@ Singleton {
   - Default cache directory: ~/.cache/noctalia
   */
   readonly property alias data: adapter  // Used to access via Settings.data.xxx.yyy
-readonly property int settingsVersion: 31
+  readonly property int settingsVersion: 31
   readonly property bool isDebug: Quickshell.env("NOCTALIA_DEBUG") === "1"
   readonly property string shellName: "noctalia"
   readonly property string configDir: Quickshell.env("NOCTALIA_CONFIG_DIR") || (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/" + shellName + "/"
@@ -615,7 +615,7 @@ readonly property int settingsVersion: 31
       property bool yazi: false
       property bool emacs: false
       property bool niri: false
-property bool hyprland: false
+      property bool hyprland: false
       property bool zed: false
       property bool enableUserTemplates: false
     }
