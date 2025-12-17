@@ -90,9 +90,22 @@ Item {
 
   readonly property string barPosition: Settings.data.bar.position
   readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
-  readonly property bool barFloating: Settings.data.bar.floating
-  readonly property real barMarginH: barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0
-  readonly property real barMarginV: barFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0
+
+  // Bar mode handling
+  readonly property string barMode: Settings.data.bar.mode ?? "classic"
+  readonly property bool barFloating: barMode === "floating"
+  readonly property bool barFramed: barMode === "framed"
+
+  // Border offset for framed mode (bar is inside the border)
+  readonly property int borderThickness: Settings.data.general.screenBorderThickness ?? 10
+  readonly property int borderOffset: barFramed ? borderThickness : 0
+
+  // No overlap needed - ScreenBorder handles masking
+  readonly property real attachmentOverlap: 0
+
+  // Margins: floating uses custom margins, framed uses border offset minus overlap, classic uses 0
+  readonly property real barMarginH: barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : (borderOffset - attachmentOverlap)
+  readonly property real barMarginV: barFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : (borderOffset - attachmentOverlap)
 
   // Check if bar should be visible on this screen
   readonly property bool barShouldShow: {

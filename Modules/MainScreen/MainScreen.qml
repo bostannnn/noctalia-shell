@@ -420,14 +420,9 @@ PanelWindow {
       }
     }
 
-    /**
-    *  Screen Border (caelestia-style border around entire screen)
-    */
+    // Hyprland gaps manager
     ScreenBorder {
       id: screenBorder
-      anchors.fill: parent
-      bar: barPlaceholder.barItem
-      z: -1  // Behind everything including AllBackgrounds
     }
 
     /**

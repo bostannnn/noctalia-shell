@@ -16,50 +16,42 @@ import qs.Widgets
 Item {
   id: root
 
-  // Reference Bar
-  required property var bar
+  enabled: false  // Allow click-through to widgets below
 
-  // Reference to MainScreen (for panel access)
+  required property var bar
   required property var windowRoot
 
   readonly property color panelBackgroundColor: Color.mSurface
+  readonly property bool isFramedMode: (Settings.data.bar.mode ?? "classic") === "framed"
 
   anchors.fill: parent
 
-  // Wrapper with layer caching for better shadow performance
+  // Wrapper with layer caching for shadow performance
   Item {
     anchors.fill: parent
-
-    // Enable layer caching to prevent continuous re-rendering
-    // This caches the Shape to a GPU texture, reducing GPU tessellation overhead
     layer.enabled: true
-
-    // Apply opacity to all backgrounds
     opacity: Settings.data.ui.panelBackgroundOpacity
 
-    // The unified Shape container
     Shape {
       id: backgroundsShape
       anchors.fill: parent
-
-      // Use curve renderer for smooth corners (GPU-accelerated)
       preferredRendererType: Shape.CurveRenderer
-
-      enabled: false // Disable mouse input on the Shape itself
-
-      Component.onCompleted: {
-        Logger.d("AllBackgrounds", "AllBackgrounds initialized");
-      }
+      enabled: false
 
       /**
-      *  Bar - hidden in framed mode (ScreenBorder provides the background)
+      *  Border frame (framed mode only) - renders border + bar area as one shape
       */
+      BorderFrameBackground {
+        shapeContainer: backgroundsShape
+        backgroundColor: panelBackgroundColor
+      }
+
+      // Bar background - transparent in framed mode (BorderFrameBackground provides it)
       BarBackground {
         bar: root.bar
         shapeContainer: backgroundsShape
         windowRoot: root.windowRoot
-// Transparent mode = no background, otherwise use panel color (opacity applied at container level)
-        backgroundColor: Settings.data.bar.transparent ? "transparent" : panelBackgroundColor
+        backgroundColor: (Settings.data.bar.transparent || root.isFramedMode) ? "transparent" : panelBackgroundColor
       }
 
       /**
@@ -186,11 +178,11 @@ Item {
       }
     }
 
-    // Apply shadow to the cached layer (disabled in framed mode)
+    // Shadow disabled in framed mode
     NDropShadow {
       anchors.fill: parent
       source: backgroundsShape
-      visible: (Settings.data.bar.mode ?? "classic") !== "framed"
+      visible: !root.isFramedMode
     }
   }
 }
