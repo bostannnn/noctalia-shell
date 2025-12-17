@@ -664,7 +664,9 @@ SmartPanel {
       target: WallpaperService
       function onWallpaperChanged(screenName, path) {
         if (targetScreen !== null && screenName === targetScreen.name) {
-          currentWallpaper = WallpaperService.getWallpaper(targetScreen.name);
+          currentWallpaper = path;
+          // Move the new wallpaper to the front of the list dynamically
+          moveWallpaperToFront(path);
         }
       }
       function onWallpaperDirectoryChanged(screenName, directory) {
@@ -676,6 +678,30 @@ SmartPanel {
         if (targetScreen !== null && screenName === targetScreen.name) {
           refreshWallpaperScreenData();
         }
+      }
+    }
+
+    // Move a wallpaper to the front of the list without full refresh
+    function moveWallpaperToFront(path) {
+      if (!path) return;
+
+      var idx = wallpapersList.indexOf(path);
+      if (idx > 0) {
+        // Remove from current position and add to front
+        var newList = wallpapersList.slice();
+        newList.splice(idx, 1);
+        newList.unshift(path);
+        wallpapersList = newList;
+
+        // Update the cached names list too
+        wallpapersWithNames = wallpapersList.map(function (p) {
+          return { "path": p, "name": p.split('/').pop() };
+        });
+
+        // Update filtered list
+        updateFiltered();
+
+        Logger.d("WallpaperPanel", "Moved wallpaper to front:", path.split('/').pop());
       }
     }
 

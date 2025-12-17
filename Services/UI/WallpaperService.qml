@@ -374,11 +374,22 @@ Singleton {
     isUpscaling = true;
     upscalingFile = imagePath;
 
+    // Check which screens have this as active wallpaper (to auto-apply upscaled version)
+    var screensWithThisWallpaper = [];
+    for (var screenName in currentWallpapers) {
+      if (currentWallpapers[screenName] === imagePath) {
+        screensWithThisWallpaper.push(screenName);
+      }
+    }
+
     // Generate output filename with _upscaled suffix
     var basePath = imagePath.substring(0, imagePath.lastIndexOf('.'));
     var outputPath = basePath + "_upscaled.png"; // Real-ESRGAN outputs PNG
 
     Logger.i("Wallpaper", "Starting upscale:", imagePath, "->", outputPath);
+    if (screensWithThisWallpaper.length > 0) {
+      Logger.i("Wallpaper", "Will auto-apply to screens:", screensWithThisWallpaper.join(", "));
+    }
     ToastService.showNotice(
       I18n.tr("wallpaper.upscale.started"),
       I18n.tr("wallpaper.upscale.started-desc")
@@ -445,6 +456,14 @@ Singleton {
                 Logger.w("Wallpaper", "Failed to move original:", mvProcess.stderr.text);
               }
               mvProcess.destroy();
+
+              // Auto-apply upscaled wallpaper to screens that had the original
+              for (var i = 0; i < screensWithThisWallpaper.length; i++) {
+                var screen = screensWithThisWallpaper[i];
+                Logger.i("Wallpaper", "Auto-applying upscaled wallpaper to:", screen);
+                changeWallpaper(outputPath, screen);
+              }
+
               // Refresh wallpaper list after move
               refreshWallpapersList();
             });
@@ -514,11 +533,22 @@ Singleton {
     isUpscalingVideo = true;
     upscalingFile = videoPath;
 
+    // Check which screens have this as active wallpaper (to auto-apply upscaled version)
+    var screensWithThisWallpaper = [];
+    for (var screenName in currentWallpapers) {
+      if (currentWallpapers[screenName] === videoPath) {
+        screensWithThisWallpaper.push(screenName);
+      }
+    }
+
     // Generate output filename with _upscaled suffix
     var basePath = videoPath.substring(0, videoPath.lastIndexOf('.'));
     var outputPath = basePath + "_upscaled." + ext;
 
     Logger.i("Wallpaper", "Starting video upscale:", videoPath, "->", outputPath);
+    if (screensWithThisWallpaper.length > 0) {
+      Logger.i("Wallpaper", "Will auto-apply to screens:", screensWithThisWallpaper.join(", "));
+    }
     ToastService.showNotice(
       I18n.tr("wallpaper.upscale.video-started"),
       I18n.tr("wallpaper.upscale.video-started-desc")
@@ -597,6 +627,14 @@ Singleton {
                 Logger.w("Wallpaper", "Failed to move original video:", mvProcess.stderr.text);
               }
               mvProcess.destroy();
+
+              // Auto-apply upscaled video to screens that had the original
+              for (var i = 0; i < screensWithThisWallpaper.length; i++) {
+                var screen = screensWithThisWallpaper[i];
+                Logger.i("Wallpaper", "Auto-applying upscaled video to:", screen);
+                changeWallpaper(outputPath, screen);
+              }
+
               refreshWallpapersList();
             });
             mvProcess.running = true;
