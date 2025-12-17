@@ -943,16 +943,68 @@ SmartPanel {
           property string thumbnailPath: ""
           property bool thumbnailReady: false
 
+          // Metadata properties
+          property bool isUpscaled: filename.indexOf("_upscaled") !== -1
+          property string resolution: ""
+          property string fileSize: ""
+          property bool metadataLoaded: false
+
           width: wallpaperGridView.itemSize
           spacing: Style.marginXS
 
-          // Generate thumbnail for video files
+          // Load metadata when item is created
           Component.onCompleted: {
             if (isVideo && VideoWallpaperService.isInitialized) {
               loadThumbnail()
             } else if (isVideo) {
               thumbnailRetryTimer.start()
             }
+            // Load file metadata
+            loadMetadata()
+          }
+
+          function loadMetadata() {
+            var itemRef = wallpaperItem;
+            var path = wallpaperPath;
+
+            // Get file size and resolution using stat and file/identify
+            var metaProcess = Qt.createQmlObject(`
+              import QtQuick
+              import Quickshell.Io
+              Process {
+                property string filePath: ""
+                command: ["sh", "-c", "stat -c '%s' '" + filePath + "' 2>/dev/null && (file '" + filePath + "' | grep -oP '\\\\d+\\\\s*x\\\\s*\\\\d+' | head -1 || identify -format '%wx%h' '" + filePath + "' 2>/dev/null || echo '')"]
+                stdout: StdioCollector {}
+              }
+            `, wallpaperItem, "MetadataProcess");
+
+            metaProcess.filePath = path;
+            metaProcess.exited.connect(function(exitCode) {
+              if (exitCode === 0 && itemRef) {
+                var lines = metaProcess.stdout.text.trim().split('\\n');
+                if (lines.length >= 1) {
+                  // Parse file size (first line)
+                  var sizeBytes = parseInt(lines[0]);
+                  if (!isNaN(sizeBytes)) {
+                    itemRef.fileSize = formatFileSize(sizeBytes);
+                  }
+                }
+                if (lines.length >= 2 && lines[1]) {
+                  // Parse resolution (second line)
+                  itemRef.resolution = lines[1].replace(/\\s+/g, '');
+                }
+                itemRef.metadataLoaded = true;
+              }
+              metaProcess.destroy();
+            });
+            metaProcess.running = true;
+          }
+
+          function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+            return (bytes / (1024 * 1024 * 1024)).toFixed(1) + " GB";
           }
           
           function loadThumbnail() {
@@ -1079,6 +1131,63 @@ SmartPanel {
                 icon: "player-play"
                 pointSize: 14
                 color: Color.mOnSurface
+              }
+            }
+
+            // Upscaled badge (top-left corner)
+            Rectangle {
+              anchors.top: parent.top
+              anchors.left: parent.left
+              anchors.margins: Style.marginS
+              height: 18
+              width: upscaledLabel.implicitWidth + Style.marginS * 2
+              radius: 4
+              color: Color.mPrimary
+              visible: wallpaperItem.isUpscaled
+
+              NText {
+                id: upscaledLabel
+                anchors.centerIn: parent
+                text: "AI"
+                pointSize: Style.fontSizeXXS
+                font.weight: Style.fontWeightBold
+                color: Color.mOnPrimary
+              }
+            }
+
+            // Metadata overlay (shows on hover)
+            Rectangle {
+              anchors.bottom: parent.bottom
+              anchors.left: parent.left
+              anchors.right: parent.right
+              height: metadataColumn.implicitHeight + Style.marginS * 2
+              color: Qt.rgba(0, 0, 0, 0.7)
+              visible: hoverHandler.hovered && wallpaperItem.metadataLoaded
+              opacity: hoverHandler.hovered ? 1 : 0
+
+              Behavior on opacity {
+                NumberAnimation { duration: Style.animationFast }
+              }
+
+              Column {
+                id: metadataColumn
+                anchors.fill: parent
+                anchors.margins: Style.marginS
+                spacing: 2
+
+                NText {
+                  text: wallpaperItem.resolution || ""
+                  pointSize: Style.fontSizeXXS
+                  color: "white"
+                  visible: wallpaperItem.resolution !== ""
+                }
+
+                NText {
+                  text: wallpaperItem.fileSize || ""
+                  pointSize: Style.fontSizeXXS
+                  color: Qt.rgba(1, 1, 1, 0.8)
+                  visible: wallpaperItem.fileSize !== ""
+                }
               }
             }
 
