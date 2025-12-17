@@ -390,7 +390,7 @@ Singleton {
       import QtQuick
       import Quickshell.Io
       Process {
-        command: ["realesrgan-ncnn-vulkan", "-i", "` + imagePath.replace(/"/g, '\\"') + `", "-o", "` + outputPath.replace(/"/g, '\\"') + `", "-n", "realesrgan-x4plus"]
+        command: ["realesrgan-ncnn-vulkan", "-i", "` + imagePath.replace(/"/g, '\\"') + `", "-o", "` + outputPath.replace(/"/g, '\\"') + `", "-n", "realesrgan-x4plus-anime"]
         stdout: StdioCollector {}
         stderr: StdioCollector {}
       }
