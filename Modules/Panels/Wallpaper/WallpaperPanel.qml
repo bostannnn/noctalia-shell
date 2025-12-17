@@ -967,37 +967,72 @@ SmartPanel {
             var itemRef = wallpaperItem;
             var path = wallpaperPath;
 
-            // Get file size and resolution using stat and file/identify
-            var metaProcess = Qt.createQmlObject(`
+            // Get file size using stat
+            var sizeProcess = Qt.createQmlObject(`
               import QtQuick
               import Quickshell.Io
               Process {
-                property string filePath: ""
-                command: ["sh", "-c", "stat -c '%s' '" + filePath + "' 2>/dev/null && (file '" + filePath + "' | grep -oP '\\\\d+\\\\s*x\\\\s*\\\\d+' | head -1 || identify -format '%wx%h' '" + filePath + "' 2>/dev/null || echo '')"]
+                command: ["stat", "-c", "%s", "` + path.replace(/"/g, '\\"') + `"]
                 stdout: StdioCollector {}
               }
-            `, wallpaperItem, "MetadataProcess");
+            `, wallpaperItem, "SizeProcess");
 
-            metaProcess.filePath = path;
-            metaProcess.exited.connect(function(exitCode) {
+            sizeProcess.exited.connect(function(exitCode) {
               if (exitCode === 0 && itemRef) {
-                var lines = metaProcess.stdout.text.trim().split('\\n');
-                if (lines.length >= 1) {
-                  // Parse file size (first line)
-                  var sizeBytes = parseInt(lines[0]);
-                  if (!isNaN(sizeBytes)) {
-                    itemRef.fileSize = formatFileSize(sizeBytes);
+                var sizeBytes = parseInt(sizeProcess.stdout.text.trim());
+                if (!isNaN(sizeBytes)) {
+                  itemRef.fileSize = formatFileSize(sizeBytes);
+                }
+              }
+              sizeProcess.destroy();
+            });
+            sizeProcess.running = true;
+
+            // Get resolution using identify (ImageMagick)
+            if (!wallpaperItem.isVideo) {
+              var resProcess = Qt.createQmlObject(`
+                import QtQuick
+                import Quickshell.Io
+                Process {
+                  command: ["identify", "-format", "%wx%h", "` + path.replace(/"/g, '\\"') + `"]
+                  stdout: StdioCollector {}
+                }
+              `, wallpaperItem, "ResProcess");
+
+              resProcess.exited.connect(function(exitCode) {
+                if (exitCode === 0 && itemRef) {
+                  var res = resProcess.stdout.text.trim();
+                  if (res) {
+                    itemRef.resolution = res;
                   }
                 }
-                if (lines.length >= 2 && lines[1]) {
-                  // Parse resolution (second line)
-                  itemRef.resolution = lines[1].replace(/\\s+/g, '');
+                itemRef.metadataLoaded = true;
+                resProcess.destroy();
+              });
+              resProcess.running = true;
+            } else {
+              // For videos, try ffprobe
+              var videoResProcess = Qt.createQmlObject(`
+                import QtQuick
+                import Quickshell.Io
+                Process {
+                  command: ["sh", "-c", "ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 '` + path.replace(/'/g, "'\\''") + `' 2>/dev/null | tr ',' 'x'"]
+                  stdout: StdioCollector {}
+                }
+              `, wallpaperItem, "VideoResProcess");
+
+              videoResProcess.exited.connect(function(exitCode) {
+                if (exitCode === 0 && itemRef) {
+                  var res = videoResProcess.stdout.text.trim();
+                  if (res) {
+                    itemRef.resolution = res;
+                  }
                 }
                 itemRef.metadataLoaded = true;
-              }
-              metaProcess.destroy();
-            });
-            metaProcess.running = true;
+                videoResProcess.destroy();
+              });
+              videoResProcess.running = true;
+            }
           }
 
           function formatFileSize(bytes) {
