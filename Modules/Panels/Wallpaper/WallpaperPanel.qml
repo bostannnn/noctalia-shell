@@ -1382,6 +1382,65 @@ SmartPanel {
               }
             }
 
+            // Video upscale progress overlay
+            Rectangle {
+              id: upscaleProgressOverlay
+              anchors.fill: parent
+              color: Qt.rgba(0, 0, 0, 0.75)
+              radius: parent.radius
+              visible: WallpaperService.isUpscalingVideo && WallpaperService.upscalingFile === wallpaperPath
+
+              Column {
+                anchors.centerIn: parent
+                spacing: Style.marginS
+                width: parent.width - Style.marginM * 2
+
+                NText {
+                  anchors.horizontalCenter: parent.horizontalCenter
+                  text: {
+                    var stage = WallpaperService.videoUpscaleStage;
+                    switch (stage) {
+                      case "analyzing": return I18n.tr("wallpaper.upscale.stage.analyzing") || "Analyzing...";
+                      case "extracting": return I18n.tr("wallpaper.upscale.stage.extracting") || "Extracting...";
+                      case "upscaling": return I18n.tr("wallpaper.upscale.stage.upscaling") || "Upscaling...";
+                      case "encoding": return I18n.tr("wallpaper.upscale.stage.encoding") || "Encoding...";
+                      default: return I18n.tr("wallpaper.upscale.stage.processing") || "Processing...";
+                    }
+                  }
+                  color: Color.mOnSurface
+                  pointSize: Style.fontSizeXS
+                  font.weight: Style.fontWeightBold
+                }
+
+                // Progress bar background
+                Rectangle {
+                  width: parent.width
+                  height: 6
+                  radius: 3
+                  color: Color.mSurfaceVariant
+
+                  // Progress bar fill
+                  Rectangle {
+                    width: parent.width * WallpaperService.videoUpscaleProgress
+                    height: parent.height
+                    radius: parent.radius
+                    color: Color.mPrimary
+
+                    Behavior on width {
+                      NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                    }
+                  }
+                }
+
+                NText {
+                  anchors.horizontalCenter: parent.horizontalCenter
+                  text: Math.round(WallpaperService.videoUpscaleProgress * 100) + "%"
+                  color: Color.mOnSurfaceVariant
+                  pointSize: Style.fontSizeXS
+                }
+              }
+            }
+
             // More efficient hover handling
             HoverHandler {
               id: hoverHandler

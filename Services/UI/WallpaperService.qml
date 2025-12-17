@@ -45,6 +45,10 @@ Singleton {
   property bool isUpscaling: false
   property bool isUpscalingVideo: false
   property string upscalingFile: ""
+  property real videoUpscaleProgress: 0.0  // 0.0 to 1.0
+  property string videoUpscaleStage: ""    // extracting, upscaling, encoding
+  property string _videoUpscaleTempDir: "" // Internal: temp directory for progress tracking
+  property int _videoUpscaleTotalFrames: 0 // Internal: total frames count
   signal upscaleCompleted(string originalPath, string upscaledPath)
   signal upscaleFailed(string originalPath, string error)
 
@@ -554,9 +558,10 @@ Singleton {
       I18n.tr("wallpaper.upscale.video-started-desc")
     );
 
-    // Escape paths for shell
-    var safeInput = videoPath.replace(/'/g, "'\\''");
-    var safeOutput = outputPath.replace(/'/g, "'\\''");
+    // Reset progress
+    videoUpscaleProgress = 0.0;
+    videoUpscaleStage = "extracting";
+
     var scriptPath = Quickshell.shellDir + "/Assets/Scripts/upscale-video.sh";
 
     var processString = `
@@ -577,9 +582,49 @@ Singleton {
     upscaleProcess.input = videoPath;
     upscaleProcess.output = outputPath;
 
+    // Timer to poll stdout for progress
+    var progressTimer = Qt.createQmlObject(`
+      import QtQuick
+      Timer {
+        property var process: null
+        interval: 500
+        repeat: true
+        running: true
+      }
+    `, root, "ProgressTimer");
+
+    progressTimer.process = upscaleProcess;
+    progressTimer.triggered.connect(function() {
+      if (progressTimer.process && progressTimer.process.stdout) {
+        var text = progressTimer.process.stdout.text || "";
+        var lines = text.split("\\n");
+        // Find last PROGRESS line
+        for (var i = lines.length - 1; i >= 0; i--) {
+          if (lines[i].startsWith("PROGRESS:")) {
+            var parts = lines[i].substring(9).split(":");
+            if (parts.length >= 2) {
+              var progress = parseFloat(parts[0]);
+              var stage = parts[1];
+              if (!isNaN(progress)) {
+                videoUpscaleProgress = Math.min(1.0, Math.max(0.0, progress));
+                videoUpscaleStage = stage;
+              }
+            }
+            break;
+          }
+        }
+      }
+    });
+
     upscaleProcess.exited.connect(function(exitCode) {
+      // Stop and cleanup progress timer
+      progressTimer.running = false;
+      progressTimer.destroy();
+
       isUpscalingVideo = false;
       upscalingFile = "";
+      videoUpscaleProgress = 0.0;
+      videoUpscaleStage = "";
 
       if (exitCode === 0) {
         Logger.i("Wallpaper", "Video upscale completed:", outputPath);
