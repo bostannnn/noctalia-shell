@@ -14,11 +14,6 @@ SmartPanel {
   preferredWidth: Math.round(400 * Style.uiScaleRatio)
   preferredHeight: Math.round(500 * Style.uiScaleRatio)
 
-  // Auto-focus input when panel opens
-  onOpened: {
-    addInput.forceActiveFocus();
-  }
-
   panelContent: Item {
     anchors.fill: parent
 
@@ -27,6 +22,14 @@ SmartPanel {
       var baseHeight = content.implicitHeight + (Style.marginL * 2);
       // Clamp between minimum (280) and maximum (500)
       return Math.max(280 * Style.uiScaleRatio, Math.min(root.preferredHeight, baseHeight));
+    }
+
+    // Auto-focus input when panel opens
+    Connections {
+      target: root
+      function onOpened() {
+        addInput.forceActiveFocus();
+      }
     }
 
     ColumnLayout {

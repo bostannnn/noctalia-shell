@@ -71,9 +71,6 @@ Singleton {
     var filename = "screenshot-" + timestamp + ".png";
     var outputFile = screenshotDir + "/" + filename;
 
-    // Store for later use
-    screenshotProcess.outputFile = outputFile;
-
     // Build the command
     var setupCmd = "mkdir -p '" + screenshotDir + "'";
 
