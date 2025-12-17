@@ -21,9 +21,11 @@ Item {
   // Border configuration from Settings
   property int borderThickness: Settings.data.general.screenBorderThickness ?? 10
   property int borderRounding: Settings.data.general.screenBorderRounding ?? Math.round(25 * Settings.data.general.radiusRatio)
-  property color borderColor: (Settings.data.general.screenBorderUseThemeColor ?? true)
-                              ? Color.mSurface
-                              : (Settings.data.general.screenBorderColor ?? Color.mSurface)
+  property color baseColor: (Settings.data.general.screenBorderUseThemeColor ?? true)
+                            ? Color.mSurface
+                            : (Settings.data.general.screenBorderColor ?? Color.mSurface)
+  // Apply panel background opacity to match bar/panel transparency
+  property color borderColor: Settings.data.bar.transparent ? "transparent" : Qt.alpha(baseColor, Settings.data.ui.panelBackgroundOpacity)
 
   // Shadow configuration
   property bool shadowEnabled: Settings.data.general.screenBorderShadowEnabled ?? true
