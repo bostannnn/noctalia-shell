@@ -766,47 +766,146 @@ SmartPanel {
       deleteProcess.running = true;
     }
 
-    // Context menu for wallpaper items
+    // Styled context menu for wallpaper items
     Menu {
       id: wallpaperContextMenu
       property string wallpaperToDelete: ""
 
+      // Style the menu background
+      background: Rectangle {
+        implicitWidth: 220
+        color: Color.mSurface
+        radius: Style.radiusS
+        border.color: Color.mOutline
+        border.width: Style.borderS
+      }
+
+      // Delete item
       MenuItem {
+        id: deleteItem
         text: I18n.tr("wallpaper.panel.context.delete")
-        icon.name: "trash"
-        onTriggered: {
-          if (wallpaperContextMenu.wallpaperToDelete) {
-            deleteWallpaper(wallpaperContextMenu.wallpaperToDelete)
+        icon.name: "user-trash-symbolic"
+        icon.color: deleteItemArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+
+        background: Rectangle {
+          color: deleteItemArea.containsMouse ? Color.mHover : Color.transparent
+          radius: Style.radiusXS
+        }
+
+        contentItem: RowLayout {
+          spacing: Style.marginS
+          NIcon {
+            icon: "trash"
+            pointSize: Style.fontSizeM
+            color: deleteItemArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+          }
+          NText {
+            text: deleteItem.text
+            pointSize: Style.fontSizeS
+            color: deleteItemArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+            Layout.fillWidth: true
+          }
+        }
+
+        MouseArea {
+          id: deleteItemArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: {
+            if (wallpaperContextMenu.wallpaperToDelete) {
+              deleteWallpaper(wallpaperContextMenu.wallpaperToDelete);
+            }
+            wallpaperContextMenu.close();
           }
         }
       }
 
+      // Open folder item
       MenuItem {
+        id: openFolderItem
         text: I18n.tr("wallpaper.panel.context.open-folder")
-        icon.name: "folder-open"
-        onTriggered: {
-          if (wallpaperContextMenu.wallpaperToDelete) {
-            var folder = wallpaperContextMenu.wallpaperToDelete.substring(0, wallpaperContextMenu.wallpaperToDelete.lastIndexOf('/'))
-            Qt.openUrlExternally("file://" + folder)
+
+        background: Rectangle {
+          color: openFolderArea.containsMouse ? Color.mHover : Color.transparent
+          radius: Style.radiusXS
+        }
+
+        contentItem: RowLayout {
+          spacing: Style.marginS
+          NIcon {
+            icon: "folder-open"
+            pointSize: Style.fontSizeM
+            color: openFolderArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+          }
+          NText {
+            text: openFolderItem.text
+            pointSize: Style.fontSizeS
+            color: openFolderArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+            Layout.fillWidth: true
+          }
+        }
+
+        MouseArea {
+          id: openFolderArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: {
+            if (wallpaperContextMenu.wallpaperToDelete) {
+              var folder = wallpaperContextMenu.wallpaperToDelete.substring(0, wallpaperContextMenu.wallpaperToDelete.lastIndexOf('/'));
+              Qt.openUrlExternally("file://" + folder);
+            }
+            wallpaperContextMenu.close();
           }
         }
       }
 
+      // Upscale item
       MenuItem {
+        id: upscaleItem
+        visible: ProgramCheckerService.realesrganAvailable
         text: WallpaperService.isUpscaling ? I18n.tr("wallpaper.panel.context.upscaling") : I18n.tr("wallpaper.panel.context.upscale")
-        icon.name: "photo-up"
         enabled: {
           if (WallpaperService.isUpscaling) return false;
-          if (!ProgramCheckerService.realesrganAvailable) return false;
           var path = wallpaperContextMenu.wallpaperToDelete;
           if (!path) return false;
           var ext = path.split('.').pop().toLowerCase();
           var imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "pnm"];
           return imageExtensions.indexOf(ext) !== -1;
         }
-        onTriggered: {
-          if (wallpaperContextMenu.wallpaperToDelete) {
-            WallpaperService.upscaleWallpaper(wallpaperContextMenu.wallpaperToDelete)
+
+        background: Rectangle {
+          color: upscaleArea.containsMouse && upscaleItem.enabled ? Color.mHover : Color.transparent
+          radius: Style.radiusXS
+        }
+
+        contentItem: RowLayout {
+          spacing: Style.marginS
+          opacity: upscaleItem.enabled ? 1.0 : 0.5
+          NIcon {
+            icon: "photo-up"
+            pointSize: Style.fontSizeM
+            color: upscaleArea.containsMouse && upscaleItem.enabled ? Color.mOnHover : Color.mOnSurface
+          }
+          NText {
+            text: upscaleItem.text
+            pointSize: Style.fontSizeS
+            color: upscaleArea.containsMouse && upscaleItem.enabled ? Color.mOnHover : Color.mOnSurface
+            Layout.fillWidth: true
+          }
+        }
+
+        MouseArea {
+          id: upscaleArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: upscaleItem.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+          onClicked: {
+            if (upscaleItem.enabled && wallpaperContextMenu.wallpaperToDelete) {
+              WallpaperService.upscaleWallpaper(wallpaperContextMenu.wallpaperToDelete);
+            }
+            wallpaperContextMenu.close();
           }
         }
       }
@@ -1203,6 +1302,7 @@ SmartPanel {
             }
 
             TapHandler {
+              acceptedButtons: Qt.LeftButton
               onTapped: {
                 wallpaperGridView.forceActiveFocus();
                 wallpaperGridView.currentIndex = index;
@@ -1215,14 +1315,11 @@ SmartPanel {
             }
 
             // Right-click for context menu
-            MouseArea {
-              anchors.fill: parent
+            TapHandler {
               acceptedButtons: Qt.RightButton
-              onClicked: function(mouse) {
-                if (mouse.button === Qt.RightButton) {
-                  wallpaperContextMenu.wallpaperToDelete = wallpaperPath
-                  wallpaperContextMenu.popup()
-                }
+              onTapped: {
+                wallpaperContextMenu.wallpaperToDelete = wallpaperPath;
+                wallpaperContextMenu.popup();
               }
             }
           }
