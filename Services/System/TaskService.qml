@@ -12,7 +12,6 @@ Singleton {
   // Task data
   property var tasks: []
   property int pendingCount: 0
-  property int completedCount: 0
   property bool loading: false
   property string lastError: ""
 
@@ -95,7 +94,8 @@ Singleton {
 
     taskDeleter.taskId = taskId;
     taskDeleter.callback = callback;
-    taskDeleter.command = ["sh", "-c", "echo 'yes' | task " + taskId + " delete"];
+    // Use rc.confirmation:off to avoid shell injection risks
+    taskDeleter.command = ["task", "rc.confirmation:off", taskId, "delete"];
     taskDeleter.running = true;
   }
 
@@ -147,9 +147,11 @@ Singleton {
       var success = (exitCode === 0);
       if (success) {
         Logger.d("TaskService", "Task added");
+        root.lastError = "";
         root.loadTasks();
         root.taskAdded("");
       } else {
+        root.lastError = "Failed to add task";
         Logger.e("TaskService", "Failed to add task:", stderr.text);
       }
 
@@ -174,9 +176,11 @@ Singleton {
       var success = (exitCode === 0);
       if (success) {
         Logger.d("TaskService", "Task completed:", taskId);
+        root.lastError = "";
         root.loadTasks();
         root.taskCompleted(taskId);
       } else {
+        root.lastError = "Failed to complete task";
         Logger.e("TaskService", "Failed to complete task:", stderr.text);
       }
 
@@ -202,9 +206,11 @@ Singleton {
       var success = (exitCode === 0);
       if (success) {
         Logger.d("TaskService", "Task deleted:", taskId);
+        root.lastError = "";
         root.loadTasks();
         root.taskDeleted(taskId);
       } else {
+        root.lastError = "Failed to delete task";
         Logger.e("TaskService", "Failed to delete task:", stderr.text);
       }
 

@@ -12,12 +12,22 @@ SmartPanel {
   id: root
 
   preferredWidth: Math.round(400 * Style.uiScaleRatio)
+  preferredHeight: Math.round(500 * Style.uiScaleRatio)
+
+  // Auto-focus input when panel opens
+  onOpened: {
+    addInput.forceActiveFocus();
+  }
 
   panelContent: Item {
     anchors.fill: parent
 
     // SmartPanel uses this to calculate panel height dynamically
-    readonly property real contentPreferredHeight: content.implicitHeight + (Style.marginL * 2)
+    readonly property real contentPreferredHeight: {
+      var baseHeight = content.implicitHeight + (Style.marginL * 2);
+      // Clamp between minimum (280) and maximum (500)
+      return Math.max(280 * Style.uiScaleRatio, Math.min(root.preferredHeight, baseHeight));
+    }
 
     ColumnLayout {
       id: content
@@ -135,95 +145,106 @@ SmartPanel {
       // Task list or empty state
       Item {
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.max(200, taskList.implicitHeight)
+        Layout.fillHeight: true
+        Layout.minimumHeight: 150
 
-        // Task list
-        Column {
-          id: taskList
-          width: parent.width
-          spacing: Style.marginS
+        // Task list with scrolling
+        NScrollView {
+          id: scrollView
+          anchors.fill: parent
+          ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+          ScrollBar.vertical.policy: ScrollBar.AsNeeded
+          clip: true
           visible: TaskService.tasks.length > 0
 
-          Repeater {
-            model: TaskService.tasks
+          contentWidth: availableWidth
 
-            delegate: Rectangle {
-              id: taskItem
-              width: taskList.width
-              height: taskRow.implicitHeight + Style.marginM * 2
-              color: taskMouseArea.containsMouse ? Color.mHover : Color.mSurfaceVariant
-              radius: Style.radiusS
+          Column {
+            id: taskList
+            width: scrollView.width
+            spacing: Style.marginS
 
-              property var taskData: modelData
+            Repeater {
+              model: TaskService.tasks
 
-              Behavior on color {
-                ColorAnimation { duration: Style.animationFast }
-              }
+              delegate: Rectangle {
+                id: taskItem
+                width: taskList.width
+                height: taskRow.implicitHeight + Style.marginM * 2
+                color: taskMouseArea.containsMouse ? Color.mHover : Color.mSurfaceVariant
+                radius: Style.radiusS
 
-              MouseArea {
-                id: taskMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                property var taskData: modelData
 
-                onClicked: mouse => {
-                  if (mouse.button === Qt.RightButton) {
-                    taskContextMenu.taskId = taskData.id.toString();
-                    taskContextMenu.popup();
-                  }
+                Behavior on color {
+                  ColorAnimation { duration: Style.animationFast }
                 }
-              }
 
-              RowLayout {
-                id: taskRow
-                anchors.fill: parent
-                anchors.margins: Style.marginM
-                spacing: Style.marginS
+                MouseArea {
+                  id: taskMouseArea
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-                // Checkbox to complete
-                Rectangle {
-                  width: Math.round(22 * Style.uiScaleRatio)
-                  height: width
-                  radius: Style.radiusXS
-                  color: checkboxArea.containsMouse ? Color.mPrimary : Color.transparent
-                  border.color: checkboxArea.containsMouse ? Color.mPrimary : Color.mOutline
-                  border.width: Style.borderS
-
-                  NIcon {
-                    anchors.centerIn: parent
-                    icon: "check"
-                    pointSize: Style.fontSizeS
-                    color: Color.mOnPrimary
-                    visible: checkboxArea.containsMouse
-                  }
-
-                  MouseArea {
-                    id: checkboxArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                      TaskService.completeTask(taskData.id.toString());
+                  onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                      taskContextMenu.taskId = taskData.id.toString();
+                      taskContextMenu.popup();
                     }
                   }
                 }
 
-                // Task description
-                NText {
-                  text: taskData.description || ""
-                  pointSize: Style.fontSizeS
-                  color: Color.mOnSurface
-                  wrapMode: Text.WordWrap
-                  Layout.fillWidth: true
-                }
+                RowLayout {
+                  id: taskRow
+                  anchors.fill: parent
+                  anchors.margins: Style.marginM
+                  spacing: Style.marginS
 
-                // Delete button
-                NIconButton {
-                  icon: "trash"
-                  baseSize: 24
-                  visible: taskMouseArea.containsMouse
-                  onClicked: {
-                    TaskService.deleteTask(taskData.id.toString());
+                  // Checkbox to complete
+                  Rectangle {
+                    width: Math.round(22 * Style.uiScaleRatio)
+                    height: width
+                    radius: Style.radiusXS
+                    color: checkboxArea.containsMouse ? Color.mPrimary : Color.transparent
+                    border.color: checkboxArea.containsMouse ? Color.mPrimary : Color.mOutline
+                    border.width: Style.borderS
+
+                    NIcon {
+                      anchors.centerIn: parent
+                      icon: "check"
+                      pointSize: Style.fontSizeS
+                      color: Color.mOnPrimary
+                      visible: checkboxArea.containsMouse
+                    }
+
+                    MouseArea {
+                      id: checkboxArea
+                      anchors.fill: parent
+                      hoverEnabled: true
+                      cursorShape: Qt.PointingHandCursor
+                      onClicked: {
+                        TaskService.completeTask(taskData.id.toString());
+                      }
+                    }
+                  }
+
+                  // Task description
+                  NText {
+                    text: taskData.description || ""
+                    pointSize: Style.fontSizeS
+                    color: Color.mOnSurface
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                  }
+
+                  // Delete button
+                  NIconButton {
+                    icon: "trash"
+                    baseSize: 24
+                    visible: taskMouseArea.containsMouse
+                    onClicked: {
+                      TaskService.deleteTask(taskData.id.toString());
+                    }
                   }
                 }
               }

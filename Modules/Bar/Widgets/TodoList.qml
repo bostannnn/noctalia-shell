@@ -66,12 +66,7 @@ NIconButton {
         "label": I18n.tr("todolist.context.refresh"),
         "action": "refresh",
         "icon": "refresh"
-      },
-      {
-        "label": I18n.tr("context-menu.widget-settings"),
-        "action": "widget-settings",
-        "icon": "settings"
-      },
+      }
     ]
 
     onTriggered: action => {
@@ -82,8 +77,6 @@ NIconButton {
 
                    if (action === "refresh") {
                      TaskService.loadTasks();
-                   } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
                    }
                  }
   }
@@ -109,16 +102,14 @@ NIconButton {
     anchors.rightMargin: 2
     anchors.topMargin: 1
     z: 2
-    active: !hideWhenZero || pendingCount > 0
+    active: pendingCount > 0 || !hideWhenZero
     sourceComponent: Rectangle {
-      id: badge
       height: 8
       width: height
       radius: Style.radiusXS
       color: Color.mPrimary
       border.color: Color.mSurface
       border.width: Style.borderS
-      visible: pendingCount > 0 || !hideWhenZero
     }
   }
 }
