@@ -8,6 +8,7 @@
     "showOutline": false,
     "showCapsule": true,
     "capsuleOpacity": 1,
+    "mode": "classic",
     "floating": false,
     "marginVertical": 0.25,
     "marginHorizontal": 0.25,
@@ -69,6 +70,15 @@
     "dimmerOpacity": 0.2,
     "showScreenCorners": false,
     "forceBlackScreenCorners": false,
+    "screenBorderEnabled": false,
+    "screenBorderThickness": 10,
+    "screenBorderRounding": 25,
+    "screenBorderUseThemeColor": true,
+    "screenBorderColor": "#1e1e2e",
+    "screenBorderMargin": 10,
+    "screenBorderShadowEnabled": true,
+    "screenBorderShadowBlur": 15,
+    "screenBorderShadowOpacity": 0.7,
     "scaleRatio": 1,
     "radiusRatio": 1,
     "iRadiusRatio": 1,
@@ -157,8 +167,6 @@
     "transitionEdgeSmoothness": 0.05,
     "panelPosition": "follow_bar",
     "hideWallpaperFilenames": false,
-    "videoMuted": true,
-    "videoPauseOnFullscreen": true,
     "useWallhaven": false,
     "wallhavenQuery": "",
     "wallhavenSorting": "relevance",
@@ -394,7 +402,7 @@
     "yazi": false,
     "emacs": false,
     "niri": false,
-"hyprland": false,
+    "hyprland": false,
     "zed": false,
     "enableUserTemplates": false
   },
@@ -420,4 +428,3 @@
     "monitorWidgets": []
   }
 }
-
