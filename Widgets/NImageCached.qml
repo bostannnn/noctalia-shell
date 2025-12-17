@@ -15,6 +15,8 @@ Image {
 
   // Track if we're waiting for ImageMagick fallback
   property bool waitingForMagick: false
+  // Track if we're trying to load the original image
+  property bool loadingOriginal: false
 
   asynchronous: true
   fillMode: Image.PreserveAspectCrop
@@ -22,6 +24,8 @@ Image {
   sourceSize.height: maxCacheDimension
   smooth: true
   onImagePathChanged: {
+    loadingTimeout.stop();
+    loadingOriginal = false;
     if (imagePath) {
       imageHash = Checksum.sha256(imagePath);
       waitingForMagick = false;
@@ -39,37 +43,26 @@ Image {
     }
   }
 
-  // Check if file is too large for Qt (>10MB) and needs ImageMagick
-  function checkFileSizeAndLoad() {
+  // Simplified approach: try Qt first, use ImageMagick fallback on error or timeout
+  // For cache miss, just try loading the original directly
+  function tryLoadOriginal() {
     if (!imagePath || waitingForMagick) return;
-    const srcPath = imagePath.replace(/^file:\/\//, "");
-    fileSizeChecker.srcPath = srcPath;
-    fileSizeChecker.command = ["stat", "-c", "%s", srcPath];
-    fileSizeChecker.running = true;
+    loadingOriginal = true;
+    source = imagePath;
+    // Start timeout - if Qt doesn't load within 3 seconds, use ImageMagick
+    loadingTimeout.restart();
   }
 
-  Process {
-    id: fileSizeChecker
-    property string srcPath: ""
-    running: false
-    stdout: StdioCollector {}
-    stderr: StdioCollector {}
-
-    onExited: function(exitCode) {
-      if (exitCode === 0) {
-        const sizeBytes = parseInt(stdout.text.trim(), 10);
-        // If file is larger than 10MB, use ImageMagick directly
-        if (sizeBytes > 10 * 1024 * 1024) {
-          Logger.d("NImageCached", "Large file detected (" + Math.round(sizeBytes/1024/1024) + "MB), using ImageMagick:", srcPath);
-          root.waitingForMagick = true;
-          root.generateThumbnailWithMagick();
-        } else {
-          // File is small enough for Qt, try loading it
-          root.source = root.imagePath;
-        }
-      } else {
-        // Couldn't check size, try loading anyway
-        root.source = root.imagePath;
+  // Timeout for loading original images - some large images make Qt hang forever
+  Timer {
+    id: loadingTimeout
+    interval: 3000
+    repeat: false
+    onTriggered: {
+      if (root.loadingOriginal && root.status === Image.Loading && !root.waitingForMagick) {
+        root.loadingOriginal = false;
+        root.waitingForMagick = true;
+        root.generateThumbnailWithMagick();
       }
     }
   }
@@ -79,24 +72,20 @@ Image {
     const normalizedCache = cachePath.replace(/^file:\/\//, "");
     const normalizedImage = imagePath.replace(/^file:\/\//, "");
 
-    // Debug logging
-    if (status === Image.Error) {
-      console.log("NImageCached Error loading, source:", normalizedSource);
-      console.log("NImageCached   cache:", normalizedCache);
-      console.log("NImageCached   image:", normalizedImage);
-      console.log("NImageCached   match cache?", normalizedSource === normalizedCache);
-    }
-
     if (normalizedSource === normalizedCache && status === Image.Error) {
-      // Cached image was not available - check file size before trying original
-      Logger.w("NImageCached", "Cache miss, checking file size for:", normalizedImage);
-      checkFileSizeAndLoad();
+      // Cached image was not available - try loading the original
+      // Failure is expected and warnings are ok in the console. Don't try to improve without consulting.
+      tryLoadOriginal();
     } else if (normalizedSource === normalizedImage && status === Image.Error && !waitingForMagick) {
       // Original image failed to load (too large for Qt) - use ImageMagick fallback
+      loadingTimeout.stop();
+      loadingOriginal = false;
       waitingForMagick = true;
       generateThumbnailWithMagick();
     } else if (normalizedSource === normalizedImage && status === Image.Ready && imageHash && cachePath) {
       // Original image is shown and fully loaded, time to cache it
+      loadingTimeout.stop();
+      loadingOriginal = false;
       const grabPath = cachePath;
       if (visible && width > 0 && height > 0 && Window.window && Window.window.visible)
         grabToImage(res => {
@@ -114,8 +103,6 @@ Image {
     const dstEsc = cachePath.replace(/'/g, "'\\''");
     const size = maxCacheDimension;
 
-    Logger.d("NImageCached", "Generating thumbnail with ImageMagick:", srcPath);
-
     // Use magick (IMv7) with convert fallback
     const cmd = `magick '${srcEsc}[0]' -thumbnail '${size}x${size}^' -gravity center -extent '${size}x${size}' '${dstEsc}' 2>/dev/null || convert '${srcEsc}[0]' -thumbnail '${size}x${size}^' -gravity center -extent '${size}x${size}' '${dstEsc}'`;
 
@@ -131,11 +118,8 @@ Image {
 
     onExited: function(exitCode) {
       if (exitCode === 0 && root.cachePath) {
-        Logger.d("NImageCached", "Thumbnail generated:", root.cachePath);
         // Thumbnail generated, load it
         root.source = root.cachePath;
-      } else {
-        Logger.w("NImageCached", "ImageMagick thumbnail failed for:", root.imagePath, "error:", stderr.text);
       }
       root.waitingForMagick = false;
     }
