@@ -94,9 +94,9 @@ ColumnLayout {
     onToggled: checked => Settings.data.bar.transparent = checked
   }
 
+  // Show outline works in all modes (affects widget capsule borders)
   NToggle {
     Layout.fillWidth: true
-    visible: (Settings.data.bar.mode ?? "classic") !== "framed"
     label: I18n.tr("settings.bar.appearance.show-outline.label")
     description: I18n.tr("settings.bar.appearance.show-outline.description")
     checked: Settings.data.bar.showOutline
