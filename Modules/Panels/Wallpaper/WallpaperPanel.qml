@@ -277,6 +277,13 @@ SmartPanel {
             }
 
             NIconButton {
+              icon: "arrows-shuffle"
+              tooltipText: I18n.tr("tooltips.random-wallpaper")
+              baseSize: Style.baseWidgetSize * 0.8
+              onClicked: WallpaperService.setRandomWallpaper()
+            }
+
+            NIconButton {
               icon: "close"
               tooltipText: I18n.tr("tooltips.close")
               baseSize: Style.baseWidgetSize * 0.8
