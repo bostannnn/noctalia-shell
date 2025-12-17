@@ -795,8 +795,9 @@ SmartPanel {
       MenuItem {
         text: WallpaperService.isUpscaling ? I18n.tr("wallpaper.panel.context.upscaling") : I18n.tr("wallpaper.panel.context.upscale")
         icon.name: "photo-up"
-        enabled: !WallpaperService.isUpscaling && ProgramCheckerService.realesrganAvailable && {
-          // Only enable for image files, not videos
+        enabled: {
+          if (WallpaperService.isUpscaling) return false;
+          if (!ProgramCheckerService.realesrganAvailable) return false;
           var path = wallpaperContextMenu.wallpaperToDelete;
           if (!path) return false;
           var ext = path.split('.').pop().toLowerCase();
