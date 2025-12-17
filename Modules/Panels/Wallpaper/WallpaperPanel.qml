@@ -883,7 +883,9 @@ SmartPanel {
           var imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "pnm"];
           return imageExtensions.indexOf(ext) !== -1;
         }
-        visible: ProgramCheckerService.realesrganAvailable && isImage
+        property bool shouldShow: ProgramCheckerService.realesrganAvailable && isImage
+        visible: shouldShow
+        height: shouldShow ? implicitHeight : 0
         text: WallpaperService.isUpscaling ? I18n.tr("wallpaper.panel.context.upscaling") : I18n.tr("wallpaper.panel.context.upscale")
         enabled: !WallpaperService.isUpscaling && !WallpaperService.isUpscalingVideo && isImage
 
@@ -932,7 +934,9 @@ SmartPanel {
           var videoExtensions = ["mp4", "webm", "mkv", "avi", "mov", "ogv", "m4v"];
           return videoExtensions.indexOf(ext) !== -1;
         }
-        visible: ProgramCheckerService.realesrganAvailable && isVideo
+        property bool shouldShow: ProgramCheckerService.realesrganAvailable && isVideo
+        visible: shouldShow
+        height: shouldShow ? implicitHeight : 0
         text: WallpaperService.isUpscalingVideo ? I18n.tr("wallpaper.panel.context.upscaling-video") : I18n.tr("wallpaper.panel.context.upscale-video")
         enabled: !WallpaperService.isUpscaling && !WallpaperService.isUpscalingVideo && isVideo
 
