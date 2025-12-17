@@ -21,7 +21,8 @@ Item {
   required property var bar
   required property var windowRoot
 
-  readonly property color panelBackgroundColor: Color.mSurface
+  // Apply panelBackgroundOpacity directly to background color for reliable transparency
+  readonly property color panelBackgroundColor: Qt.alpha(Color.mSurface, Settings.data.ui.panelBackgroundOpacity)
   readonly property bool isFramedMode: (Settings.data.bar.mode ?? "classic") === "framed"
 
   anchors.fill: parent
@@ -30,7 +31,6 @@ Item {
   Item {
     anchors.fill: parent
     layer.enabled: true
-    opacity: Settings.data.ui.panelBackgroundOpacity
 
     Shape {
       id: backgroundsShape
