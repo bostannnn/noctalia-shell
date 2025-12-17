@@ -411,27 +411,50 @@ Singleton {
         var originalsDir = dirPath + "/Originals";
         var newOriginalPath = originalsDir + "/" + fileName;
 
-        var moveProcess = Qt.createQmlObject(`
+        Logger.i("Wallpaper", "Moving original to:", newOriginalPath);
+
+        // Use separate commands array to avoid shell escaping issues
+        var mkdirProcess = Qt.createQmlObject(`
           import QtQuick
           import Quickshell.Io
           Process {
-            command: ["sh", "-c", "mkdir -p '` + originalsDir.replace(/'/g, "'\\''") + `' && mv '` + imagePath.replace(/'/g, "'\\''") + `' '` + newOriginalPath.replace(/'/g, "'\\''") + `'"]
+            command: ["mkdir", "-p", "` + originalsDir.replace(/"/g, '\\"') + `"]
             stdout: StdioCollector {}
             stderr: StdioCollector {}
           }
-        `, root, "MoveOriginalProcess");
+        `, root, "MkdirProcess");
 
-        moveProcess.exited.connect(function(moveExitCode) {
-          if (moveExitCode === 0) {
-            Logger.i("Wallpaper", "Original moved to:", newOriginalPath);
+        mkdirProcess.exited.connect(function(mkdirExitCode) {
+          if (mkdirExitCode === 0) {
+            // Now move the file
+            var mvProcess = Qt.createQmlObject(`
+              import QtQuick
+              import Quickshell.Io
+              Process {
+                command: ["mv", "` + imagePath.replace(/"/g, '\\"') + `", "` + newOriginalPath.replace(/"/g, '\\"') + `"]
+                stdout: StdioCollector {}
+                stderr: StdioCollector {}
+              }
+            `, root, "MvProcess");
+
+            mvProcess.exited.connect(function(mvExitCode) {
+              if (mvExitCode === 0) {
+                Logger.i("Wallpaper", "Original moved to:", newOriginalPath);
+              } else {
+                Logger.w("Wallpaper", "Failed to move original:", mvProcess.stderr.text);
+              }
+              mvProcess.destroy();
+              // Refresh wallpaper list after move
+              refreshWallpapersList();
+            });
+            mvProcess.running = true;
           } else {
-            Logger.w("Wallpaper", "Failed to move original:", moveProcess.stderr.text);
+            Logger.w("Wallpaper", "Failed to create Originals folder:", mkdirProcess.stderr.text);
+            refreshWallpapersList();
           }
-          moveProcess.destroy();
-          // Refresh wallpaper list after move
-          refreshWallpapersList();
+          mkdirProcess.destroy();
         });
-        moveProcess.running = true;
+        mkdirProcess.running = true;
 
         ToastService.showNotice(
           I18n.tr("wallpaper.upscale.completed"),
