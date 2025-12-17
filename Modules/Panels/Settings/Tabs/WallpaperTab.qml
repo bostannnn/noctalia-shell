@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Services.Compositor
+import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 
@@ -454,6 +455,79 @@ ColumnLayout {
       pointSize: Style.fontSizeS
       wrapMode: Text.WordWrap
       Layout.fillWidth: true
+    }
+  }
+
+  NDivider {
+    visible: Settings.data.wallpaper.enabled && ProgramCheckerService.realesrganAvailable
+    Layout.fillWidth: true
+    Layout.topMargin: Style.marginL
+    Layout.bottomMargin: Style.marginL
+  }
+
+  // AI Upscaling Settings
+  ColumnLayout {
+    visible: Settings.data.wallpaper.enabled && ProgramCheckerService.realesrganAvailable
+    spacing: Style.marginL
+    Layout.fillWidth: true
+
+    NHeader {
+      label: I18n.tr("settings.wallpaper.upscale.section.label") || "AI Upscaling"
+      description: I18n.tr("settings.wallpaper.upscale.section.description") || "Settings for Real-ESRGAN image/video upscaling"
+    }
+
+    NComboBox {
+      label: I18n.tr("settings.wallpaper.upscale.image-model.label") || "Image Upscale Model"
+      description: I18n.tr("settings.wallpaper.upscale.image-model.description") || "Model for upscaling images (always 4x)"
+      Layout.fillWidth: true
+      model: [
+        {
+          "key": "realesrgan-x4plus",
+          "name": I18n.tr("settings.wallpaper.upscale.model.general") || "General (photos, real-world)"
+        },
+        {
+          "key": "realesrgan-x4plus-anime",
+          "name": I18n.tr("settings.wallpaper.upscale.model.anime") || "Anime/Cartoon"
+        }
+      ]
+      currentKey: Settings.data.wallpaper.imageUpscaleModel || "realesrgan-x4plus-anime"
+      onSelected: key => Settings.data.wallpaper.imageUpscaleModel = key
+    }
+
+    NComboBox {
+      label: I18n.tr("settings.wallpaper.upscale.video-model.label") || "Video Upscale Model"
+      description: I18n.tr("settings.wallpaper.upscale.video-model.description") || "Model for upscaling videos"
+      Layout.fillWidth: true
+      model: [
+        {
+          "key": "realesrgan-x4plus",
+          "name": I18n.tr("settings.wallpaper.upscale.model.general") || "General (photos, real-world) - 4x only"
+        },
+        {
+          "key": "realesrgan-x4plus-anime",
+          "name": I18n.tr("settings.wallpaper.upscale.model.anime") || "Anime/Cartoon - 4x only"
+        },
+        {
+          "key": "realesr-animevideov3",
+          "name": I18n.tr("settings.wallpaper.upscale.model.anime-video") || "Anime Video (2x/3x/4x)"
+        }
+      ]
+      currentKey: Settings.data.wallpaper.videoUpscaleModel || "realesr-animevideov3"
+      onSelected: key => Settings.data.wallpaper.videoUpscaleModel = key
+    }
+
+    NComboBox {
+      visible: Settings.data.wallpaper.videoUpscaleModel === "realesr-animevideov3"
+      label: I18n.tr("settings.wallpaper.upscale.scale.label") || "Video Upscale Factor"
+      description: I18n.tr("settings.wallpaper.upscale.scale.description") || "How much to upscale (higher = larger file, longer processing)"
+      Layout.fillWidth: true
+      model: [
+        { "key": "2", "name": "2x" },
+        { "key": "3", "name": "3x" },
+        { "key": "4", "name": "4x" }
+      ]
+      currentKey: (Settings.data.wallpaper.videoUpscaleScale || 4).toString()
+      onSelected: key => Settings.data.wallpaper.videoUpscaleScale = parseInt(key)
     }
   }
 

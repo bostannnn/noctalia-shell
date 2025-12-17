@@ -365,6 +365,10 @@ Singleton {
       property string wallhavenResolutionMode: "atleast" // "atleast" or "exact"
       property string wallhavenResolutionWidth: ""
       property string wallhavenResolutionHeight: ""
+      // Upscale settings - separate for images and videos
+      property string imageUpscaleModel: "realesrgan-x4plus-anime" // realesrgan-x4plus, realesrgan-x4plus-anime (x4 only)
+      property string videoUpscaleModel: "realesr-animevideov3" // realesrgan-x4plus, realesrgan-x4plus-anime, realesr-animevideov3
+      property int videoUpscaleScale: 4 // 2, 3, or 4 (only for realesr-animevideov3)
     }
 
     // applauncher

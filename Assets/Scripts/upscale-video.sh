@@ -2,15 +2,19 @@
 
 # Video upscaler using Real-ESRGAN for wallpaper videos
 # Dependencies: ffmpeg, realesrgan-ncnn-vulkan
-# Outputs progress in format: PROGRESS:<0.0-1.0>
+# Outputs progress in format: PROGRESS:<0.0-1.0>:<stage>
+# Usage: upscale-video.sh <input> [output] [model] [scale]
 
 set -e
 
-# Configuration
-SCALE=${SCALE:-4}
-MODEL=${MODEL:-realesrgan-x4plus}  # or realesrgan-x4plus-anime for anime content
+# Configuration - can be overridden by arguments or env vars
+SCALE=${4:-${SCALE:-4}}
+MODEL=${3:-${MODEL:-realesrgan-x4plus-anime}}
 TEMP_DIR="/tmp/video-upscale-$$"
 THREADS=${THREADS:-4}
+# Use input file hash for predictable progress file path (echo -n for no newline)
+INPUT_HASH=$(echo -n "$1" | md5sum | cut -d' ' -f1)
+PROGRESS_FILE="/tmp/video-upscale-progress-${INPUT_HASH}"
 
 # Progress output function (parseable by QML)
 emit_progress() {
@@ -18,13 +22,16 @@ emit_progress() {
     local total=$2
     local stage=$3
     if [ "$total" -gt 0 ]; then
-        local ratio=$(echo "scale=4; $current / $total" | bc)
+        local ratio=$(awk "BEGIN {printf \"%.4f\", $current / $total}")
         echo "PROGRESS:$ratio:$stage"
+        # Also write to progress file for real-time polling
+        echo "$ratio:$stage" > "$PROGRESS_FILE"
     fi
 }
 
 cleanup() {
     rm -rf "$TEMP_DIR"
+    rm -f "$PROGRESS_FILE"
 }
 
 trap cleanup EXIT
@@ -58,7 +65,9 @@ mkdir -p "$TEMP_DIR/frames" "$TEMP_DIR/upscaled"
 # Stage 1: Analyze video
 emit_progress 0 100 "analyzing"
 
-FPS=$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 "$INPUT" | bc -l | xargs printf "%.2f")
+# Get FPS as fraction (e.g., 30000/1001) and calculate with awk
+FPS_FRAC=$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1 "$INPUT")
+FPS=$(echo "$FPS_FRAC" | awk -F'/' '{if(NF==2) printf "%.2f", $1/$2; else print $1}')
 
 # Stage 2: Extract frames (0-10%)
 emit_progress 0 100 "extracting"
@@ -91,8 +100,9 @@ while kill -0 $UPSCALE_PID 2>/dev/null; do
     DONE_FRAMES=$(ls "$TEMP_DIR/upscaled" 2>/dev/null | wc -l)
     # Map to 10-90% range
     if [ "$ACTUAL_FRAMES" -gt 0 ]; then
-        PROGRESS=$(echo "scale=4; 0.10 + (0.80 * $DONE_FRAMES / $ACTUAL_FRAMES)" | bc)
+        PROGRESS=$(awk "BEGIN {printf \"%.4f\", 0.10 + (0.80 * $DONE_FRAMES / $ACTUAL_FRAMES)}")
         echo "PROGRESS:$PROGRESS:upscaling"
+        echo "$PROGRESS:upscaling" > "$PROGRESS_FILE"
     fi
     sleep 1
 done

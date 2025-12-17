@@ -399,20 +399,29 @@ Singleton {
       I18n.tr("wallpaper.upscale.started-desc")
     );
 
-    // Create process for upscaling
-    // -n realesrgan-x4plus is a good general model
-    // -s 4 means 4x upscale
+    // Create process for upscaling using settings (image models are always x4)
+    var model = Settings.data.wallpaper.imageUpscaleModel || "realesrgan-x4plus-anime";
+    var scale = 4; // Image models (realesrgan-x4plus, realesrgan-x4plus-anime) only support x4
+
     var processString = `
       import QtQuick
       import Quickshell.Io
       Process {
-        command: ["realesrgan-ncnn-vulkan", "-i", "` + imagePath.replace(/"/g, '\\"') + `", "-o", "` + outputPath.replace(/"/g, '\\"') + `", "-n", "realesrgan-x4plus-anime"]
+        property string inputPath: ""
+        property string outputPath: ""
+        property string model: ""
+        property int scale: 4
+        command: ["realesrgan-ncnn-vulkan", "-i", inputPath, "-o", outputPath, "-n", model, "-s", scale.toString()]
         stdout: StdioCollector {}
         stderr: StdioCollector {}
       }
     `;
 
     var upscaleProcess = Qt.createQmlObject(processString, root, "UpscaleProcess");
+    upscaleProcess.inputPath = imagePath;
+    upscaleProcess.outputPath = outputPath;
+    upscaleProcess.model = model;
+    upscaleProcess.scale = scale;
 
     upscaleProcess.exited.connect(function(exitCode) {
       isUpscaling = false;
@@ -563,6 +572,9 @@ Singleton {
     videoUpscaleStage = "extracting";
 
     var scriptPath = Quickshell.shellDir + "/Assets/Scripts/upscale-video.sh";
+    var model = Settings.data.wallpaper.videoUpscaleModel || "realesr-animevideov3";
+    // Only realesr-animevideov3 supports variable scale, others are x4 only
+    var scale = (model === "realesr-animevideov3") ? (Settings.data.wallpaper.videoUpscaleScale || 4) : 4;
 
     var processString = `
       import QtQuick
@@ -571,7 +583,9 @@ Singleton {
         property string script: ""
         property string input: ""
         property string output: ""
-        command: ["bash", script, input, output]
+        property string model: ""
+        property string scale: ""
+        command: ["bash", script, input, output, model, scale]
         stdout: StdioCollector {}
         stderr: StdioCollector {}
       }
@@ -581,45 +595,82 @@ Singleton {
     upscaleProcess.script = scriptPath;
     upscaleProcess.input = videoPath;
     upscaleProcess.output = outputPath;
+    upscaleProcess.model = model;
+    upscaleProcess.scale = scale.toString();
 
-    // Timer to poll stdout for progress
-    var progressTimer = Qt.createQmlObject(`
+    // Calculate progress file path (same as script: md5sum of video path)
+    var escapedPath = videoPath.replace(/'/g, "'\\''"); // Escape single quotes for shell
+    var progressFileProcess = Qt.createQmlObject(`
       import QtQuick
-      Timer {
-        property var process: null
-        interval: 500
-        repeat: true
-        running: true
+      import Quickshell.Io
+      Process {
+        command: ["sh", "-c", "echo -n '` + escapedPath + `' | md5sum | cut -d' ' -f1"]
+        stdout: StdioCollector {}
       }
-    `, root, "ProgressTimer");
+    `, root, "HashProcess");
 
-    progressTimer.process = upscaleProcess;
-    progressTimer.triggered.connect(function() {
-      if (progressTimer.process && progressTimer.process.stdout) {
-        var text = progressTimer.process.stdout.text || "";
-        var lines = text.split("\\n");
-        // Find last PROGRESS line
-        for (var i = lines.length - 1; i >= 0; i--) {
-          if (lines[i].startsWith("PROGRESS:")) {
-            var parts = lines[i].substring(9).split(":");
-            if (parts.length >= 2) {
-              var progress = parseFloat(parts[0]);
-              var stage = parts[1];
-              if (!isNaN(progress)) {
-                videoUpscaleProgress = Math.min(1.0, Math.max(0.0, progress));
-                videoUpscaleStage = stage;
+    var progressFilePath = "";
+    var progressTimer = null;
+
+    progressFileProcess.exited.connect(function(code) {
+      if (code === 0) {
+        var hash = progressFileProcess.stdout.text.trim();
+        progressFilePath = "/tmp/video-upscale-progress-" + hash;
+        Logger.i("Wallpaper", "Progress file path:", progressFilePath);
+
+        // Start timer to poll progress file
+        progressTimer = Qt.createQmlObject(`
+          import QtQuick
+          Timer {
+            interval: 500
+            repeat: true
+            running: true
+          }
+        `, root, "ProgressTimer");
+
+        progressTimer.triggered.connect(function() {
+          var readProcess = Qt.createQmlObject(`
+            import QtQuick
+            import Quickshell.Io
+            Process {
+              property string file: ""
+              command: ["cat", file]
+              stdout: StdioCollector {}
+            }
+          `, root, "ReadProgressProcess");
+          readProcess.file = progressFilePath;
+          readProcess.exited.connect(function(readCode) {
+            if (readCode === 0) {
+              var content = readProcess.stdout.text.trim();
+              if (content) {
+                var parts = content.split(":");
+                if (parts.length >= 2) {
+                  var progress = parseFloat(parts[0]);
+                  var stage = parts[1];
+                  if (!isNaN(progress)) {
+                    videoUpscaleProgress = Math.min(1.0, Math.max(0.0, progress));
+                    videoUpscaleStage = stage;
+                  }
+                }
               }
             }
-            break;
-          }
-        }
+            readProcess.destroy();
+          });
+          readProcess.running = true;
+        });
       }
+      progressFileProcess.destroy();
     });
+    progressFileProcess.running = true;
+
+    Logger.i("Wallpaper", "Progress timer started for video upscale");
 
     upscaleProcess.exited.connect(function(exitCode) {
       // Stop and cleanup progress timer
-      progressTimer.running = false;
-      progressTimer.destroy();
+      if (progressTimer) {
+        progressTimer.running = false;
+        progressTimer.destroy();
+      }
 
       isUpscalingVideo = false;
       upscalingFile = "";
