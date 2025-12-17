@@ -37,6 +37,55 @@ Singleton {
   // Base API URL
   readonly property string apiBaseUrl: "https://wallhaven.cc/api/v1"
 
+  // Curated word list for random discovery (aesthetic, nature, abstract, etc.)
+  readonly property var discoveryWords: [
+    // Nature
+    "sunset", "sunrise", "mountains", "ocean", "forest", "lake", "river", "waterfall",
+    "aurora", "northern lights", "stars", "galaxy", "nebula", "cosmos", "moon", "clouds",
+    "storm", "lightning", "rain", "snow", "winter", "autumn", "spring", "summer",
+    "beach", "desert", "canyon", "valley", "cliff", "island", "tropical", "arctic",
+    "flowers", "cherry blossom", "sakura", "trees", "bamboo", "meadow", "field",
+    // Cities & Architecture
+    "cityscape", "skyline", "night city", "tokyo", "new york", "paris", "london",
+    "cyberpunk city", "futuristic city", "neon city", "rain city", "urban", "street",
+    "architecture", "building", "skyscraper", "bridge", "temple", "castle", "ruins",
+    // Abstract & Art
+    "abstract", "minimal", "geometric", "fractal", "gradient", "colorful", "vibrant",
+    "dark", "moody", "atmospheric", "ethereal", "dreamy", "surreal", "fantasy",
+    "digital art", "concept art", "illustration", "painting", "artwork",
+    // Sci-Fi & Fantasy
+    "space", "spaceship", "planet", "alien", "sci-fi", "futuristic", "cyberpunk",
+    "neon", "synthwave", "retrowave", "vaporwave", "outrun", "blade runner",
+    "dragon", "magic", "wizard", "sword", "medieval", "mythology", "fairy tale",
+    // Aesthetic moods
+    "cozy", "peaceful", "serene", "calm", "tranquil", "mysterious", "epic",
+    "dramatic", "cinematic", "beautiful", "stunning", "breathtaking", "majestic",
+    "lonely", "solitude", "melancholy", "nostalgic", "vintage", "retro",
+    // Colors
+    "blue", "purple", "pink", "red", "orange", "golden", "green", "teal", "cyan",
+    "black and white", "monochrome", "pastel", "neon colors", "warm colors", "cool colors",
+    // Time & Light
+    "golden hour", "blue hour", "twilight", "dusk", "dawn", "night", "midnight",
+    "sunlight", "moonlight", "starlight", "candlelight", "firelight", "reflection",
+    // Specific subjects
+    "cat", "wolf", "eagle", "whale", "deer", "fox", "owl", "butterfly",
+    "car", "motorcycle", "train", "airplane", "boat", "lighthouse",
+    "coffee", "books", "music", "guitar", "piano", "rain on window",
+    // Anime/Art styles
+    "anime landscape", "anime scenery", "studio ghibli", "makoto shinkai",
+    "lofi", "pixel art", "watercolor", "oil painting", "ink art",
+    // Popular combinations
+    "mountain sunset", "ocean waves", "forest path", "city rain", "space station",
+    "cozy room", "rainy day", "starry night", "foggy forest", "snowy mountain"
+  ]
+
+  // Popular Wallhaven tags for random discovery
+  readonly property var discoveryTags: [
+    "landscape", "nature", "space", "city", "abstract", "anime", "fantasy",
+    "sci-fi", "cyberpunk", "dark", "minimal", "colorful", "sunset", "night",
+    "mountains", "ocean", "forest", "digital art", "artwork", "photography"
+  ]
+
   // -------------------------------------------------
   function search(query, page) {
     if (fetching) {
@@ -255,6 +304,65 @@ Singleton {
     if (currentPage > 1 && !fetching) {
       search(currentQuery, currentPage - 1);
     }
+  }
+
+  // -------------------------------------------------
+  // Generate a random search query for discovery
+  function generateRandomQuery() {
+    var query = "";
+
+    // 70% chance to use a random word, 30% chance to use a tag
+    if (Math.random() < 0.7) {
+      // Pick 1-2 random words
+      var numWords = Math.random() < 0.6 ? 1 : 2;
+      var usedIndices = [];
+
+      for (var i = 0; i < numWords; i++) {
+        var idx;
+        do {
+          idx = Math.floor(Math.random() * discoveryWords.length);
+        } while (usedIndices.indexOf(idx) !== -1);
+
+        usedIndices.push(idx);
+        if (query !== "") query += " ";
+        query += discoveryWords[idx];
+      }
+    } else {
+      // Pick a random tag
+      var tagIdx = Math.floor(Math.random() * discoveryTags.length);
+      query = discoveryTags[tagIdx];
+    }
+
+    return query;
+  }
+
+  // -------------------------------------------------
+  // Discover random wallpapers with random query and sorting
+  function discover() {
+    if (fetching) {
+      return;
+    }
+
+    // Generate random query
+    var randomQuery = generateRandomQuery();
+
+    // Store original sorting and set to random
+    var originalSorting = sorting;
+    sorting = "random";
+
+    // Clear seed to get truly random results
+    seed = "";
+
+    Logger.d("Wallhaven", "Discovering with query:", randomQuery);
+
+    // Perform search with random query
+    search(randomQuery, 1);
+
+    // Restore original sorting after search starts (for UI display)
+    // The actual search already captured the "random" sorting
+    Qt.callLater(function() {
+      sorting = originalSorting;
+    });
   }
 }
 

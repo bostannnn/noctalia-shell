@@ -38,6 +38,7 @@ Singleton {
   property bool slurpAvailable: false
   property bool sattyAvailable: false
   property bool swappyAvailable: false
+  property bool realesrganAvailable: false
 
   // Discord client auto-detection
   property var availableDiscordClients: []
@@ -203,7 +204,8 @@ Singleton {
                                             "grimAvailable": ["which", "grim"],
                                             "slurpAvailable": ["which", "slurp"],
                                             "sattyAvailable": ["which", "satty"],
-                                            "swappyAvailable": ["which", "swappy"]
+                                            "swappyAvailable": ["which", "swappy"],
+                                            "realesrganAvailable": ["which", "realesrgan-ncnn-vulkan"]
                                           })
 
   // Internal tracking

@@ -2690,6 +2690,7 @@
     "refresh-wallpaper-list": "Refresh wallpaper list",
     "random-wallpaper": "Random wallpaper",
     "random-wallpaper-auto": "Random wallpaper (auto: every {interval}s)",
+    "discover-wallpapers": "Discover random wallpapers",
     "remove-widget": "Remove widget",
     "screen-recorder-not-installed": "Screen recorder (not installed)",
     "screenshot": "Screenshot",
@@ -2728,7 +2729,9 @@
       },
       "context": {
         "delete": "Move to trash",
-        "open-folder": "Open folder"
+        "open-folder": "Open folder",
+        "upscale": "Upscale (AI)",
+        "upscaling": "Upscaling..."
       },
       "deleted": "Wallpaper moved to trash",
       "delete-failed": "Failed to delete wallpaper",
@@ -2791,6 +2794,19 @@
       "random": "Random",
       "stripes": "Stripes",
       "wipe": "Wipe"
+    },
+    "upscale": {
+      "already-in-progress": "Upscaling in progress",
+      "already-in-progress-desc": "Please wait for the current upscale to complete.",
+      "completed": "Upscale completed",
+      "completed-desc": "The wallpaper has been upscaled successfully.",
+      "failed": "Upscale failed",
+      "not-available": "Upscaler not available",
+      "not-available-desc": "Please install realesrgan-ncnn-vulkan.",
+      "not-image": "Cannot upscale",
+      "not-image-desc": "Only image files can be upscaled.",
+      "started": "Upscaling wallpaper",
+      "started-desc": "This may take a few seconds..."
     },
     "try-different-search": "Try a different search query.",
     "unknown": "Unknown",

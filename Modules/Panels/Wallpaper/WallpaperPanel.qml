@@ -7,6 +7,7 @@ import "../../../Helpers/FuzzySort.js" as FuzzySort
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Modules.Panels.Settings
+import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 
@@ -460,6 +461,20 @@ SmartPanel {
                           }
             }
 
+            // Discover button (only visible for Wallhaven) - random wallpaper discovery
+            NIconButton {
+              icon: "dice-5"
+              tooltipText: I18n.tr("tooltips.discover-wallpapers")
+              baseSize: Style.baseWidgetSize * 0.8
+              visible: Settings.data.wallpaper.useWallhaven
+              onClicked: {
+                if (typeof WallhavenService !== "undefined") {
+                  wallhavenView.loading = true;
+                  WallhavenService.discover();
+                }
+              }
+            }
+
             // Settings button (only visible for Wallhaven)
             NIconButton {
               id: wallhavenSettingsButton
@@ -773,6 +788,24 @@ SmartPanel {
           if (wallpaperContextMenu.wallpaperToDelete) {
             var folder = wallpaperContextMenu.wallpaperToDelete.substring(0, wallpaperContextMenu.wallpaperToDelete.lastIndexOf('/'))
             Qt.openUrlExternally("file://" + folder)
+          }
+        }
+      }
+
+      MenuItem {
+        text: WallpaperService.isUpscaling ? I18n.tr("wallpaper.panel.context.upscaling") : I18n.tr("wallpaper.panel.context.upscale")
+        icon.name: "photo-up"
+        enabled: !WallpaperService.isUpscaling && ProgramCheckerService.realesrganAvailable && {
+          // Only enable for image files, not videos
+          var path = wallpaperContextMenu.wallpaperToDelete;
+          if (!path) return false;
+          var ext = path.split('.').pop().toLowerCase();
+          var imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "pnm"];
+          return imageExtensions.indexOf(ext) !== -1;
+        }
+        onTriggered: {
+          if (wallpaperContextMenu.wallpaperToDelete) {
+            WallpaperService.upscaleWallpaper(wallpaperContextMenu.wallpaperToDelete)
           }
         }
       }

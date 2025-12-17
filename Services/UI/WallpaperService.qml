@@ -5,6 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import qs.Services.System
 
 Singleton {
   id: root
@@ -39,6 +40,12 @@ Singleton {
   signal wallpaperDirectoryChanged(string screenName, string directory)
   // Emitted when a monitor's directory changes
   signal wallpaperListChanged(string screenName, int count)
+
+  // Upscaling state
+  property bool isUpscaling: false
+  property string upscalingFile: ""
+  signal upscaleCompleted(string originalPath, string upscaledPath)
+  signal upscaleFailed(string originalPath, string error)
 
   // Emitted when available wallpapers list changes
   Connections {
@@ -328,6 +335,96 @@ Singleton {
       restartRandomWallpaperTimer();
       setRandomWallpaper();
     }
+  }
+
+  // -------------------------------------------------------------------
+  // Upscale a wallpaper image using Real-ESRGAN
+  function upscaleWallpaper(imagePath) {
+    if (isUpscaling) {
+      Logger.w("Wallpaper", "Upscaling already in progress");
+      ToastService.showWarning(
+        I18n.tr("wallpaper.upscale.already-in-progress"),
+        I18n.tr("wallpaper.upscale.already-in-progress-desc")
+      );
+      return;
+    }
+
+    if (!ProgramCheckerService.realesrganAvailable) {
+      Logger.e("Wallpaper", "realesrgan-ncnn-vulkan not available");
+      ToastService.showError(
+        I18n.tr("wallpaper.upscale.not-available"),
+        I18n.tr("wallpaper.upscale.not-available-desc")
+      );
+      return;
+    }
+
+    // Check if it's an image (not video)
+    var ext = imagePath.split('.').pop().toLowerCase();
+    var imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "pnm"];
+    if (imageExtensions.indexOf(ext) === -1) {
+      Logger.w("Wallpaper", "Cannot upscale non-image file:", imagePath);
+      ToastService.showWarning(
+        I18n.tr("wallpaper.upscale.not-image"),
+        I18n.tr("wallpaper.upscale.not-image-desc")
+      );
+      return;
+    }
+
+    isUpscaling = true;
+    upscalingFile = imagePath;
+
+    // Generate output filename with _upscaled suffix
+    var basePath = imagePath.substring(0, imagePath.lastIndexOf('.'));
+    var outputPath = basePath + "_upscaled.png"; // Real-ESRGAN outputs PNG
+
+    Logger.i("Wallpaper", "Starting upscale:", imagePath, "->", outputPath);
+    ToastService.showNotice(
+      I18n.tr("wallpaper.upscale.started"),
+      I18n.tr("wallpaper.upscale.started-desc")
+    );
+
+    // Create process for upscaling
+    // -n realesrgan-x4plus is a good general model
+    // -s 4 means 4x upscale
+    var processString = `
+      import QtQuick
+      import Quickshell.Io
+      Process {
+        command: ["realesrgan-ncnn-vulkan", "-i", "` + imagePath.replace(/"/g, '\\"') + `", "-o", "` + outputPath.replace(/"/g, '\\"') + `", "-n", "realesrgan-x4plus"]
+        stdout: StdioCollector {}
+        stderr: StdioCollector {}
+      }
+    `;
+
+    var upscaleProcess = Qt.createQmlObject(processString, root, "UpscaleProcess");
+
+    upscaleProcess.exited.connect(function(exitCode) {
+      isUpscaling = false;
+      upscalingFile = "";
+
+      if (exitCode === 0) {
+        Logger.i("Wallpaper", "Upscale completed:", outputPath);
+        ToastService.showNotice(
+          I18n.tr("wallpaper.upscale.completed"),
+          I18n.tr("wallpaper.upscale.completed-desc")
+        );
+        upscaleCompleted(imagePath, outputPath);
+        // Refresh wallpaper list to show the new file
+        refreshWallpapersList();
+      } else {
+        var errorMsg = upscaleProcess.stderr.text || "Unknown error";
+        Logger.e("Wallpaper", "Upscale failed:", errorMsg);
+        ToastService.showError(
+          I18n.tr("wallpaper.upscale.failed"),
+          errorMsg
+        );
+        upscaleFailed(imagePath, errorMsg);
+      }
+
+      upscaleProcess.destroy();
+    });
+
+    upscaleProcess.running = true;
   }
 
   // -------------------------------------------------------------------
