@@ -404,13 +404,40 @@ Singleton {
 
       if (exitCode === 0) {
         Logger.i("Wallpaper", "Upscale completed:", outputPath);
+
+        // Move original to Originals folder
+        var dirPath = imagePath.substring(0, imagePath.lastIndexOf('/'));
+        var fileName = imagePath.split('/').pop();
+        var originalsDir = dirPath + "/Originals";
+        var newOriginalPath = originalsDir + "/" + fileName;
+
+        var moveProcess = Qt.createQmlObject(`
+          import QtQuick
+          import Quickshell.Io
+          Process {
+            command: ["sh", "-c", "mkdir -p '` + originalsDir.replace(/'/g, "'\\''") + `' && mv '` + imagePath.replace(/'/g, "'\\''") + `' '` + newOriginalPath.replace(/'/g, "'\\''") + `'"]
+            stdout: StdioCollector {}
+            stderr: StdioCollector {}
+          }
+        `, root, "MoveOriginalProcess");
+
+        moveProcess.exited.connect(function(moveExitCode) {
+          if (moveExitCode === 0) {
+            Logger.i("Wallpaper", "Original moved to:", newOriginalPath);
+          } else {
+            Logger.w("Wallpaper", "Failed to move original:", moveProcess.stderr.text);
+          }
+          moveProcess.destroy();
+          // Refresh wallpaper list after move
+          refreshWallpapersList();
+        });
+        moveProcess.running = true;
+
         ToastService.showNotice(
           I18n.tr("wallpaper.upscale.completed"),
           I18n.tr("wallpaper.upscale.completed-desc")
         );
         upscaleCompleted(imagePath, outputPath);
-        // Refresh wallpaper list to show the new file
-        refreshWallpapersList();
       } else {
         var errorMsg = upscaleProcess.stderr.text || "Unknown error";
         Logger.e("Wallpaper", "Upscale failed:", errorMsg);
