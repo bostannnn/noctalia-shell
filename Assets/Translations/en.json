@@ -617,7 +617,9 @@
         "comfortable": "Comfortable",
         "compact": "Compact",
         "default": "Default",
-        "mini": "Mini"
+        "massive": "Massive",
+        "mini": "Mini",
+        "substantial": "Substantial"
       },
       "mode": {
         "classic": "Classic",
