@@ -1,4 +1,4 @@
-# Noctalia shell
+# Noctalia Shell (Fork)
 
 **_quiet by design_**
 
@@ -6,26 +6,34 @@
   <img src="https://assets.noctalia.dev/noctalia-logo.svg?v=2" alt="Noctalia Logo" style="width: 192px" />
 </p>
 
-<p align="center">
-  <a href="https://docs.noctalia.dev/getting-started/installation">
-    <img src="https://img.shields.io/badge/⚡_QUICK_INSTALL-Get_Started_Now-A8AEFF?style=for-the-badge&logoColor=FFFFFF&labelColor=0C0D11" alt="Quick Install" style="height: 50px" />
-  </a>
-</p>
+> Personal fork of [Noctalia Shell](https://github.com/noctalia-dev/noctalia-shell) with additional features and customizations.
 
-<p align="center">
-  <a href="https://github.com/noctalia-dev/noctalia-shell/commits">
-    <img src="https://img.shields.io/github/last-commit/noctalia-dev/noctalia-shell?style=for-the-badge&labelColor=0C0D11&color=A8AEFF&logo=git&logoColor=FFFFFF&label=commit" alt="Last commit" />
-  </a>
-  <a href="https://github.com/noctalia-dev/noctalia-shell/stargazers">
-    <img src="https://img.shields.io/github/stars/noctalia-dev/noctalia-shell?style=for-the-badge&labelColor=0C0D11&color=A8AEFF&logo=github&logoColor=FFFFFF" alt="GitHub stars" />
-  </a>
-  <a href="https://docs.noctalia.dev">
-    <img src="https://img.shields.io/badge/docs-A8AEFF?style=for-the-badge&logo=gitbook&logoColor=FFFFFF&labelColor=0C0D11" alt="Documentation" />
-  </a>
-  <a href="https://discord.noctalia.dev">
-    <img src="https://img.shields.io/badge/discord-A8AEFF?style=for-the-badge&labelColor=0C0D11&logo=discord&logoColor=FFFFFF" alt="Discord" />
-  </a>
-</p>
+---
+
+## Fork Features
+
+This fork includes the following additions:
+
+### Bar Modes
+Three bar display modes for different aesthetics:
+- **Classic** - Traditional attached bar
+- **Floating** - Detached bar with configurable margins
+- **Framed** - Screen border frame with integrated bar (caelestia-style)
+
+### Video Wallpaper Support
+- Play video files as animated wallpapers
+- Per-monitor video wallpaper configuration
+- Seamless integration with the wallpaper picker
+
+### Screen Border (Framed Mode)
+- Configurable border thickness and rounding
+- Theme-aware coloring
+- Optimized single-pass GPU rendering with unified shadow system
+
+### Other Improvements
+- Hyprland theming template integration
+- BorderExclusionZones for Wayland-native window spacing
+- Optimized background rendering (AllBackgrounds unified Shape)
 
 ---
 
@@ -33,111 +41,68 @@
 
 A beautiful, minimal desktop shell for Wayland that actually gets out of your way. Built on Quickshell with a warm lavender aesthetic that you can easily customize to match your vibe.
 
-**✨ Key Features:**
-- 🪟 Native support for Niri, Hyprland, Sway and MangoWC
-- ⚡ Built on Quickshell for performance
-- 🎯 Minimalist design philosophy
-- 🔧 Easily customizable to match your style
-- 🎨 Many color schemes available
----
-
-## Preview
-
-https://github.com/user-attachments/assets/bf46f233-8d66-439a-a1ae-ab0446270f2d
-
-<details>
-<summary>Screenshots</summary>
-
-![Dark 1](/Assets/Screenshots/noctalia-dark-1.png)
-![Dark 2](/Assets/Screenshots/noctalia-dark-2.png)
-![Dark 3](/Assets/Screenshots/noctalia-dark-3.png)
-
-![Light 1](/Assets/Screenshots/noctalia-light-1.png)
-![Light 2](/Assets/Screenshots/noctalia-light-2.png)
-![Light 3](/Assets/Screenshots/noctalia-light-3.png)
-
-</details>
+**Key Features:**
+- Native support for Niri, Hyprland, Sway and MangoWC
+- Built on Quickshell for performance
+- Minimalist design philosophy
+- Easily customizable to match your style
+- Many color schemes available
 
 ---
 
-## 📋 Requirements
+## Requirements
 
-- Wayland compositor (Niri, Hyprland, Sway or MangoWC recommended)
+- Wayland compositor (Hyprland recommended for full feature support)
 - Quickshell
-- Additional dependencies are listed in our [documentation](https://docs.noctalia.dev)
+- Additional dependencies listed in [upstream documentation](https://docs.noctalia.dev)
 
 ---
 
-## 🚀 Getting Started
+## Installation
 
-**New to Noctalia?**  
-Check out our comprehensive documentation and installation guide to get up and running!
+1. Clone this fork:
+```bash
+git clone https://github.com/bostannnn/noctalia-shell.git
+cd noctalia-shell
+```
 
-<p align="center">
-  <a href="https://docs.noctalia.dev/getting-started/installation">
-    <img src="https://img.shields.io/badge/📖_Installation_Guide-A8AEFF?style=for-the-badge&logoColor=FFFFFF&labelColor=0C0D11" alt="Installation Guide" />
-  </a>
-  <a href="https://docs.noctalia.dev/getting-started/faq/">
-    <img src="https://img.shields.io/badge/❓_FAQ-A8AEFF?style=for-the-badge&logoColor=FFFFFF&labelColor=0C0D11" alt="FAQ" />
-  </a>
-  <a href="https://discord.noctalia.dev">
-    <img src="https://img.shields.io/badge/💬_Get_Help-A8AEFF?style=for-the-badge&logo=discord&logoColor=FFFFFF&labelColor=0C0D11" alt="Discord" />
-  </a>
-</p>
+2. Run with Quickshell:
+```bash
+quickshell -c .
+```
+
+For full installation instructions, see the [upstream documentation](https://docs.noctalia.dev/getting-started/installation).
 
 ---
 
-## 🖥️ Wayland Compositors
+## Configuration
 
-Noctalia provides native support for **Niri**, **Hyprland** and **Sway**. Other Wayland compositors will work but may require additional workspace logic configuration.
+### Bar Mode
+Set in Settings > Bar > Mode:
+- `classic` - Attached to screen edge
+- `floating` - Floating with margins
+- `framed` - Integrated with screen border
 
----
+### Screen Border (Framed Mode)
+Configure in Settings > General:
+- Border thickness
+- Border rounding
+- Theme color or custom color
 
-## 🤝 Contributing
-
-We welcome contributions of any size - bug fixes, new features, documentation improvements, or custom themes and configs.
-
-**Get involved:**
-- **Found a bug?** [Open an issue](https://github.com/noctalia-dev/noctalia-shell/issues/new)
-- **Want to code?** Check out our [development guidelines](https://docs.noctalia.dev/development/guideline)
-- **Need help?** Join our [Discord](https://discord.noctalia.dev)
-
-### ✨ Nix DevShell
-
-Nix users can use the flake's devShell to access a development environment. Run `nix develop` in the repo root to enter the dev shell. It includes packages, utilities and environment variables needed to develop Noctalia.
+### Video Wallpaper
+Select video files in the wallpaper picker. Supported formats depend on your Qt/GStreamer installation.
 
 ---
 
-## 💜 Credits
+## Upstream
 
-A heartfelt thank you to our incredible community of [**contributors**](https://github.com/noctalia-dev/noctalia-shell/graphs/contributors). We are immensely grateful for your dedicated participation and the constructive feedback you've provided, which continue to shape and improve our project for everyone.
+This fork is based on [noctalia-dev/noctalia-shell](https://github.com/noctalia-dev/noctalia-shell).
 
----
-
-## ☕ Donations
-
-While all donations are greatly appreciated, they are completely voluntary.
-
-<a href="https://ko-fi.com/lysec">
-  <img src="https://img.shields.io/badge/donate-ko--fi-A8AEFF?style=for-the-badge&logo=kofi&logoColor=FFFFFF&labelColor=0C0D11" alt="Ko-Fi" />
-</a>
-
-### Thank you to everyone who supports the project 💜!
-* Gohma
-* DiscoCevapi
-* <a href="https://pika-os.com/" target="_blank">PikaOS</a>
-* LionHeartP
-* Nyxion ツ
-* RockDuck
-* MrDowntempo
-* Tempus Thales
-* Raine
-* JustCurtis
-* llego
-* Grune
+- [Upstream Documentation](https://docs.noctalia.dev)
+- [Upstream Discord](https://discord.noctalia.dev)
 
 ---
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](./LICENSE) for details.
