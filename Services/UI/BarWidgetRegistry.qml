@@ -30,6 +30,7 @@ Singleton {
                            "PowerProfile": powerProfileComponent,
                            "RandomWallpaper": randomWallpaperComponent,
                            "ScreenRecorder": screenRecorderComponent,
+                           "Screenshot": screenshotComponent,
                            "SessionMenu": sessionMenuComponent,
                            "Spacer": spacerComponent,
                            "SystemMonitor": systemMonitorComponent,
@@ -304,6 +305,9 @@ Singleton {
   }
   property Component screenRecorderComponent: Component {
     ScreenRecorder {}
+  }
+  property Component screenshotComponent: Component {
+    Screenshot {}
   }
   property Component controlCenterComponent: Component {
     ControlCenter {}

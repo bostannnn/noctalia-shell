@@ -34,6 +34,10 @@ Singleton {
   property bool zedAvailable: false
   property bool niriAvailable: false
   property bool hyprlandAvailable: false
+  property bool grimAvailable: false
+  property bool slurpAvailable: false
+  property bool sattyAvailable: false
+  property bool swappyAvailable: false
 
   // Discord client auto-detection
   property var availableDiscordClients: []
@@ -195,7 +199,11 @@ Singleton {
                                             "zedAvailable": ["which", "zeditor"],
                                             "emacsAvailable": ["sh", "-c", "test -d \"$HOME/.config/doom\" || test -d \"$HOME/.emacs.d\""],
                                             "niriAvailable": ["which", "niri"],
-                                            "hyprlandAvailable": ["which", "hyprctl"]
+                                            "hyprlandAvailable": ["which", "hyprctl"],
+                                            "grimAvailable": ["which", "grim"],
+                                            "slurpAvailable": ["which", "slurp"],
+                                            "sattyAvailable": ["which", "satty"],
+                                            "swappyAvailable": ["which", "swappy"]
                                           })
 
   // Internal tracking

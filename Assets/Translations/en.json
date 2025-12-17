@@ -543,6 +543,11 @@
     "random-wallpaper": "Random wallpaper",
     "enable-auto-shuffle": "Enable auto shuffle",
     "disable-auto-shuffle": "Disable auto shuffle",
+    "screenshot-region": "Capture region",
+    "screenshot-screen": "Capture screen",
+    "screenshot-window": "Capture window",
+    "screenshot-annotate-last": "Annotate last screenshot",
+    "screenshot-open-folder": "Open screenshot folder",
     "toggle-mute": "Toggle mute",
     "widget-settings": "Widget settings"
   },
@@ -2593,6 +2598,18 @@
       "started": "Recording started",
       "stopping": "Stopping recording…"
     },
+    "screenshot": {
+      "annotated": "Screenshot annotated",
+      "captured": "Screenshot captured",
+      "no-annotation-tool": "No annotation tool available",
+      "no-annotation-tool-desc": "Please install satty or swappy to annotate screenshots.",
+      "no-last-screenshot": "No screenshot to annotate",
+      "no-last-screenshot-desc": "Take a screenshot first, then you can annotate it.",
+      "not-available": "Screenshot tools not available",
+      "not-available-desc": "Please install grim and slurp to take screenshots.",
+      "opening-editor": "Opening annotation editor…",
+      "saved": "Screenshot saved"
+    },
     "theming-processor-failed": {
       "desc-generic": "Encountered an error while processing templates",
       "title-matugen": "Matugen templating processing failed",
@@ -2675,6 +2692,8 @@
     "random-wallpaper-auto": "Random wallpaper (auto: every {interval}s)",
     "remove-widget": "Remove widget",
     "screen-recorder-not-installed": "Screen recorder (not installed)",
+    "screenshot": "Screenshot",
+    "screenshot-not-installed": "Screenshot (not installed)",
     "search": "Search",
     "search-close": "Close search",
     "session-menu": "Session menu",

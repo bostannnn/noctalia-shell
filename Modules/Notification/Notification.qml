@@ -399,10 +399,12 @@ Variants {
                 Layout.bottomMargin: Style.marginM
 
                 NImageRounded {
-                  Layout.preferredWidth: Math.round(40 * Style.uiScaleRatio)
-                  Layout.preferredHeight: Math.round(40 * Style.uiScaleRatio)
+                  // Larger preview for screenshot notifications
+                  readonly property bool isScreenshot: model.appName === "Screenshot"
+                  Layout.preferredWidth: Math.round((isScreenshot ? 120 : 40) * Style.uiScaleRatio)
+                  Layout.preferredHeight: Math.round((isScreenshot ? 80 : 40) * Style.uiScaleRatio)
                   Layout.alignment: Qt.AlignVCenter
-                  radius: Math.min(Style.radiusL, Layout.preferredWidth / 2)
+                  radius: isScreenshot ? Style.radiusM : Math.min(Style.radiusL, Layout.preferredWidth / 2)
                   imagePath: model.originalImage || ""
                   borderColor: Color.transparent
                   borderWidth: 0
