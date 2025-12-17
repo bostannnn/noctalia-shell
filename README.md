@@ -56,6 +56,16 @@ A beautiful, minimal desktop shell for Wayland that actually gets out of your wa
 - Quickshell
 - Additional dependencies listed in [upstream documentation](https://docs.noctalia.dev)
 
+### Video Wallpaper Requirements
+
+```nix
+environment.systemPackages = with pkgs; [
+  mpvpaper    # Plays video as wallpaper
+  ffmpeg      # Creates thumbnail previews
+  swww        # Handles smooth transitions
+];
+```
+
 ---
 
 ## Installation
@@ -75,6 +85,43 @@ For full installation instructions, see the [upstream documentation](https://doc
 
 ---
 
+## Hyprland Configuration
+
+Add these lines to your `hyprland.conf`:
+
+```bash
+# Source Noctalia-generated configs
+source = ~/.config/noctalia/hypr-gaps.conf   # Bar gaps (auto-managed)
+source = ~/.config/hypr/noctalia.conf        # Theme colors (if template enabled)
+
+# Required for video wallpaper transitions
+exec-once = swww-daemon
+```
+
+### NixOS (Home Manager)
+
+```nix
+wayland.windowManager.hyprland.settings = {
+  source = [
+    "~/.config/noctalia/hypr-gaps.conf"  # Bar gaps management
+    "~/.config/hypr/noctalia.conf"       # Theme colors (optional)
+  ];
+
+  exec-once = [
+    "swww-daemon"  # Required for video wallpaper
+  ];
+};
+```
+
+### What These Files Do
+
+| File | Purpose |
+|------|---------|
+| `~/.config/noctalia/hypr-gaps.conf` | Auto-generated gaps config for bar modes. Updates when bar mode/position changes. |
+| `~/.config/hypr/noctalia.conf` | Theme colors for window borders. Generated when Hyprland template is enabled in Settings > Color Schemes. |
+
+---
+
 ## Configuration
 
 ### Bar Mode
@@ -83,6 +130,12 @@ Set in Settings > Bar > Mode:
 - `floating` - Floating with margins
 - `framed` - Integrated with screen border
 
+### Bar Gap
+Set in Settings > Bar > Gap:
+- Controls spacing between bar and windows
+- Only affects classic and floating modes
+- Framed mode uses BorderExclusionZones instead
+
 ### Screen Border (Framed Mode)
 Configure in Settings > General:
 - Border thickness
@@ -90,7 +143,36 @@ Configure in Settings > General:
 - Theme color or custom color
 
 ### Video Wallpaper
-Select video files in the wallpaper picker. Supported formats depend on your Qt/GStreamer installation.
+1. Ensure `mpvpaper`, `ffmpeg`, and `swww` are installed
+2. Start `swww-daemon` (add to exec-once)
+3. Select video files in the wallpaper picker
+
+Supported formats: `.mp4`, `.webm`, `.mkv`, `.avi`, `.mov`, `.ogv`, `.m4v`
+
+### Hyprland Theme Colors
+1. Go to Settings > Color Schemes > Templates
+2. Enable "Hyprland"
+3. Source `~/.config/hypr/noctalia.conf` in your hyprland.conf
+4. Colors update automatically when wallpaper or theme changes
+
+---
+
+## Troubleshooting
+
+### Bar gaps not working
+1. Ensure `~/.config/noctalia/hypr-gaps.conf` is sourced in hyprland.conf
+2. The file is auto-created on first run
+3. Check with: `cat ~/.config/noctalia/hypr-gaps.conf`
+
+### Video wallpaper not playing
+1. Check mpvpaper is installed: `which mpvpaper`
+2. Check swww-daemon is running: `pgrep swww-daemon`
+3. Test manually: `mpvpaper -o "loop" DP-1 /path/to/video.mp4`
+
+### Theme colors not updating
+1. Enable Hyprland template in Settings > Color Schemes
+2. Source noctalia.conf in hyprland.conf
+3. Check file exists: `cat ~/.config/hypr/noctalia.conf`
 
 ---
 
