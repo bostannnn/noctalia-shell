@@ -2731,7 +2731,9 @@
         "delete": "Move to trash",
         "open-folder": "Open folder",
         "upscale": "Upscale (AI)",
-        "upscaling": "Upscaling..."
+        "upscale-video": "Upscale Video (AI)",
+        "upscaling": "Upscaling...",
+        "upscaling-video": "Upscaling video..."
       },
       "deleted": "Wallpaper moved to trash",
       "delete-failed": "Failed to delete wallpaper",
@@ -2805,8 +2807,15 @@
       "not-available-desc": "Please install realesrgan-ncnn-vulkan.",
       "not-image": "Cannot upscale",
       "not-image-desc": "Only image files can be upscaled.",
+      "not-video": "Cannot upscale",
+      "not-video-desc": "Only video files can be upscaled with this option.",
       "started": "Upscaling wallpaper",
-      "started-desc": "This may take a few seconds..."
+      "started-desc": "This may take a few seconds...",
+      "video-started": "Upscaling video",
+      "video-started-desc": "This may take several minutes depending on video length...",
+      "video-completed": "Video upscale completed",
+      "video-completed-desc": "The video has been upscaled successfully.",
+      "video-failed": "Video upscale failed"
     },
     "try-different-search": "Try a different search query.",
     "unknown": "Unknown",

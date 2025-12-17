@@ -43,6 +43,7 @@ Singleton {
 
   // Upscaling state
   property bool isUpscaling: false
+  property bool isUpscalingVideo: false
   property string upscalingFile: ""
   signal upscaleCompleted(string originalPath, string upscaledPath)
   signal upscaleFailed(string originalPath, string error)
@@ -469,6 +470,157 @@ Singleton {
           errorMsg
         );
         upscaleFailed(imagePath, errorMsg);
+      }
+
+      upscaleProcess.destroy();
+    });
+
+    upscaleProcess.running = true;
+  }
+
+  // -------------------------------------------------------------------
+  // Upscale a video wallpaper using Real-ESRGAN via upscale-video.sh
+  function upscaleVideo(videoPath) {
+    if (isUpscaling || isUpscalingVideo) {
+      Logger.w("Wallpaper", "Upscaling already in progress");
+      ToastService.showWarning(
+        I18n.tr("wallpaper.upscale.already-in-progress"),
+        I18n.tr("wallpaper.upscale.already-in-progress-desc")
+      );
+      return;
+    }
+
+    if (!ProgramCheckerService.realesrganAvailable) {
+      Logger.e("Wallpaper", "realesrgan-ncnn-vulkan not available");
+      ToastService.showError(
+        I18n.tr("wallpaper.upscale.not-available"),
+        I18n.tr("wallpaper.upscale.not-available-desc")
+      );
+      return;
+    }
+
+    // Check if it's a video file
+    var ext = videoPath.split('.').pop().toLowerCase();
+    var videoExtensions = ["mp4", "webm", "mkv", "avi", "mov", "ogv", "m4v"];
+    if (videoExtensions.indexOf(ext) === -1) {
+      Logger.w("Wallpaper", "Cannot upscale non-video file:", videoPath);
+      ToastService.showWarning(
+        I18n.tr("wallpaper.upscale.not-video"),
+        I18n.tr("wallpaper.upscale.not-video-desc")
+      );
+      return;
+    }
+
+    isUpscalingVideo = true;
+    upscalingFile = videoPath;
+
+    // Generate output filename with _upscaled suffix
+    var basePath = videoPath.substring(0, videoPath.lastIndexOf('.'));
+    var outputPath = basePath + "_upscaled." + ext;
+
+    Logger.i("Wallpaper", "Starting video upscale:", videoPath, "->", outputPath);
+    ToastService.showNotice(
+      I18n.tr("wallpaper.upscale.video-started"),
+      I18n.tr("wallpaper.upscale.video-started-desc")
+    );
+
+    // Escape paths for shell
+    var safeInput = videoPath.replace(/'/g, "'\\''");
+    var safeOutput = outputPath.replace(/'/g, "'\\''");
+    var scriptPath = Quickshell.shellDir + "/Assets/Scripts/upscale-video.sh";
+
+    var processString = `
+      import QtQuick
+      import Quickshell.Io
+      Process {
+        property string script: ""
+        property string input: ""
+        property string output: ""
+        command: ["bash", script, input, output]
+        stdout: StdioCollector {}
+        stderr: StdioCollector {}
+      }
+    `;
+
+    var upscaleProcess = Qt.createQmlObject(processString, root, "VideoUpscaleProcess");
+    upscaleProcess.script = scriptPath;
+    upscaleProcess.input = videoPath;
+    upscaleProcess.output = outputPath;
+
+    upscaleProcess.exited.connect(function(exitCode) {
+      isUpscalingVideo = false;
+      upscalingFile = "";
+
+      if (exitCode === 0) {
+        Logger.i("Wallpaper", "Video upscale completed:", outputPath);
+
+        // Move original to Originals folder
+        var dirPath = videoPath.substring(0, videoPath.lastIndexOf('/'));
+        var fileName = videoPath.split('/').pop();
+        var originalsDir = dirPath + "/Originals";
+        var newOriginalPath = originalsDir + "/" + fileName;
+
+        Logger.i("Wallpaper", "Moving original video to:", newOriginalPath);
+
+        var mkdirProcess = Qt.createQmlObject(`
+          import QtQuick
+          import Quickshell.Io
+          Process {
+            property string dir: ""
+            command: ["mkdir", "-p", dir]
+            stdout: StdioCollector {}
+            stderr: StdioCollector {}
+          }
+        `, root, "MkdirVideoProcess");
+        mkdirProcess.dir = originalsDir;
+
+        mkdirProcess.exited.connect(function(mkdirExitCode) {
+          if (mkdirExitCode === 0) {
+            var mvProcess = Qt.createQmlObject(`
+              import QtQuick
+              import Quickshell.Io
+              Process {
+                property string src: ""
+                property string dest: ""
+                command: ["mv", src, dest]
+                stdout: StdioCollector {}
+                stderr: StdioCollector {}
+              }
+            `, root, "MvVideoProcess");
+            mvProcess.src = videoPath;
+            mvProcess.dest = newOriginalPath;
+
+            mvProcess.exited.connect(function(mvExitCode) {
+              if (mvExitCode === 0) {
+                Logger.i("Wallpaper", "Original video moved to:", newOriginalPath);
+              } else {
+                Logger.w("Wallpaper", "Failed to move original video:", mvProcess.stderr.text);
+              }
+              mvProcess.destroy();
+              refreshWallpapersList();
+            });
+            mvProcess.running = true;
+          } else {
+            Logger.w("Wallpaper", "Failed to create Originals folder:", mkdirProcess.stderr.text);
+            refreshWallpapersList();
+          }
+          mkdirProcess.destroy();
+        });
+        mkdirProcess.running = true;
+
+        ToastService.showNotice(
+          I18n.tr("wallpaper.upscale.video-completed"),
+          I18n.tr("wallpaper.upscale.video-completed-desc")
+        );
+        upscaleCompleted(videoPath, outputPath);
+      } else {
+        var errorMsg = upscaleProcess.stderr.text || "Unknown error";
+        Logger.e("Wallpaper", "Video upscale failed:", errorMsg);
+        ToastService.showError(
+          I18n.tr("wallpaper.upscale.video-failed"),
+          errorMsg
+        );
+        upscaleFailed(videoPath, errorMsg);
       }
 
       upscaleProcess.destroy();

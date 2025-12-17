@@ -873,13 +873,13 @@ SmartPanel {
         }
       }
 
-      // Upscale item
+      // Upscale item (for images)
       MenuItem {
         id: upscaleItem
-        visible: ProgramCheckerService.realesrganAvailable
+        visible: ProgramCheckerService.realesrganAvailable && !upscaleVideoItem.isVideo
         text: WallpaperService.isUpscaling ? I18n.tr("wallpaper.panel.context.upscaling") : I18n.tr("wallpaper.panel.context.upscale")
         enabled: {
-          if (WallpaperService.isUpscaling) return false;
+          if (WallpaperService.isUpscaling || WallpaperService.isUpscalingVideo) return false;
           var path = wallpaperContextMenu.wallpaperToDelete;
           if (!path) return false;
           var ext = path.split('.').pop().toLowerCase();
@@ -916,6 +916,55 @@ SmartPanel {
           onClicked: {
             if (upscaleItem.enabled && wallpaperContextMenu.wallpaperToDelete) {
               WallpaperService.upscaleWallpaper(wallpaperContextMenu.wallpaperToDelete);
+            }
+            wallpaperContextMenu.close();
+          }
+        }
+      }
+
+      // Upscale video item
+      MenuItem {
+        id: upscaleVideoItem
+        property bool isVideo: {
+          var path = wallpaperContextMenu.wallpaperToDelete;
+          if (!path) return false;
+          var ext = path.split('.').pop().toLowerCase();
+          var videoExtensions = ["mp4", "webm", "mkv", "avi", "mov", "ogv", "m4v"];
+          return videoExtensions.indexOf(ext) !== -1;
+        }
+        visible: ProgramCheckerService.realesrganAvailable && isVideo
+        text: WallpaperService.isUpscalingVideo ? I18n.tr("wallpaper.panel.context.upscaling-video") : I18n.tr("wallpaper.panel.context.upscale-video")
+        enabled: !WallpaperService.isUpscaling && !WallpaperService.isUpscalingVideo && isVideo
+
+        background: Rectangle {
+          color: upscaleVideoArea.containsMouse && upscaleVideoItem.enabled ? Color.mHover : Color.transparent
+          radius: Style.radiusXS
+        }
+
+        contentItem: RowLayout {
+          spacing: Style.marginS
+          opacity: upscaleVideoItem.enabled ? 1.0 : 0.5
+          NIcon {
+            icon: "movie"
+            pointSize: Style.fontSizeM
+            color: upscaleVideoArea.containsMouse && upscaleVideoItem.enabled ? Color.mOnHover : Color.mOnSurface
+          }
+          NText {
+            text: upscaleVideoItem.text
+            pointSize: Style.fontSizeS
+            color: upscaleVideoArea.containsMouse && upscaleVideoItem.enabled ? Color.mOnHover : Color.mOnSurface
+            Layout.fillWidth: true
+          }
+        }
+
+        MouseArea {
+          id: upscaleVideoArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: upscaleVideoItem.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+          onClicked: {
+            if (upscaleVideoItem.enabled && wallpaperContextMenu.wallpaperToDelete) {
+              WallpaperService.upscaleVideo(wallpaperContextMenu.wallpaperToDelete);
             }
             wallpaperContextMenu.close();
           }
