@@ -58,14 +58,8 @@ Item {
         bar: root.bar
         shapeContainer: backgroundsShape
         windowRoot: root.windowRoot
-        // In framed mode or transparent mode, bar has no background
-        backgroundColor: {
-          var barMode = Settings.data.bar.mode ?? "classic";
-          if (barMode === "framed" || Settings.data.bar.transparent) {
-            return "transparent";
-          }
-          return panelBackgroundColor;
-        }
+// Transparent mode = no background, otherwise use panel color (opacity applied at container level)
+        backgroundColor: Settings.data.bar.transparent ? "transparent" : panelBackgroundColor
       }
 
       /**

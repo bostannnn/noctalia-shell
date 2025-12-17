@@ -84,10 +84,9 @@ ColumnLayout {
     onSelected: key => Settings.data.bar.density = key
   }
 
-  // Hide transparency options in framed mode (screen border provides background)
+  // Transparent background toggle (works in all modes)
   NToggle {
     Layout.fillWidth: true
-    visible: (Settings.data.bar.mode ?? "classic") !== "framed"
     label: I18n.tr("settings.bar.appearance.transparent.label")
     description: I18n.tr("settings.bar.appearance.transparent.description")
     checked: Settings.data.bar.transparent
