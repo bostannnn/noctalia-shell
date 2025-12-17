@@ -13,6 +13,9 @@ Image {
   property int maxCacheDimension: 384
   readonly property string cachePath: imageHash ? `${cacheFolder}${imageHash}@${maxCacheDimension}x${maxCacheDimension}.png` : ""
 
+  // Track if we're waiting for ImageMagick fallback
+  property bool waitingForMagick: false
+
   asynchronous: true
   fillMode: Image.PreserveAspectCrop
   sourceSize.width: maxCacheDimension
@@ -21,10 +24,11 @@ Image {
   onImagePathChanged: {
     if (imagePath) {
       imageHash = Checksum.sha256(imagePath);
-      // Logger.i("NImageCached", imagePath, imageHash)
+      waitingForMagick = false;
     } else {
       source = "";
       imageHash = "";
+      waitingForMagick = false;
     }
   }
   onCachePathChanged: {
@@ -38,6 +42,10 @@ Image {
     if (source == cachePath && status === Image.Error) {
       // Cached image was not available, show the original
       source = imagePath;
+    } else if (source == imagePath && status === Image.Error && !waitingForMagick) {
+      // Original image failed to load (too large for Qt) - use ImageMagick fallback
+      waitingForMagick = true;
+      generateThumbnailWithMagick();
     } else if (source == imagePath && status === Image.Ready && imageHash && cachePath) {
       // Original image is shown and fully loaded, time to cache it
       const grabPath = cachePath;
@@ -45,6 +53,39 @@ Image {
         grabToImage(res => {
                       return res.saveToFile(grabPath);
                     });
+    }
+  }
+
+  // Use ImageMagick to generate thumbnail for images Qt can't decode
+  function generateThumbnailWithMagick() {
+    if (!imagePath || !cachePath) return;
+
+    const srcPath = imagePath.replace(/^file:\/\//, "");
+    const srcEsc = srcPath.replace(/'/g, "'\\''");
+    const dstEsc = cachePath.replace(/'/g, "'\\''");
+    const size = maxCacheDimension;
+
+    // Use convert to create thumbnail - handles large images well
+    const cmd = `convert '${srcEsc}[0]' -thumbnail '${size}x${size}^' -gravity center -extent '${size}x${size}' '${dstEsc}'`;
+
+    magickProcess.command = ["bash", "-c", cmd];
+    magickProcess.running = true;
+  }
+
+  Process {
+    id: magickProcess
+    running: false
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+
+    onExited: function(exitCode) {
+      if (exitCode === 0 && root.cachePath) {
+        // Thumbnail generated, load it
+        root.source = root.cachePath;
+      } else {
+        Logger.w("NImageCached", "ImageMagick thumbnail failed:", stderr.text);
+      }
+      root.waitingForMagick = false;
     }
   }
 }
