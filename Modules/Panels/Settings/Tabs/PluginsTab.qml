@@ -8,11 +8,10 @@ import qs.Widgets
 
 ColumnLayout {
   id: root
-  spacing: Style.marginL
-  width: parent.width
 
   // Track which plugins are currently updating
   property var updatingPlugins: ({})
+  property int installedPluginsRefreshCounter: 0
 
   function stripAuthorEmail(author) {
     if (!author)
@@ -80,6 +79,9 @@ ColumnLayout {
     }
   }
 
+  // ------------------------------
+  // Installed plugins
+  // ------------------------------
   ColumnLayout {
     spacing: Style.marginM
     Layout.fillWidth: true
@@ -88,17 +90,18 @@ ColumnLayout {
       id: installedPluginsRepeater
 
       model: {
-        // Make this reactive to PluginRegistry and PluginService changes
-        var _ = PluginRegistry.installedPlugins; // Force dependency
-        var __ = PluginRegistry.pluginStates;    // Force dependency
-        var ___ = PluginService.pluginUpdates;   // Force dependency on updates
+        // Force refresh when counter changes
+        var _ = root.installedPluginsRefreshCounter;
 
         var allIds = PluginRegistry.getAllInstalledPluginIds();
         var plugins = [];
         for (var i = 0; i < allIds.length; i++) {
           var manifest = PluginRegistry.getPluginManifest(allIds[i]);
           if (manifest) {
-            plugins.push(manifest);
+            // Create a copy of manifest and include update info
+            var pluginData = JSON.parse(JSON.stringify(manifest));
+            pluginData._updateInfo = PluginService.pluginUpdates[allIds[i]];
+            plugins.push(pluginData);
           }
         }
         return plugins;
@@ -106,7 +109,9 @@ ColumnLayout {
 
       delegate: NBox {
         Layout.fillWidth: true
-        implicitHeight: rowLayout.implicitHeight + Style.marginL * 2
+        Layout.leftMargin: Style.borderS
+        Layout.rightMargin: Style.borderS
+        implicitHeight: Math.round(rowLayout.implicitHeight) + Style.marginL * 2
         color: Color.mSurface
 
         RowLayout {
@@ -129,6 +134,7 @@ ColumnLayout {
               text: modelData.name
               font.weight: Font.Medium
               color: Color.mOnSurface
+              elide: Text.ElideRight
               Layout.fillWidth: true
             }
 
@@ -137,6 +143,8 @@ ColumnLayout {
               font.pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
               wrapMode: Text.WordWrap
+              maximumLineCount: 2
+              elide: Text.ElideRight
               Layout.fillWidth: true
             }
 
@@ -144,15 +152,13 @@ ColumnLayout {
               spacing: Style.marginS
 
               NText {
-                property var updateInfo: PluginService.pluginUpdates[modelData.id]
-
-                text: updateInfo ? I18n.tr("settings.plugins.update-version", {
-                                             "current": modelData.version,
-                                             "new": updateInfo.availableVersion
-                                           }) : "v" + modelData.version
+                text: modelData._updateInfo ? I18n.tr("settings.plugins.update-version", {
+                                                        "current": modelData.version,
+                                                        "new": modelData._updateInfo.availableVersion
+                                                      }) : "v" + modelData.version
                 font.pointSize: Style.fontSizeXXS
-                color: updateInfo ? Color.mPrimary : Color.mOnSurfaceVariant
-                font.weight: updateInfo ? Font.Medium : Font.Normal
+                color: modelData._updateInfo ? Color.mPrimary : Color.mOnSurfaceVariant
+                font.weight: modelData._updateInfo ? Font.Medium : Font.Normal
               }
 
               NText {
@@ -211,14 +217,14 @@ ColumnLayout {
                                          "plugin": modelData.name
                                        }) : I18n.tr("settings.plugins.update")
             icon: isUpdating ? "" : "download"
-            visible: PluginService.pluginUpdates[pluginId] !== undefined
+            visible: modelData._updateInfo !== undefined
             enabled: !isUpdating
             backgroundColor: Color.mPrimary
             textColor: Color.mOnPrimary
             onClicked: {
               var pid = pluginId;
               var pname = modelData.name;
-              var pversion = PluginService.pluginUpdates[pid]?.availableVersion || "";
+              var pversion = modelData._updateInfo?.availableVersion || "";
               var rootRef = root;
               var updates = Object.assign({}, rootRef.updatingPlugins);
               updates[pid] = true;
@@ -372,10 +378,12 @@ ColumnLayout {
   RowLayout {
     spacing: Style.marginM
     Layout.fillWidth: true
+    Layout.bottomMargin: Style.marginM
 
     NTabBar {
       id: filterTabBar
       Layout.fillWidth: true
+      spacing: Style.marginM
       currentIndex: 0
       onCurrentIndexChanged: {
         if (currentIndex === 0)
@@ -385,7 +393,6 @@ ColumnLayout {
         else if (currentIndex === 2)
           pluginFilter = "notDownloaded";
       }
-      spacing: Style.marginXS
 
       NTabButton {
         text: I18n.tr("settings.plugins.filter.all")
@@ -400,6 +407,7 @@ ColumnLayout {
       }
 
       NTabButton {
+        Layout.fillWidth: true
         text: I18n.tr("settings.plugins.filter.not-downloaded")
         tabIndex: 2
         checked: pluginFilter === "notDownloaded"
@@ -409,7 +417,7 @@ ColumnLayout {
     NIconButton {
       icon: "refresh"
       tooltipText: I18n.tr("settings.plugins.refresh.tooltip")
-      baseSize: Style.baseWidgetSize * 0.8
+      baseSize: Style.baseWidgetSize * 0.9
       onClicked: {
         PluginService.refreshAvailablePlugins();
         checkUpdatesTimer.restart();
@@ -418,10 +426,19 @@ ColumnLayout {
     }
   }
 
-  // Timer to check for updates after refresh
+  // Timer to check for updates after refresh starts
   Timer {
     id: checkUpdatesTimer
     interval: 100
+    onTriggered: {
+      PluginService.checkForUpdates();
+    }
+  }
+
+  // Timer to recheck updates after available plugins are updated
+  Timer {
+    id: recheckUpdatesTimer
+    interval: 50
     onTriggered: {
       PluginService.checkForUpdates();
     }
@@ -459,7 +476,9 @@ ColumnLayout {
 
       delegate: NBox {
         Layout.fillWidth: true
-        implicitHeight: contentRow.implicitHeight + Style.marginL * 2
+        Layout.leftMargin: Style.borderS
+        Layout.rightMargin: Style.borderS
+        implicitHeight: Math.round(contentRow.implicitHeight + Style.marginL * 2)
         color: Color.mSurface
 
         RowLayout {
@@ -482,6 +501,7 @@ ColumnLayout {
               text: modelData.name
               font.weight: Font.Medium
               color: Color.mOnSurface
+              elide: Text.ElideRight
               Layout.fillWidth: true
             }
 
@@ -490,6 +510,8 @@ ColumnLayout {
               font.pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
               wrapMode: Text.WordWrap
+              maximumLineCount: 2
+              elide: Text.ElideRight
               Layout.fillWidth: true
             }
 
@@ -790,7 +812,7 @@ ColumnLayout {
     target: PluginService
 
     function onAvailablePluginsUpdated() {
-      // Force model refresh
+      // Force model refresh for available plugins
       availablePluginsRepeater.model = undefined;
       Qt.callLater(function () {
         availablePluginsRepeater.model = Qt.binding(function () {
@@ -813,6 +835,16 @@ ColumnLayout {
           return filtered;
         });
       });
+
+      // Manually trigger update check after a small delay to ensure all registries are loaded
+      Qt.callLater(function () {
+        PluginService.checkForUpdates();
+      });
+    }
+
+    function onPluginUpdatesChanged() {
+      // Increment counter to force installed plugins model refresh
+      root.installedPluginsRefreshCounter++;
     }
   }
 }

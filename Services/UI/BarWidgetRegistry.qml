@@ -34,7 +34,6 @@ Singleton {
                            "Spacer": spacerComponent,
                            "SystemMonitor": systemMonitorComponent,
                            "Taskbar": taskbarComponent,
-                           "TaskbarGrouped": taskbarGroupedComponent,
                            "Tray": trayComponent,
                            "Volume": volumeComponent,
                            "VPN": vpnComponent,
@@ -61,7 +60,6 @@ Singleton {
                                      "Spacer": "WidgetSettings/SpacerSettings.qml",
                                      "SystemMonitor": "WidgetSettings/SystemMonitorSettings.qml",
                                      "Taskbar": "WidgetSettings/TaskbarSettings.qml",
-                                     "TaskbarGrouped": "WidgetSettings/TaskbarGroupedSettings.qml",
                                      "Tray": "WidgetSettings/TraySettings.qml",
                                      "Volume": "WidgetSettings/VolumeSettings.qml",
                                      "VPN": "WidgetSettings/VPNSettings.qml",
@@ -194,6 +192,7 @@ Singleton {
                                     "usePrimaryColor": false,
                                     "showCpuUsage": true,
                                     "showCpuTemp": true,
+                                    "showGpuTemp": false,
                                     "showMemoryUsage": true,
                                     "showMemoryAsPercent": false,
                                     "showNetworkStats": false,
@@ -212,19 +211,13 @@ Singleton {
                                     "smartWidth": true,
                                     "maxTaskbarWidth": 40
                                   },
-                                  "TaskbarGrouped": {
-                                    "allowUserSettings": true,
-                                    "hideUnoccupied": false,
-                                    "labelMode": "index",
-                                    "showLabelsOnlyWhenOccupied": true,
-                                    "colorizeIcons": false
-                                  },
                                   "Tray": {
                                     "allowUserSettings": true,
                                     "blacklist": [],
                                     "colorizeIcons": false,
                                     "pinned": [],
-                                    "drawerEnabled": true
+                                    "drawerEnabled": true,
+                                    "hidePassive": false
                                   },
                                   "VPN": {
                                     "allowUserSettings": true,
@@ -239,7 +232,11 @@ Singleton {
                                     "labelMode": "index",
                                     "followFocusedScreen": false,
                                     "hideUnoccupied": false,
-                                    "characterCount": 2
+                                    "characterCount": 2,
+                                    "showApplications": false,
+                                    "showLabelsOnlyWhenOccupied": true,
+                                    "colorizeIcons": false,
+                                    "enableScrollWheel": true
                                   },
                                   "Volume": {
                                     "allowUserSettings": true,
@@ -338,10 +335,6 @@ Singleton {
   property Component taskbarComponent: Component {
     Taskbar {}
   }
-  property Component taskbarGroupedComponent: Component {
-    TaskbarGrouped {}
-  }
-
   function init() {
     Logger.i("BarWidgetRegistry", "Service started");
   }

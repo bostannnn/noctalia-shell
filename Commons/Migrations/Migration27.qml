@@ -1,44 +1,44 @@
 import QtQuick
 
 /**
- * Migration v27: Migrate bar.floating to bar.mode
- * 
- * Old settings:
- *   - bar.floating: true/false
- *   - general.screenBorderEnabled: true/false
- * 
- * New setting:
- *   - bar.mode: "classic" | "floating" | "framed"
- * 
- * Migration logic:
- *   - If screenBorderEnabled was true → mode = "framed"
- *   - Else if floating was true → mode = "floating"
- *   - Else → mode = "classic"
+ * Migration v27:
+ * 1. Migrate bar.floating to bar.mode
+ * 2. Migrate settingsPanelAttachToBar to settingsPanelMode
  */
 QtObject {
-  function migrate(adapter, Logger) {
-    Logger.i("Migration", "Running migration v27: bar.floating → bar.mode");
-    
+  id: root
+
+  function migrate(adapter, logger, rawJson) {
+    logger.i("Settings", "Running migration v27");
+
     try {
-      // Determine the new mode based on old settings
+      // Migration 1: bar.floating → bar.mode
       var oldFloating = adapter.bar.floating ?? false;
       var oldScreenBorder = adapter.general.screenBorderEnabled ?? false;
-      
+
       var newMode = "classic";
       if (oldScreenBorder) {
         newMode = "framed";
       } else if (oldFloating) {
         newMode = "floating";
       }
-      
-      // Set the new mode
+
       adapter.bar.mode = newMode;
-      
-      Logger.i("Migration", "  Migrated to bar.mode = '" + newMode + "' (was floating=" + oldFloating + ", screenBorderEnabled=" + oldScreenBorder + ")");
-      
+      logger.i("Settings", "  Migrated to bar.mode = '" + newMode + "'");
+
+      // Migration 2: settingsPanelAttachToBar → settingsPanelMode
+      if (rawJson?.ui?.settingsPanelAttachToBar !== undefined) {
+        if (rawJson.ui.settingsPanelAttachToBar === true) {
+          adapter.ui.settingsPanelMode = "attached";
+        } else {
+          adapter.ui.settingsPanelMode = "centered";
+        }
+        logger.i("Settings", "  Migrated settingsPanelAttachToBar to settingsPanelMode: " + adapter.ui.settingsPanelMode);
+      }
+
       return true;
     } catch (e) {
-      Logger.e("Migration", "Migration v27 failed: " + e);
+      logger.e("Settings", "Migration v27 failed: " + e);
       return false;
     }
   }

@@ -165,6 +165,11 @@ Singleton {
           "requiresThemesFolder": false
         },
         {
+          "name": "equicord",
+          "path": "~/.config/Equicord",
+          "requiresThemesFolder": false
+        },
+        {
           "name": "lightcord",
           "path": "~/.config/lightcord",
           "requiresThemesFolder": false
@@ -194,6 +199,17 @@ Singleton {
         {
           "name": "codium",
           "path": "~/.vscode-oss/extensions/undefined_publisher.noctaliatheme-0.0.1/themes/NoctaliaTheme-color-theme.json"
+        }
+      ]
+    },
+    {
+      "id": "zed",
+      "name": "Zeditor",
+      "category": "applications",
+      "input": "zed.json",
+      "outputs": [
+        {
+          "path": "~/.config/zed/themes/noctalia.json"
         }
       ]
     },
@@ -231,6 +247,17 @@ Singleton {
         }
       ],
       "postProcess": () => `${colorsApplyScript} cava`
+    },
+    {
+      "id": "yazi",
+      "name": "Yazi",
+      "category": "applications",
+      "input": "yazi.toml",
+      "outputs": [
+        {
+          "path": "~/.config/yazi/flavors/noctalia.yazi/flavor.toml"
+        }
+      ]
     },
     {
       "id": "emacs",

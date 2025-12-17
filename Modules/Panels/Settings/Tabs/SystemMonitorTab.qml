@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
+import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 
@@ -15,6 +16,15 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("settings.system-monitor.general.section.label")
     description: I18n.tr("settings.system-monitor.general.section.description")
+  }
+
+  NToggle {
+    Layout.fillWidth: true
+    Layout.topMargin: Style.marginM
+    label: I18n.tr("settings.system-monitor.enable-nvidia-gpu.label")
+    description: I18n.tr("settings.system-monitor.enable-nvidia-gpu.description")
+    checked: Settings.data.systemMonitor.enableNvidiaGpu
+    onToggled: checked => Settings.data.systemMonitor.enableNvidiaGpu = checked
   }
 
   // Colors Section
@@ -116,7 +126,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.cpu-warning-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.warning")
         pointSize: Style.fontSizeS
       }
 
@@ -144,7 +154,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.cpu-critical-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.critical")
         pointSize: Style.fontSizeS
       }
 
@@ -201,7 +211,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.temp-warning-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.warning")
         pointSize: Style.fontSizeS
       }
 
@@ -228,7 +238,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.temp-critical-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.critical")
         pointSize: Style.fontSizeS
       }
 
@@ -266,6 +276,92 @@ ColumnLayout {
     }
   }
 
+  // GPU Temperature
+  NText {
+    Layout.fillWidth: true
+    Layout.topMargin: Style.marginM
+    text: I18n.tr("settings.system-monitor.gpu-section.label")
+    pointSize: Style.fontSizeM
+    visible: SystemStatService.gpuAvailable
+  }
+
+  RowLayout {
+    Layout.fillWidth: true
+    spacing: Style.marginM
+    visible: SystemStatService.gpuAvailable
+
+    ColumnLayout {
+      Layout.fillWidth: true
+      spacing: Style.marginM
+
+      NText {
+        Layout.alignment: Qt.AlignHCenter
+        horizontalAlignment: Text.AlignHCenter
+        text: I18n.tr("settings.system-monitor.threshold.warning")
+        pointSize: Style.fontSizeS
+      }
+
+      NSpinBox {
+        Layout.alignment: Qt.AlignHCenter
+        from: 0
+        to: 120
+        stepSize: 5
+        value: Settings.data.systemMonitor.gpuWarningThreshold
+        onValueChanged: {
+          Settings.data.systemMonitor.gpuWarningThreshold = value;
+          if (Settings.data.systemMonitor.gpuCriticalThreshold < value) {
+            Settings.data.systemMonitor.gpuCriticalThreshold = value;
+          }
+        }
+        suffix: "°C"
+      }
+    }
+
+    ColumnLayout {
+      Layout.fillWidth: true
+      spacing: Style.marginM
+
+      NText {
+        Layout.alignment: Qt.AlignHCenter
+        horizontalAlignment: Text.AlignHCenter
+        text: I18n.tr("settings.system-monitor.threshold.critical")
+        pointSize: Style.fontSizeS
+      }
+
+      NSpinBox {
+        Layout.alignment: Qt.AlignHCenter
+        from: Settings.data.systemMonitor.gpuWarningThreshold
+        to: 120
+        stepSize: 5
+        value: Settings.data.systemMonitor.gpuCriticalThreshold
+        onValueChanged: Settings.data.systemMonitor.gpuCriticalThreshold = value
+        suffix: "°C"
+      }
+    }
+
+    ColumnLayout {
+      Layout.fillWidth: true
+      spacing: Style.marginM
+
+      NText {
+        Layout.alignment: Qt.AlignHCenter
+        horizontalAlignment: Text.AlignHCenter
+        text: I18n.tr("settings.system-monitor.polling-interval.label")
+        pointSize: Style.fontSizeS
+      }
+
+      NSpinBox {
+        Layout.alignment: Qt.AlignHCenter
+        from: 250
+        to: 10000
+        stepSize: 250
+        value: Settings.data.systemMonitor.gpuPollingInterval
+        onValueChanged: Settings.data.systemMonitor.gpuPollingInterval = value
+        suffix: " ms"
+      }
+    }
+  }
+
   // Memory Usage
   NText {
     Layout.fillWidth: true
@@ -285,7 +381,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.mem-warning-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.warning")
         pointSize: Style.fontSizeS
       }
 
@@ -312,7 +408,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.mem-critical-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.critical")
         pointSize: Style.fontSizeS
       }
 
@@ -369,7 +465,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.disk-warning-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.warning")
         pointSize: Style.fontSizeS
       }
 
@@ -396,7 +492,7 @@ ColumnLayout {
       NText {
         Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: I18n.tr("settings.system-monitor.disk-critical-threshold.label")
+        text: I18n.tr("settings.system-monitor.threshold.critical")
         pointSize: Style.fontSizeS
       }
 

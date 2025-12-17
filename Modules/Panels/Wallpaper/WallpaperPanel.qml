@@ -310,6 +310,7 @@ SmartPanel {
               NTabButton {
                 required property var modelData
                 required property int index
+                Layout.fillWidth: true
                 text: modelData.name || `Screen ${index + 1}`
                 tabIndex: index
                 checked: {

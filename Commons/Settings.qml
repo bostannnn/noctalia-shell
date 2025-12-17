@@ -27,7 +27,7 @@ Singleton {
   - Default cache directory: ~/.cache/noctalia
   */
   readonly property alias data: adapter  // Used to access via Settings.data.xxx.yyy
-  readonly property int settingsVersion: 27
+readonly property int settingsVersion: 31
   readonly property bool isDebug: Quickshell.env("NOCTALIA_DEBUG") === "1"
   readonly property string shellName: "noctalia"
   readonly property string configDir: Quickshell.env("NOCTALIA_CONFIG_DIR") || (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/" + shellName + "/"
@@ -125,15 +125,25 @@ Singleton {
       if (!isLoaded) {
         Logger.i("Settings", "Settings loaded");
 
-        upgradeSettings();
+        // Load raw JSON for migrations (adapter doesn't expose removed properties)
+        var rawJson = null;
+        try {
+          rawJson = JSON.parse(settingsFileView.text());
+        } catch (e) {
+          Logger.w("Settings", "Could not parse raw JSON for migrations");
+        }
 
-        root.isLoaded = true;
-
-        // Emit the signal
-        root.settingsLoaded();
+        // Run versioned migrations immediately, don't move it in upgradeSettings
+        runVersionedMigrations(rawJson);
 
         // Finally, update our local settings version
         adapter.settingsVersion = settingsVersion;
+
+        // Emit the signal
+        root.isLoaded = true;
+        root.settingsLoaded();
+
+        upgradeSettings();
       }
     }
     onLoadFailed: function (error) {
@@ -150,14 +160,15 @@ Singleton {
   JsonAdapter {
     id: adapter
 
-    property int settingsVersion: root.settingsVersion
+    property int settingsVersion: 0
 
     // bar
     property JsonObject bar: JsonObject {
       property string position: "top" // "top", "bottom", "left", or "right"
-      property real backgroundOpacity: 1.0
       property list<string> monitors: [] // holds bar visibility per monitor
       property string density: "default" // "compact", "default", "comfortable"
+      property bool transparent: false
+      property bool showOutline: false
       property bool showCapsule: true
       property real capsuleOpacity: 1.0
 
@@ -232,7 +243,7 @@ Singleton {
     // general
     property JsonObject general: JsonObject {
       property string avatarImage: ""
-      property real dimmerOpacity: 0.6
+      property real dimmerOpacity: 0.2
       property bool showScreenCorners: false
       property bool forceBlackScreenCorners: false
       
@@ -272,9 +283,9 @@ Singleton {
       property real fontDefaultScale: 1.0
       property real fontFixedScale: 1.0
       property bool tooltipsEnabled: true
-      property real panelBackgroundOpacity: 1.0
+      property real panelBackgroundOpacity: 0.85
       property bool panelsAttachedToBar: true
-      property bool settingsPanelAttachToBar: false
+      property string settingsPanelMode: "attached" // "centered", "attached", "window"
     }
 
     // location
@@ -422,6 +433,10 @@ Singleton {
           "enabled": true
         },
         {
+          "id": "brightness-card",
+          "enabled": false
+        },
+        {
           "id": "weather-card",
           "enabled": true
         },
@@ -438,12 +453,16 @@ Singleton {
       property int cpuCriticalThreshold: 90
       property int tempWarningThreshold: 80
       property int tempCriticalThreshold: 90
+      property int gpuWarningThreshold: 80
+      property int gpuCriticalThreshold: 90
       property int memWarningThreshold: 80
       property int memCriticalThreshold: 90
       property int diskWarningThreshold: 80
       property int diskCriticalThreshold: 90
       property int cpuPollingInterval: 3000
       property int tempPollingInterval: 3000
+      property int gpuPollingInterval: 3000
+      property bool enableNvidiaGpu: false // Opt-in: nvidia-smi wakes dGPU on laptops, draining battery
       property int memPollingInterval: 3000
       property int diskPollingInterval: 3000
       property int networkPollingInterval: 3000
@@ -481,6 +500,7 @@ Singleton {
       property int countdownDuration: 10000
       property string position: "center"
       property bool showHeader: true
+      property bool largeButtonsStyle: false
       property list<var> powerOptions: [
         {
           "action": "lock",
@@ -539,7 +559,7 @@ Singleton {
       property int autoHideMs: 2000
       property bool overlayLayer: true
       property real backgroundOpacity: 1.0
-      property list<var> enabledTypes: [OSD.Type.Volume, OSD.Type.InputVolume, OSD.Type.Brightness]
+      property list<var> enabledTypes: [OSD.Type.Volume, OSD.Type.InputVolume, OSD.Type.Brightness, OSD.Type.CustomText]
       property list<string> monitors: [] // holds osd visibility per monitor
     }
 
@@ -592,9 +612,11 @@ Singleton {
       property bool spicetify: false
       property bool telegram: false
       property bool cava: false
+      property bool yazi: false
       property bool emacs: false
       property bool niri: false
-      property bool hyprland: false
+property bool hyprland: false
+      property bool zed: false
       property bool enableUserTemplates: false
     }
 
@@ -614,6 +636,16 @@ Singleton {
       property bool enabled: false
       property string wallpaperChange: ""
       property string darkModeChange: ""
+      property string screenLock: ""
+      property string screenUnlock: ""
+    }
+
+    // desktop widgets
+    property JsonObject desktopWidgets: JsonObject {
+      property bool enabled: false
+      property bool editMode: false
+      property list<var> monitorWidgets: []
+      // Format: [{ "name": "DP-1", "widgets": [...] }, { "name": "HDMI-1", "widgets": [...] }]
     }
   }
 
@@ -669,9 +701,12 @@ Singleton {
 
   // -----------------------------------------------------
   // Run versioned migrations using MigrationRegistry
-  function runVersionedMigrations() {
+  // rawJson is the parsed JSON file content (before adapter filtering)
+  function runVersionedMigrations(rawJson) {
     const currentVersion = adapter.settingsVersion;
     const migrations = MigrationRegistry.migrations;
+
+    Logger.i("Settings", "adapter.settingsVersion:", adapter.settingsVersion);
 
     // Get all migration versions and sort them
     const versions = Object.keys(migrations).map(v => parseInt(v)).sort((a, b) => a - b);
@@ -686,7 +721,7 @@ Singleton {
         const migration = migrationComponent.createObject(root);
 
         if (migration && typeof migration.migrate === "function") {
-          const success = migration.migrate(adapter, Logger);
+          const success = migration.migrate(adapter, Logger, rawJson);
           if (!success) {
             Logger.e("Settings", "Migration to v" + version + " failed");
           }
@@ -720,10 +755,6 @@ Singleton {
       Qt.callLater(upgradeSettings);
       return;
     }
-
-    // -----------------
-    // Run versioned migrations from MigrationRegistry
-    runVersionedMigrations();
 
     // -----------------
     const sections = ["left", "center", "right"];

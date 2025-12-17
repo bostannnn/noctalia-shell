@@ -157,11 +157,11 @@
           "update-text": "左键单击时更新显示的文本"
         },
         "max-text-length-horizontal": {
-          "description": "在水平栏中显示的最大字符数（0 为隐藏文本）",
+          "description": "在水平栏中显示的最大字符数（0 为隐藏文本）。",
           "label": "最大文本长度（水平）"
         },
         "max-text-length-vertical": {
-          "description": "在垂直栏中显示的最大字符数（0 为隐藏文本）",
+          "description": "在垂直栏中显示的最大字符数（0 为隐藏文本）。",
           "label": "最大文本长度（垂直）"
         },
         "middle-click": {
@@ -191,7 +191,7 @@
           "label": "流"
         },
         "wheel": {
-          "description": "使用滚轮时执行的命令。\n在命令中使用 $delta 表示滚轮增量",
+          "description": "使用滚轮时执行的命令。<br>在命令中使用 $delta 表示滚轮增量。",
           "label": "滚轮",
           "update-text": "滚轮滚动时更新显示的文本"
         },
@@ -200,7 +200,7 @@
           "label": "滚轮向下命令"
         },
         "wheel-mode-separate": {
-          "description": "为滚轮向上和向下启用单独的命令",
+          "description": "为滚轮向上和向下启用单独的命令。",
           "label": "分开滚轮命令"
         },
         "wheel-up": {
@@ -294,7 +294,7 @@
       },
       "spacer": {
         "width": {
-          "description": "间距宽度（像素）",
+          "description": "间距宽度（像素）。",
           "label": "宽度"
         }
       },
@@ -310,6 +310,10 @@
         "disk-path": {
           "description": "选择要监控的磁盘挂载点。",
           "label": "磁盘路径"
+        },
+        "gpu-temperature": {
+          "description": "显示GPU温度读数（如果可用）。",
+          "label": "GPU温度"
         },
         "memory-percentage": {
           "description": "以百分比而不是绝对值显示内存使用情况。",
@@ -345,9 +349,9 @@
           "description": "仅显示来自活动工作区的应用程序",
           "label": "仅显示活动工作区"
         },
-        "only-same-output": {
-          "description": "仅显示任务栏所在屏幕上的应用程序",
-          "label": "仅显示同屏幕"
+        "only-same-monitor": {
+          "description": "仅显示工具栏所在显示器上的应用。",
+          "label": "仅从同一显示器"
         },
         "show-pinned-apps": {
           "description": "在任务栏中显示 Dock 上固定的应用。",
@@ -368,19 +372,13 @@
           "reset-tooltip": "重置标题宽度"
         }
       },
-      "taskbar-grouped": {
-        "show-labels-only-when-occupied": {
-          "description": "只显示有打开窗口的工作区标签。",
-          "label": "仅在被占用时显示标签"
-        }
-      },
       "tray": {
         "colorize-icons": {
           "description": "将主题颜色应用到系统托盘图标。",
           "label": "着色图标"
         },
         "drawer-enabled": {
-          "description": "启用时，未固定的托盘项显示在抽屉面板中。禁用时，所有托盘项都内联显示。",
+          "description": "启用时，未固定的托盘项显示在抽屉面板中。<br>禁用时，所有托盘项都内联显示。",
           "label": "启用抽屉"
         },
         "hide-passive": {
@@ -399,6 +397,10 @@
           "description": "显示工作区名称的字符数量（1-10）。",
           "label": "字符数量"
         },
+        "enable-scrollwheel": {
+          "description": "使用鼠标滚轮切换工作区。",
+          "label": "滚动切换工作区"
+        },
         "follow-focused-screen": {
           "description": "显示当前焦点屏幕的工作区，而不是任务栏所在屏幕的工作区。",
           "label": "跟随焦点屏幕"
@@ -410,6 +412,14 @@
         "label-mode": {
           "description": "选择工作区标签的显示方式。",
           "label": "标签模式"
+        },
+        "show-applications": {
+          "description": "在每个工作区内显示应用程序图标。",
+          "label": "显示应用程序"
+        },
+        "show-labels-only-when-occupied": {
+          "description": "仅在工作区包含窗口时显示工作区标签。",
+          "label": "仅在被占用时显示标签"
         }
       }
     }
@@ -460,6 +470,7 @@
       "minutes": "米",
       "pause": "暂停",
       "reset": "重置",
+      "resume": "简历",
       "seconds": "s",
       "start": "开始",
       "stopwatch": "秒表",
@@ -705,6 +716,11 @@
       "hover": "悬停时滚动",
       "never": "从不滚动"
     },
+    "settings-panel-mode": {
+      "attached": "连接到杆的面板",
+      "centered": "居中面板",
+      "window": "分离窗口"
+    },
     "shadow-direction": {
       "bottom": "下方",
       "bottom_left": "左下",
@@ -752,7 +768,7 @@
   "plugins": {
     "applications": "应用程序",
     "calculator": "计算器",
-    "calculator-description": "计算器 - 计算数学表达式",
+    "calculator-description": "计算器 — 计算数学表达式",
     "calculator-enter-expression": "输入数学表达式",
     "calculator-error": "错误",
     "calculator-name": "计算器",
@@ -970,10 +986,6 @@
     },
     "bar": {
       "appearance": {
-        "background-opacity": {
-          "description": "调整状态栏的背景不透明度。",
-          "label": "背景不透明度"
-        },
         "capsule-opacity": {
           "description": "设置显示胶囊时小部件背景的不透明度。",
           "label": "胶囊不透明度"
@@ -1007,6 +1019,14 @@
         "show-capsule": {
           "description": "为每个小部件添加背景。",
           "label": "显示组件背景"
+        },
+        "show-outline": {
+          "description": "在每个小部件周围显示可见边框。",
+          "label": "显示小部件轮廓"
+        },
+        "transparent": {
+          "description": "这将阻止面板连接到栏上。",
+          "label": "透明背景"
         }
       },
       "monitors": {
@@ -1037,14 +1057,14 @@
       "color-source": {
         "matugen-scheme-type": {
           "description": {
-            "scheme-content": "推导出与底层图像紧密匹配的颜色",
-            "scheme-expressive": "充满活力的调色板，色彩饱和度高",
-            "scheme-fidelity": "保留原始色调的高保真调色板",
-            "scheme-fruit-salad": "鲜艳对比色的缤纷组合",
-            "scheme-monochrome": "围绕单一色调构建的极简调色板",
+            "scheme-content": "推导出与底层图像紧密匹配的颜色。",
+            "scheme-expressive": "充满活力的调色板，色彩饱和度高。",
+            "scheme-fidelity": "保留原始色调的高保真调色板。",
+            "scheme-fruit-salad": "鲜艳对比色的缤纷组合。",
+            "scheme-monochrome": "围绕单一色调构建的极简调色板。",
             "scheme-neutral": "柔和的色调，沉稳平静。",
-            "scheme-rainbow": "涵盖整个光谱的多元调色板",
-            "scheme-tonal-spot": "平衡的色调，重点突出"
+            "scheme-rainbow": "涵盖整个光谱的多元调色板。",
+            "scheme-tonal-spot": "平衡的色调，重点突出。"
           },
           "label": "Matugen 配色方案类型"
         },
@@ -1134,17 +1154,21 @@
         },
         "programs": {
           "cava": {
-            "description": "写入 {filepath}。",
+            "description": "写入 {filepath}",
             "description-missing": "需要安装 {app}"
           },
           "code": {
-            "description": "写入 {filepath}。Hyprluna 主题需要手动安装和激活。",
-            "description-missing": "未检测到 Code 客户端。请安装 VSCode 或 VSCodium。"
+            "description": "写入 {filepath}，Hyprluna 主题需要手动安装和激活",
+            "description-missing": "未检测到 Code 客户端，请安装 VSCode 或 VSCodium"
           },
-          "description": "应用程序特定主题。",
+          "description": "应用程序特定主题",
           "discord": {
-            "description": "为 {client} 写入 {filepath}",
-            "description-missing": "未检测到 Discord 客户端。请安装 vencord、vesktop、webcord、armcord、equibop、lightcord 或 dorion。"
+            "description": "为 {client} 写入 {filepath}，Hyprluna 主题需要手动安装和激活",
+            "description-missing": "未检测到 Discord 客户端，请安装 vencord、vesktop、webcord、armcord、equibop、lightcord 或 dorion"
+          },
+          "emacs": {
+            "description": "Doom: ~/.config/doom/themes/noctalia.el<br>标准: ~/.emacs.d/themes/noctalia.el<br>手动应用: (load-theme 'noctalia t)",
+            "description-missing": "需要安装{app}"
           },
           "fuzzel": {
             "description": "写入 {filepath} 并重新加载",
@@ -1156,11 +1180,11 @@
             "description-missing": "需要安装 {app}"
           },
           "spicetify": {
-            "description": "写入 {filepath}。Comfy 主题需要手动安装和激活。",
+            "description": "写入 {filepath}，Comfy 主题需要手动安装和激活",
             "description-missing": "需要安装 {app}"
           },
           "telegram": {
-            "description": "写入 {filepath}。",
+            "description": "写入 {filepath}",
             "description-missing": "需要安装 {app}"
           },
           "vicinae": {
@@ -1169,6 +1193,14 @@
           },
           "walker": {
             "description": "写入 {filepath} 并将主题设置为 noctalia",
+            "description-missing": "需要安装 {app}"
+          },
+          "yazi": {
+            "description": "写入 {filepath}，需要手动激活 flavor",
+            "description-missing": "需要安装{app}"
+          },
+          "zed": {
+            "description": "写入 {filepath} 并重新加载",
             "description-missing": "需要安装 {app}"
           }
         },
@@ -1295,6 +1327,96 @@
       },
       "title": "控制中心"
     },
+    "desktop-widgets": {
+      "clock": {
+        "enabled": {
+          "description": "在桌面上显示一个时钟小部件。",
+          "label": "启用时钟小部件"
+        },
+        "height": {
+          "description": "时钟小部件的高度，以像素为单位。",
+          "label": "高度"
+        },
+        "section": {
+          "description": "配置时钟小部件外观。",
+          "label": "时钟小部件"
+        },
+        "show-background": {
+          "description": "显示时钟小部件的背景容器。",
+          "label": "显示背景"
+        },
+        "show-date": {
+          "description": "在时间下方显示当前日期。",
+          "label": "显示日期"
+        },
+        "show-seconds": {
+          "description": "在时间中显示秒。",
+          "label": "显示秒数"
+        },
+        "width": {
+          "description": "时钟小部件的宽度，以像素为单位。",
+          "label": "宽度"
+        }
+      },
+      "edit-mode": {
+        "button": {
+          "label": "进入编辑模式"
+        },
+        "controls-explanation": "鼠标左键：移动小组件\n鼠标右键：调整小组件大小",
+        "description": "启用编辑模式以移动和重新定位桌面小组件。启用后，小组件会显示拖动轮廓，并且可以重新定位。",
+        "exit-button": "退出编辑模式",
+        "label": "编辑模式"
+      },
+      "enabled": {
+        "description": "完全启用或禁用桌面小部件。",
+        "label": "启用桌面小部件"
+      },
+      "general": {
+        "section": {
+          "description": "配置显示在您桌面上的小部件。",
+          "label": "桌面小部件"
+        }
+      },
+      "media-player": {
+        "enabled": {
+          "description": "在桌面上显示媒体播放器小部件。",
+          "label": "启用媒体播放器小部件"
+        },
+        "section": {
+          "description": "配置媒体播放器小部件外观。",
+          "label": "媒体播放器小部件"
+        },
+        "show-background": {
+          "description": "显示媒体播放器小部件的背景容器。",
+          "label": "显示背景"
+        },
+        "visualizer-type": {
+          "description": "选择桌面媒体播放器的背景可视化类型。",
+          "label": "可视化类型"
+        }
+      },
+      "title": "桌面小部件",
+      "weather": {
+        "enabled": {
+          "description": "在桌面上显示天气小部件。",
+          "label": "启用天气小部件"
+        },
+        "section": {
+          "description": "配置天气小部件外观。",
+          "label": "天气小部件"
+        },
+        "show-background": {
+          "description": "显示天气小部件的背景容器。",
+          "label": "显示背景"
+        }
+      },
+      "widgets": {
+        "section": {
+          "description": "添加和配置桌面小部件",
+          "label": "桌面小部件"
+        }
+      }
+    },
     "display": {
       "monitors": {
         "brightness": "亮度",
@@ -1321,7 +1443,7 @@
       },
       "night-light": {
         "auto-schedule": {
-          "description": "基于 <i>{location}</i> 的日落和日出时间 - 推荐。",
+          "description": "基于 <i>{location}</i> 的日落和日出时间 — 推荐。",
           "label": "自动调度"
         },
         "enable": {
@@ -1406,9 +1528,9 @@
         "label": "启用 Dock"
       },
       "monitors": {
-        "only-same-output": {
-          "description": "仅显示输出结果中dock所在位置的应用。",
-          "label": "仅来自相同输出的应用"
+        "only-same-monitor": {
+          "description": "仅显示停靠栏所在显示器上的应用程序。",
+          "label": "仅限来自同一显示器的应用"
         },
         "section": {
           "description": "在特定显示器上显示 Dock。如果未选择任何显示器，则默认为全部。",
@@ -1493,13 +1615,23 @@
     "hooks": {
       "info": {
         "command-info": {
-          "description": "• 命令通过 shell 执行 (sh -c)\n• 命令在后台运行（分离）\n• 测试按钮使用当前值执行",
+          "description": "• 命令通过 shell 执行 (sh -c)<br>• 命令在后台运行（分离）<br>• 测试按钮使用当前值执行",
           "label": "钩子命令信息"
         },
         "parameters": {
-          "description": "• 壁纸钩子: $1 = 壁纸路径, $2 = 屏幕名称\n• 主题切换钩子: $1 = true/false (深色模式状态)",
+          "description": "• 壁纸钩子: $1 = 壁纸路径, $2 = 屏幕名称<br>• 主题切换钩子: $1 = true/false (深色模式状态)",
           "label": "可用参数"
         }
+      },
+      "screen-lock": {
+        "description": "屏幕锁定时执行的命令。",
+        "label": "屏幕已锁定",
+        "placeholder": "例如：notify-send \"屏幕\" \"已锁定\""
+      },
+      "screen-unlock": {
+        "description": "屏幕解锁时执行的命令。",
+        "label": "屏幕已解锁",
+        "placeholder": "例如：notify-send \"屏幕\" \"已解锁\""
       },
       "system-hooks": {
         "enable": {
@@ -1525,10 +1657,6 @@
     },
     "launcher": {
       "settings": {
-        "background-opacity": {
-          "description": "调整启动器的背景不透明度。",
-          "label": "背景不透明度"
-        },
         "clip-preview": {
           "description": "在使用 >clip 命令时显示剪贴板内容的预览。",
           "label": "启用剪贴板预览"
@@ -1732,7 +1860,7 @@
           "label": "启用屏显菜单"
         },
         "enabled": {
-          "description": "启用或禁用通知守护进程，需要重启 noctalia-shell。",
+          "description": "启用或禁用通知守护进程，需要重启 Noctalia shell。",
           "label": "启用通知"
         },
         "location": {
@@ -1857,6 +1985,10 @@
           "description": "当屏幕亮度发生变化时显示 OSD。",
           "label": "亮度"
         },
+        "custom-text": {
+          "description": "显示来自 IPC 的自定义文本消息的 OSD。",
+          "label": "自定义文本"
+        },
         "input-volume": {
           "description": "当麦克风音量发生变化时显示 OSD。",
           "label": "输入音量"
@@ -1918,8 +2050,8 @@
           "title": "添加插件源",
           "url": "仓库 URL"
         },
-        "description": "管理插件仓库，插件从这些仓库下载。",
-        "label": "插件源",
+        "description": "管理插件仓库。",
+        "label": "来源",
         "placeholder": "我的酷仓库",
         "remove": {
           "tooltip": "移除插件源"
@@ -2041,6 +2173,10 @@
           "label": "常规"
         }
       },
+      "large-buttons-style": {
+        "description": "以网格布局显示带有大按钮的会话菜单。",
+        "label": "大按钮样式"
+      },
       "position": {
         "description": "选择会话菜单面板打开时出现的位置。",
         "label": "位置"
@@ -2052,14 +2188,8 @@
       "title": "会话菜单"
     },
     "system-monitor": {
-      "cpu-critical-threshold": {
-        "label": "严重阈值"
-      },
       "cpu-section": {
         "label": "CPU 使用率"
-      },
-      "cpu-warning-threshold": {
-        "label": "警告阈值"
       },
       "critical-color": {
         "label": "严重颜色"
@@ -2067,14 +2197,12 @@
       "custom-highlight-colors-title": {
         "label": "自定义高亮颜色"
       },
-      "disk-critical-threshold": {
-        "label": "严重阈值"
-      },
       "disk-section": {
         "label": "磁盘使用率"
       },
-      "disk-warning-threshold": {
-        "label": "警告阈值"
+      "enable-nvidia-gpu": {
+        "description": "警告：这将唤醒您的 NVIDIA GPU，这可能会显著影响配备混合显卡的笔记本电脑的电池续航时间。",
+        "label": "启用 NVIDIA GPU 监控"
       },
       "general": {
         "section": {
@@ -2082,14 +2210,11 @@
           "label": "通用"
         }
       },
+      "gpu-section": {
+        "label": "GPU温度"
+      },
       "highlight-colors-section": {
         "label": "高亮颜色"
-      },
-      "mem-critical-threshold": {
-        "label": "严重阈值"
-      },
-      "mem-warning-threshold": {
-        "label": "警告阈值"
       },
       "memory-section": {
         "label": "内存使用率"
@@ -2100,14 +2225,12 @@
       "polling-interval": {
         "label": "轮询间隔"
       },
-      "temp-critical-threshold": {
-        "label": "严重阈值"
-      },
-      "temp-warning-threshold": {
-        "label": "警告阈值"
-      },
       "temperature-section": {
         "label": "CPU 温度"
+      },
+      "threshold": {
+        "critical": "临界阈值",
+        "warning": "警告阈值"
       },
       "thresholds-section": {
         "description": "为每个系统指标调整警告/严重阈值和轮询间隔。",
@@ -2156,7 +2279,7 @@
         "reset": "重置变暗桌面不透明度"
       },
       "panel-background-opacity": {
-        "description": "设置所有面板的背景不透明度（启动器、控制中心、设置等）。",
+        "description": "设置所有面板（栏、启动器、设置等）的背景不透明度。",
         "label": "面板背景不透明度"
       },
       "panels-attached-to-bar": {
@@ -2176,9 +2299,9 @@
         "description": "自定义界面的外观、感觉和行为。",
         "label": "外观"
       },
-      "settings-panel-attached-to-bar": {
-        "description": "使设置窗口与边栏保持对齐，实现统一的外观。",
-        "label": "将设置窗口贴合边栏"
+      "settings-panel-mode": {
+        "description": "选择设置布局（可能需要重新打开）。",
+        "label": "设置面板模式"
       },
       "shadows": {
         "description": "启用条形图和面板下的阴影。",
@@ -2393,11 +2516,11 @@
     },
     "power-profile": {
       "changed": "电源模式已更改",
-      "profile-name": "\"{profile}\""
+      "profile-name": "{profile}"
     },
     "recording": {
-      "failed-general": "录制器因错误退出。",
-      "failed-gpu": "gpu-screen-recorder 意外退出。",
+      "failed-general": "录制器因错误退出",
+      "failed-gpu": "gpu-screen-recorder 意外退出",
       "failed-start": "开始录制失败",
       "no-portals": "桌面门户未运行",
       "no-portals-desc": "请启动 xdg-desktop-portal 和一个合成器门户 (wlr/hyprland/gnome/kde)。",
@@ -2420,7 +2543,7 @@
       "disabled": "壁纸颜色已禁用",
       "enabled": "壁纸颜色已启用",
       "label": "壁纸颜色生成",
-      "not-installed": "Matugen 未安装 - 壁纸颜色提取所需"
+      "not-installed": "Matugen 未安装 — 壁纸颜色提取所需"
     },
     "wifi": {
       "connected": "已连接到 '{ssid}'",
@@ -2438,12 +2561,14 @@
     "click-to-start-recording": "屏幕录制器（开始录制）",
     "click-to-stop-recording": "屏幕录制器（停止录制）",
     "close": "关闭",
+    "collapse": "折叠侧边栏",
     "connect-disconnect-devices": "蓝牙设备",
     "delete-notification": "删除通知",
     "disable-keep-awake": "保持唤醒",
     "do-not-disturb-disabled": "勿扰模式",
     "do-not-disturb-enabled": "勿扰模式",
     "enable-keep-awake": "保持唤醒",
+    "expand": "展开侧边栏",
     "forget-network": "忘记网络",
     "grid-view": "网格视图",
     "hidden-files-hide": "隐藏文件",
@@ -2620,8 +2745,8 @@
         "no-leading-zero": "日期无前导零 (1-31)"
       },
       "hour": {
-        "leading-zero": "小时有前导零 (00-23) - 24小时制",
-        "no-leading-zero": "小时无前导零 (0-23) - 24小时制"
+        "leading-zero": "小时有前导零 (00-23) — 24小时制",
+        "no-leading-zero": "小时无前导零 (0-23) — 24小时制"
       },
       "minute": {
         "leading-zero": "分钟有前导零 (00-59)",

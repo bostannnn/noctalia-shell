@@ -1,159 +1,143 @@
-# Noctalia Shell Fork
+# Noctalia shell
 
-This fork adds workspace overview, video wallpaper support, Hyprland border theming, random color schemes, screen border (caelestia-style), and wallpaper picker improvements.
+**_quiet by design_**
 
-## Features
+<p align="center">
+  <img src="https://assets.noctalia.dev/noctalia-logo.svg?v=2" alt="Noctalia Logo" style="width: 192px" />
+</p>
 
-### Screen Border (Caelestia-Style)
-- Decorative colored border around the entire screen
-- Uses matugen theme colors or custom color
-- Configurable thickness, corner rounding, and window margin
-- Automatically manages Hyprland gaps for proper window placement
-- Settings → User Interface → Screen Border
+<p align="center">
+  <a href="https://docs.noctalia.dev/getting-started/installation">
+    <img src="https://img.shields.io/badge/⚡_QUICK_INSTALL-Get_Started_Now-A8AEFF?style=for-the-badge&logoColor=FFFFFF&labelColor=0C0D11" alt="Quick Install" style="height: 50px" />
+  </a>
+</p>
 
-### Workspace Overview
-- 2×5 grid showing all workspaces with live window previews
-- Fullscreen overlay with drag-and-drop between workspaces
-- Middle-click to close windows
-- Keyboard navigation: arrows/hjkl, 1-0 to jump, Escape/Enter to close
+<p align="center">
+  <a href="https://github.com/noctalia-dev/noctalia-shell/commits">
+    <img src="https://img.shields.io/github/last-commit/noctalia-dev/noctalia-shell?style=for-the-badge&labelColor=0C0D11&color=A8AEFF&logo=git&logoColor=FFFFFF&label=commit" alt="Last commit" />
+  </a>
+  <a href="https://github.com/noctalia-dev/noctalia-shell/stargazers">
+    <img src="https://img.shields.io/github/stars/noctalia-dev/noctalia-shell?style=for-the-badge&labelColor=0C0D11&color=A8AEFF&logo=github&logoColor=FFFFFF" alt="GitHub stars" />
+  </a>
+  <a href="https://docs.noctalia.dev">
+    <img src="https://img.shields.io/badge/docs-A8AEFF?style=for-the-badge&logo=gitbook&logoColor=FFFFFF&labelColor=0C0D11" alt="Documentation" />
+  </a>
+  <a href="https://discord.noctalia.dev">
+    <img src="https://img.shields.io/badge/discord-A8AEFF?style=for-the-badge&labelColor=0C0D11&logo=discord&logoColor=FFFFFF" alt="Discord" />
+  </a>
+</p>
 
-### Video Wallpaper
-- Play video files as wallpapers (MP4, WebM, MKV, AVI, MOV, OGV, M4V)
-- Powered by `mpvpaper` for playback
-- Animated transitions via `swww`
-- Mute toggle in wallpaper settings
-- Color extraction from video thumbnails
+---
 
-### Hyprland Border Theming
-- Auto-generated gradient borders from wallpaper colors
-- Config file at `~/.config/hypr/noctalia.conf`
-- Auto-reloads Hyprland when colors change
-- Enable in Settings → Color Scheme → Compositors → Hyprland
+## What is Noctalia?
 
-### Random Color Scheme
-- Picks a different matugen scheme with each wallpaper change
-- Cycles through: Content, Expressive, Fidelity, Fruit Salad, Monochrome, Neutral, Rainbow, Tonal Spot
-- Set in Settings → Color Scheme → Matugen scheme type → Random
+A beautiful, minimal desktop shell for Wayland that actually gets out of your way. Built on Quickshell with a warm lavender aesthetic that you can easily customize to match your vibe.
 
-### Wallpaper Picker
-- Filter by All / Videos / Images
-- Right-click to delete or open folder
-- Video thumbnails with play icon badge
+**✨ Key Features:**
+- 🪟 Native support for Niri, Hyprland, Sway and MangoWC
+- ⚡ Built on Quickshell for performance
+- 🎯 Minimalist design philosophy
+- 🔧 Easily customizable to match your style
+- 🎨 Many color schemes available
+---
 
-## Requirements
+## Preview
 
-```nix
-environment.systemPackages = with pkgs; [
-  swww      # Required - wallpaper display and transitions
-  mpvpaper  # Video playback
-  ffmpeg    # Thumbnail generation
-];
-```
+https://github.com/user-attachments/assets/bf46f233-8d66-439a-a1ae-ab0446270f2d
 
-**Important:** `swww-daemon` must be running for wallpapers to work:
+<details>
+<summary>Screenshots</summary>
 
-```nix
-wayland.windowManager.hyprland.settings = {
-  exec-once = [ "swww-daemon" ];
-};
-```
+![Dark 1](/Assets/Screenshots/noctalia-dark-1.png)
+![Dark 2](/Assets/Screenshots/noctalia-dark-2.png)
+![Dark 3](/Assets/Screenshots/noctalia-dark-3.png)
 
-## Keybinds Setup
+![Light 1](/Assets/Screenshots/noctalia-light-1.png)
+![Light 2](/Assets/Screenshots/noctalia-light-2.png)
+![Light 3](/Assets/Screenshots/noctalia-light-3.png)
 
-**NixOS** (using `noctalia-shell` wrapper):
-```nix
-wayland.windowManager.hyprland.settings = {
-  bindr = [ "SUPER, SUPER_L, exec, noctalia-shell ipc call launcher toggle" ];
-  bind = [
-    "$mainMod, Tab, exec, noctalia-shell ipc call overview toggle"
-    "$mainMod, W, exec, noctalia-shell ipc call wallpaper toggle"
-  ];
-};
-```
+</details>
 
-**Non-NixOS** (using `qs -c`):
-```bash
-bindr = SUPER, SUPER_L, exec, qs -c noctalia-shell ipc call launcher toggle
-bind = $mainMod, Tab, exec, qs -c noctalia-shell ipc call overview toggle
-bind = $mainMod, W, exec, qs -c noctalia-shell ipc call wallpaper toggle
-```
+---
 
-## Hyprland Setup
+## 📋 Requirements
 
-Add to `hyprland.nix`:
+- Wayland compositor (Niri, Hyprland, Sway or MangoWC recommended)
+- Quickshell
+- Additional dependencies are listed in our [documentation](https://docs.noctalia.dev)
 
-```nix
-{ config, inputs, pkgs, lib, ... }:
-{
-  # Create noctalia gaps config if it doesn't exist (for screen border feature)
-  home.activation.createNoctaliaGapsConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if [ ! -f "$HOME/.config/noctalia/hypr-gaps.conf" ]; then
-      mkdir -p "$HOME/.config/noctalia"
-      echo "general:gaps_out = 0" > "$HOME/.config/noctalia/hypr-gaps.conf"
-    fi
-  '';
+---
 
-  wayland.windowManager.hyprland = {
-    enable = true;
-    extraConfig = ''
-      source = ~/.config/hypr/noctalia.conf
-      source = ~/.config/noctalia/hypr-gaps.conf
-    '';
-    settings = {
-      general = {
-        # Fallback colors (noctalia.conf will override these)
-        "col.active_border" = "rgba(bd93f9ee) rgba(ff79c6ee) rgba(8be9fdee) rgba(50fa7bee) 45deg";
-        "col.inactive_border" = "rgba(595959aa)";
-        # Note: gaps_out is managed by noctalia when screen border is enabled
-      };
-      animations.animation = [ "borderangle,1,100,default,loop" ];
-    };
-  };
-}
-```
+## 🚀 Getting Started
 
-## Screen Border Settings
+**New to Noctalia?**  
+Check out our comprehensive documentation and installation guide to get up and running!
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `screenBorderEnabled` | bool | `false` | Enable caelestia-style screen border |
-| `screenBorderThickness` | int | `10` | Border width in pixels |
-| `screenBorderRounding` | int | `25` | Corner radius of the cutout |
-| `screenBorderMargin` | int | `10` | Gap between border and windows |
-| `screenBorderUseThemeColor` | bool | `true` | Use matugen theme color |
-| `screenBorderColor` | string | `"#1e1e2e"` | Custom color (when theme color disabled) |
+<p align="center">
+  <a href="https://docs.noctalia.dev/getting-started/installation">
+    <img src="https://img.shields.io/badge/📖_Installation_Guide-A8AEFF?style=for-the-badge&logoColor=FFFFFF&labelColor=0C0D11" alt="Installation Guide" />
+  </a>
+  <a href="https://docs.noctalia.dev/getting-started/faq/">
+    <img src="https://img.shields.io/badge/❓_FAQ-A8AEFF?style=for-the-badge&logoColor=FFFFFF&labelColor=0C0D11" alt="FAQ" />
+  </a>
+  <a href="https://discord.noctalia.dev">
+    <img src="https://img.shields.io/badge/💬_Get_Help-A8AEFF?style=for-the-badge&logo=discord&logoColor=FFFFFF&labelColor=0C0D11" alt="Discord" />
+  </a>
+</p>
 
-**Note:** When screen border is enabled:
-- Shows warning if used with floating bar (not recommended)
-- Shows warning if screen corners are disabled (recommended to enable)
-- Hyprland gaps are managed via `~/.config/noctalia/hypr-gaps.conf`
+---
 
-## NixOS Home Manager Settings
+## 🖥️ Wayland Compositors
 
-Example `noctalia-settings.nix`:
+Noctalia provides native support for **Niri**, **Hyprland** and **Sway**. Other Wayland compositors will work but may require additional workspace logic configuration.
 
-```nix
-{ pkgs, inputs, ... }:
-{
-  programs.noctalia-shell = {
-    enable = true;
-    settings = {
-      general = {
-        # Screen Border settings
-        screenBorderEnabled = true;
-        screenBorderThickness = 10;
-        screenBorderRounding = 25;
-        screenBorderMargin = 10;
-        screenBorderUseThemeColor = true;
-        screenBorderColor = "#1e1e2e";
-        # ... other settings
-      };
-      # ... other sections
-    };
-  };
-}
-```
+---
 
-## Upstream
+## 🤝 Contributing
 
-https://github.com/noctalia-dev/noctalia-shell
+We welcome contributions of any size - bug fixes, new features, documentation improvements, or custom themes and configs.
+
+**Get involved:**
+- **Found a bug?** [Open an issue](https://github.com/noctalia-dev/noctalia-shell/issues/new)
+- **Want to code?** Check out our [development guidelines](https://docs.noctalia.dev/development/guideline)
+- **Need help?** Join our [Discord](https://discord.noctalia.dev)
+
+### ✨ Nix DevShell
+
+Nix users can use the flake's devShell to access a development environment. Run `nix develop` in the repo root to enter the dev shell. It includes packages, utilities and environment variables needed to develop Noctalia.
+
+---
+
+## 💜 Credits
+
+A heartfelt thank you to our incredible community of [**contributors**](https://github.com/noctalia-dev/noctalia-shell/graphs/contributors). We are immensely grateful for your dedicated participation and the constructive feedback you've provided, which continue to shape and improve our project for everyone.
+
+---
+
+## ☕ Donations
+
+While all donations are greatly appreciated, they are completely voluntary.
+
+<a href="https://ko-fi.com/lysec">
+  <img src="https://img.shields.io/badge/donate-ko--fi-A8AEFF?style=for-the-badge&logo=kofi&logoColor=FFFFFF&labelColor=0C0D11" alt="Ko-Fi" />
+</a>
+
+### Thank you to everyone who supports the project 💜!
+* Gohma
+* DiscoCevapi
+* <a href="https://pika-os.com/" target="_blank">PikaOS</a>
+* LionHeartP
+* Nyxion ツ
+* RockDuck
+* MrDowntempo
+* Tempus Thales
+* Raine
+* JustCurtis
+* llego
+* Grune
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](./LICENSE) for details.

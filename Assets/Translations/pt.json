@@ -157,11 +157,11 @@
           "update-text": "Atualizar texto exibido ao clicar com o botão esquerdo"
         },
         "max-text-length-horizontal": {
-          "description": "Número máximo de caracteres a serem exibidos na barra horizontal (0 para ocultar o texto)",
+          "description": "Número máximo de caracteres a serem exibidos na barra horizontal (0 para ocultar o texto).",
           "label": "Comprimento máximo do texto (horizontal)"
         },
         "max-text-length-vertical": {
-          "description": "Número máximo de caracteres a serem exibidos na barra vertical (0 para ocultar o texto)",
+          "description": "Número máximo de caracteres a serem exibidos na barra vertical (0 para ocultar o texto).",
           "label": "Comprimento máximo do texto (vertical)"
         },
         "middle-click": {
@@ -191,7 +191,7 @@
           "label": "Transmissão"
         },
         "wheel": {
-          "description": "Comando a executar quando a roda de rolagem é usada.\nUse $delta para o delta da roda de rolagem no comando",
+          "description": "Comando a executar quando a roda de rolagem é usada.<br>Use $delta para o delta da roda de rolagem no comando.",
           "label": "Roda de rolagem",
           "update-text": "Atualizar texto exibido ao rolar"
         },
@@ -200,7 +200,7 @@
           "label": "Comando de roda para baixo"
         },
         "wheel-mode-separate": {
-          "description": "Ativar comandos separados para roda para cima e para baixo",
+          "description": "Ativar comandos separados para roda para cima e para baixo.",
           "label": "Comandos de roda separados"
         },
         "wheel-up": {
@@ -294,7 +294,7 @@
       },
       "spacer": {
         "width": {
-          "description": "Largura do espaçamento em pixels",
+          "description": "Largura do espaçamento em pixels.",
           "label": "Largura"
         }
       },
@@ -310,6 +310,10 @@
         "disk-path": {
           "description": "Selecione qual ponto de montagem de disco monitorar.",
           "label": "Caminho do disco"
+        },
+        "gpu-temperature": {
+          "description": "Mostrar as leituras de temperatura da GPU, se disponíveis.",
+          "label": "Temperatura da GPU"
         },
         "memory-percentage": {
           "description": "Mostrar o uso de memória como percentual em vez de valores absolutos.",
@@ -345,9 +349,9 @@
           "description": "Mostrar apenas aplicativos de áreas de trabalho ativas.",
           "label": "Apenas de espaços de trabalho ativos"
         },
-        "only-same-output": {
-          "description": "Mostrar apenas os aplicativos da saída onde a barra está localizada.",
-          "label": "Apenas da mesma saída"
+        "only-same-monitor": {
+          "description": "Mostrar apenas aplicativos do monitor onde a barra está localizada.",
+          "label": "Apenas do mesmo monitor"
         },
         "show-pinned-apps": {
           "description": "Mostrar aplicativos fixados do Dock na barra de tarefas.",
@@ -368,19 +372,13 @@
           "reset-tooltip": "Redefinir largura do título"
         }
       },
-      "taskbar-grouped": {
-        "show-labels-only-when-occupied": {
-          "description": "Mostrar apenas o rótulo da área de trabalho para áreas de trabalho que têm janelas abertas.",
-          "label": "Mostrar rótulo somente quando ocupado."
-        }
-      },
       "tray": {
         "colorize-icons": {
           "description": "Aplicar cores do tema aos ícones da bandeja do sistema.",
           "label": "Colorir ícones"
         },
         "drawer-enabled": {
-          "description": "Quando habilitado, os itens da bandeja não fixados são exibidos em um painel gaveta. Quando desabilitado, todos os itens da bandeja são exibidos inline.",
+          "description": "Quando habilitado, os itens da bandeja não fixados são exibidos em um painel gaveta.<br>Quando desabilitado, todos os itens da bandeja são exibidos inline.",
           "label": "Habilitar gaveta"
         },
         "hide-passive": {
@@ -399,6 +397,10 @@
           "description": "Número de caracteres a exibir dos nomes de espaços de trabalho (1-10).",
           "label": "Número de caracteres"
         },
+        "enable-scrollwheel": {
+          "description": "Alternar entre áreas de trabalho usando a roda do mouse.",
+          "label": "Role para alternar entre áreas de trabalho."
+        },
         "follow-focused-screen": {
           "description": "Exibir áreas de trabalho da tela atualmente em foco, em vez da tela onde a barra está localizada.",
           "label": "Seguir Tela em Foco"
@@ -410,6 +412,14 @@
         "label-mode": {
           "description": "Escolher como os rótulos de espaço de trabalho são exibidos.",
           "label": "Modo de rótulo"
+        },
+        "show-applications": {
+          "description": "Exibir ícones de aplicativos dentro de cada espaço de trabalho.",
+          "label": "Mostrar aplicativos"
+        },
+        "show-labels-only-when-occupied": {
+          "description": "Mostrar rótulos de área de trabalho apenas quando contiverem janelas.",
+          "label": "Mostrar rótulos apenas quando ocupado."
         }
       }
     }
@@ -460,6 +470,7 @@
       "minutes": "m",
       "pause": "Pausar",
       "reset": "Reiniciar",
+      "resume": "Currículo",
       "seconds": "s",
       "start": "Começar",
       "stopwatch": "Cronômetro",
@@ -705,6 +716,11 @@
       "hover": "Rolar ao Passar o Mouse",
       "never": "Nunca Rolar"
     },
+    "settings-panel-mode": {
+      "attached": "Painel anexado à barra",
+      "centered": "Painel centralizado",
+      "window": "Janela separada"
+    },
     "shadow-direction": {
       "bottom": "Inferior",
       "bottom_left": "Inferior esquerda",
@@ -752,7 +768,7 @@
   "plugins": {
     "applications": "Aplicativos",
     "calculator": "Calculadora",
-    "calculator-description": "Calculadora - avalie expressões matemáticas",
+    "calculator-description": "Calculadora — avalie expressões matemáticas",
     "calculator-enter-expression": "Digite uma expressão matemática",
     "calculator-error": "Erro",
     "calculator-name": "Calculadora",
@@ -970,10 +986,6 @@
     },
     "bar": {
       "appearance": {
-        "background-opacity": {
-          "description": "Ajuste a opacidade do fundo da barra.",
-          "label": "Opacidade do fundo"
-        },
         "capsule-opacity": {
           "description": "Define o nível de opacidade para fundos dos widgets quando a cápsula é mostrada.",
           "label": "Opacidade da cápsula"
@@ -1007,6 +1019,14 @@
         "show-capsule": {
           "description": "Mostra o fundo dos widgets.",
           "label": "Mostrar cápsula"
+        },
+        "show-outline": {
+          "description": "Exibe uma borda visível ao redor de cada widget.",
+          "label": "Mostrar contornos do widget"
+        },
+        "transparent": {
+          "description": "Isto impedirá que os painéis se fixem à barra.",
+          "label": "Fundo transparente"
         }
       },
       "monitors": {
@@ -1128,23 +1148,27 @@
           "description": "Crie seus próprios modelos",
           "label": "Avançado",
           "user-templates": {
-            "description": "Ative apenas se souber o que está fazendo, consulte nossa documentação online",
+            "description": "Ative apenas se souber o que está fazendo — consulte nossa documentação online",
             "label": "Ativar modelos do usuário"
           }
         },
         "programs": {
           "cava": {
-            "description": "Escreva em {filepath}.",
-            "description-missing": "Requer que o {app} esteja instalado."
+            "description": "Escreva em {filepath}",
+            "description-missing": "Requer que o {app} esteja instalado"
           },
           "code": {
-            "description": "Escreva em {filepath}. O tema Hyprluna precisa ser instalado e ativado manualmente.",
-            "description-missing": "Nenhum cliente Code detectado. Instale VSCode ou VSCodium."
+            "description": "Escreva em {filepath} — o tema HyprLuna precisa ser instalado e ativado manualmente",
+            "description-missing": "Nenhum cliente Code detectado — instale VSCode ou VSCodium"
           },
           "description": "Tematização específica de aplicativos.",
           "discord": {
-            "description": "Escrever {filepath} para {client}",
-            "description-missing": "Nenhum cliente Discord detectado. Instale vencord, vesktop, webcord, armcord, equibop, lightcord ou dorion."
+            "description": "Escrever {filepath} para {client} — o tema HyprLuna precisa ser instalado e ativado manualmente",
+            "description-missing": "Nenhum cliente Discord detectado — instale vencord, vesktop, webcord, armcord, equibop, lightcord ou dorion"
+          },
+          "emacs": {
+            "description": "Doom: ~/.config/doom/themes/noctalia.el<br>Padrão: ~/.emacs.d/themes/noctalia.el<br>Aplicar manualmente: (load-theme 'noctalia t)",
+            "description-missing": "Requer que o {app} esteja instalado"
           },
           "fuzzel": {
             "description": "Escrever {filepath} e recarregar",
@@ -1156,12 +1180,12 @@
             "description-missing": "Requer que o {app} esteja instalado"
           },
           "spicetify": {
-            "description": "Escreva em {filepath}. O tema Comfy precisa ser instalado e ativado manualmente.",
-            "description-missing": "Requer que o {app} esteja instalado."
+            "description": "Escreva em {filepath} — o tema Comfy precisa ser instalado e ativado manualmente",
+            "description-missing": "Requer que o {app} esteja instalado"
           },
           "telegram": {
-            "description": "Escreva em {filepath}.",
-            "description-missing": "Requer que o {app} esteja instalado."
+            "description": "Escreva em {filepath}",
+            "description-missing": "Requer que o {app} esteja instalado"
           },
           "vicinae": {
             "description": "Escrever {filepath} e recarregar",
@@ -1169,6 +1193,14 @@
           },
           "walker": {
             "description": "Escrever {filepath} e definir tema como noctalia",
+            "description-missing": "Requer que o {app} esteja instalado"
+          },
+          "yazi": {
+            "description": "Escreva em {filepath} — o sabor precisa ser ativado manualmente",
+            "description-missing": "Requer que o {app} esteja instalado"
+          },
+          "zed": {
+            "description": "Escrever {filepath} e recarregar",
             "description-missing": "Requer que o {app} esteja instalado"
           }
         },
@@ -1178,8 +1210,8 @@
         },
         "terminal": {
           "alacritty": {
-            "description": "Escreva {filepath} e recarregue.",
-            "description-missing": "Requer que o {app} esteja instalado."
+            "description": "Escreva {filepath} e recarregue",
+            "description-missing": "Requer que o {app} esteja instalado"
           },
           "description": "Tematização do emulador de terminal.",
           "foot": {
@@ -1196,8 +1228,8 @@
           },
           "label": "Terminal",
           "wezterm": {
-            "description": "Escreva {filepath} e recarregue.",
-            "description-missing": "Requer que o {app} esteja instalado."
+            "description": "Escreva {filepath} e recarregue",
+            "description-missing": "Requer que o {app} esteja instalado"
           }
         },
         "ui": {
@@ -1295,6 +1327,96 @@
       },
       "title": "Central de Controle"
     },
+    "desktop-widgets": {
+      "clock": {
+        "enabled": {
+          "description": "Mostrar um widget de relógio na área de trabalho.",
+          "label": "Ativar widget de relógio"
+        },
+        "height": {
+          "description": "Altura do widget do relógio em pixels.",
+          "label": "Altura"
+        },
+        "section": {
+          "description": "Configurar a aparência do widget de relógio.",
+          "label": "Widget de Relógio"
+        },
+        "show-background": {
+          "description": "Mostrar o contêiner de fundo para o widget de relógio.",
+          "label": "Mostrar plano de fundo"
+        },
+        "show-date": {
+          "description": "Exiba a data atual abaixo da hora.",
+          "label": "Mostrar data"
+        },
+        "show-seconds": {
+          "description": "Exibir segundos na hora.",
+          "label": "Mostrar segundos"
+        },
+        "width": {
+          "description": "Largura do widget do relógio em pixels.",
+          "label": "Largura"
+        }
+      },
+      "edit-mode": {
+        "button": {
+          "label": "Entrar no modo de edição"
+        },
+        "controls-explanation": "Botão esquerdo do mouse: Mover widget\nBotão direito do mouse: Redimensionar widget",
+        "description": "Ative o modo de edição para mover e reposicionar widgets da área de trabalho. Quando ativado, os widgets exibem um contorno de arrastar e podem ser reposicionados.",
+        "exit-button": "Sair do modo de edição",
+        "label": "Modo de edição"
+      },
+      "enabled": {
+        "description": "Ativar ou desativar widgets da área de trabalho completamente.",
+        "label": "Ativar widgets da área de trabalho"
+      },
+      "general": {
+        "section": {
+          "description": "Configure widgets que aparecem na sua área de trabalho.",
+          "label": "Widgets para desktop"
+        }
+      },
+      "media-player": {
+        "enabled": {
+          "description": "Mostrar um widget de reprodutor de mídia na área de trabalho.",
+          "label": "Ativar widget do reprodutor de mídia"
+        },
+        "section": {
+          "description": "Configurar a aparência do widget do reprodutor de mídia.",
+          "label": "Widget do Reprodutor de Mídia"
+        },
+        "show-background": {
+          "description": "Mostrar o contêiner de fundo para o widget do reprodutor de mídia.",
+          "label": "Mostrar plano de fundo"
+        },
+        "visualizer-type": {
+          "description": "Escolha um tipo de visualização para o fundo do reprodutor de mídia na área de trabalho.",
+          "label": "Tipo de visualização"
+        }
+      },
+      "title": "Widgets da Área de Trabalho",
+      "weather": {
+        "enabled": {
+          "description": "Mostrar um widget de clima na área de trabalho.",
+          "label": "Ativar widget de clima"
+        },
+        "section": {
+          "description": "Configure a aparência do widget de clima.",
+          "label": "Widget do Clima"
+        },
+        "show-background": {
+          "description": "Mostrar o contêiner de fundo para o widget de clima.",
+          "label": "Mostrar plano de fundo"
+        }
+      },
+      "widgets": {
+        "section": {
+          "description": "Adicionar e configurar widgets da área de trabalho",
+          "label": "Widgets da Área de Trabalho"
+        }
+      }
+    },
     "display": {
       "monitors": {
         "brightness": "Brilho",
@@ -1321,7 +1443,7 @@
       },
       "night-light": {
         "auto-schedule": {
-          "description": "Baseado no horário do pôr do sol e do nascer do sol em <i>{location}</i> - recomendado.",
+          "description": "Baseado no horário do pôr do sol e do nascer do sol em <i>{location}</i> — recomendado.",
           "label": "Agendamento automático"
         },
         "enable": {
@@ -1406,9 +1528,9 @@
         "label": "Ativar dock"
       },
       "monitors": {
-        "only-same-output": {
-          "description": "Mostrar apenas aplicativos da saída onde o dock está localizado.",
-          "label": "Apenas aplicativos da mesma saída"
+        "only-same-monitor": {
+          "description": "Mostrar apenas aplicativos do monitor onde a dock está localizada.",
+          "label": "Apenas aplicativos do mesmo monitor"
         },
         "section": {
           "description": "Mostrar dock em monitores específicos. O padrão é todos se nenhum for escolhido.",
@@ -1493,13 +1615,23 @@
     "hooks": {
       "info": {
         "command-info": {
-          "description": "• Comandos são executados via shell (sh -c)\n• Comandos rodam em segundo plano (desanexados)\n• Botões de teste executam com os valores atuais",
+          "description": "• Comandos são executados via shell (sh -c)<br>• Comandos rodam em segundo plano (desanexados)<br>• Botões de teste executam com os valores atuais",
           "label": "Informações de Comando do Hook"
         },
         "parameters": {
-          "description": "• Hook de Papel de Parede: $1 = caminho do papel de parede, $2 = nome da tela\n• Hook de Alternância de Tema: $1 = true/false (estado do modo escuro)",
+          "description": "• Hook de Papel de Parede: $1 = caminho do papel de parede, $2 = nome da tela<br>• Hook de Alternância de Tema: $1 = true/false (estado do modo escuro)",
           "label": "Parâmetros Disponíveis"
         }
+      },
+      "screen-lock": {
+        "description": "Comando a ser executado quando a tela é bloqueada.",
+        "label": "Tela bloqueada",
+        "placeholder": "ex., notify-send \"Tela\" \"Bloqueada\""
+      },
+      "screen-unlock": {
+        "description": "Comando a ser executado quando a tela é desbloqueada.",
+        "label": "Tela desbloqueada",
+        "placeholder": "ex., notify-send \"Tela\" \"Desbloqueada\""
       },
       "system-hooks": {
         "enable": {
@@ -1525,10 +1657,6 @@
     },
     "launcher": {
       "settings": {
-        "background-opacity": {
-          "description": "Ajuste a opacidade do fundo do lançador.",
-          "label": "Opacidade do fundo"
-        },
         "clip-preview": {
           "description": "Mostra uma pré-visualização do conteúdo da área de transferência ao usar o comando >clip.",
           "label": "Ativar pré-visualização da área de transferência"
@@ -1732,7 +1860,7 @@
           "label": "Ativar exibição na tela"
         },
         "enabled": {
-          "description": "Ativar ou desativar o daemon de notificações, requer reiniciar o noctalia-shell.",
+          "description": "Ativar ou desativar o daemon de notificações, requer reiniciar o Noctalia shell.",
           "label": "Ativar notificações"
         },
         "location": {
@@ -1857,6 +1985,10 @@
           "description": "Mostrar o OSD quando o brilho da tela mudar.",
           "label": "Brilho"
         },
+        "custom-text": {
+          "description": "Mostrar OSD para mensagens de texto personalizadas via IPC.",
+          "label": "Texto personalizado"
+        },
         "input-volume": {
           "description": "Mostrar o OSD quando o volume do microfone mudar.",
           "label": "Volume de entrada"
@@ -1918,8 +2050,8 @@
           "title": "Adicionar fonte do plugin",
           "url": "URL do repositório"
         },
-        "description": "Gerenciar repositórios de plugins de onde os plugins são baixados.",
-        "label": "Fontes de plugins",
+        "description": "Gerenciar repositórios de plugins.",
+        "label": "Fontes",
         "placeholder": "Meu repositório legal",
         "remove": {
           "tooltip": "Remover código fonte do plugin"
@@ -2041,6 +2173,10 @@
           "label": "Geral"
         }
       },
+      "large-buttons-style": {
+        "description": "Exibir o menu de sessão com botões grandes em um layout de grade.",
+        "label": "Estilo de botões grandes"
+      },
       "position": {
         "description": "Escolha onde o painel do Menu de sessão aparece quando aberto.",
         "label": "Posição"
@@ -2052,14 +2188,8 @@
       "title": "Menu de sessão"
     },
     "system-monitor": {
-      "cpu-critical-threshold": {
-        "label": "Limite crítico"
-      },
       "cpu-section": {
         "label": "Uso da CPU"
-      },
-      "cpu-warning-threshold": {
-        "label": "Limite de aviso"
       },
       "critical-color": {
         "label": "Cor crítica"
@@ -2067,14 +2197,12 @@
       "custom-highlight-colors-title": {
         "label": "Cores de destaque personalizadas"
       },
-      "disk-critical-threshold": {
-        "label": "Limite crítico"
-      },
       "disk-section": {
         "label": "Uso do disco"
       },
-      "disk-warning-threshold": {
-        "label": "Limite de aviso"
+      "enable-nvidia-gpu": {
+        "description": "Atenção: Isto irá ativar sua GPU NVIDIA, o que pode impactar significativamente a duração da bateria em laptops com gráficos híbridos.",
+        "label": "Ativar o monitoramento da GPU NVIDIA"
       },
       "general": {
         "section": {
@@ -2082,14 +2210,11 @@
           "label": "Geral"
         }
       },
+      "gpu-section": {
+        "label": "Temperatura da GPU"
+      },
       "highlight-colors-section": {
         "label": "Cores de destaque"
-      },
-      "mem-critical-threshold": {
-        "label": "Limite crítico"
-      },
-      "mem-warning-threshold": {
-        "label": "Limite de aviso"
       },
       "memory-section": {
         "label": "Uso de memória"
@@ -2100,14 +2225,12 @@
       "polling-interval": {
         "label": "Intervalo de pesquisa"
       },
-      "temp-critical-threshold": {
-        "label": "Limite crítico"
-      },
-      "temp-warning-threshold": {
-        "label": "Limite de aviso"
-      },
       "temperature-section": {
         "label": "Temperatura da CPU"
+      },
+      "threshold": {
+        "critical": "Limiar crítico",
+        "warning": "Limite de alerta"
       },
       "thresholds-section": {
         "description": "Ajuste os limites de aviso/crítico e os intervalos de consulta para cada métrica do sistema.",
@@ -2156,7 +2279,7 @@
         "reset": "Redefinir opacidade da área de trabalho escurecida"
       },
       "panel-background-opacity": {
-        "description": "Definir a opacidade de fundo para todos os painéis (Launcher, Centro de Controle, Configurações, etc.).",
+        "description": "Definir a opacidade do fundo para todos os painéis (barra, iniciador, configurações, etc...).",
         "label": "Opacidade de fundo do painel"
       },
       "panels-attached-to-bar": {
@@ -2176,9 +2299,9 @@
         "description": "Personalize a aparência, a sensação e o comportamento da interface.",
         "label": "Aparência"
       },
-      "settings-panel-attached-to-bar": {
-        "description": "Mantenha a janela de Configurações alinhada com a barra para um visual uniforme.",
-        "label": "Ajustar Configurações à barra"
+      "settings-panel-mode": {
+        "description": "Escolha o layout das configurações (pode ser necessário reabrir).",
+        "label": "Modo do painel de configurações"
       },
       "shadows": {
         "description": "Ativa sombras projetadas sob barras e painéis.",
@@ -2309,7 +2432,7 @@
       "subheader": "Defina o ambiente com um belo fundo."
     },
     "welcome": {
-      "note": "Apenas alguns ajustes básicos para começar - o restante está em Configurações"
+      "note": "Apenas alguns ajustes básicos para começar - o restante está em configurações"
     }
   },
   "system": {
@@ -2393,11 +2516,11 @@
     },
     "power-profile": {
       "changed": "Perfil de energia alterado",
-      "profile-name": "\"{profile}\""
+      "profile-name": "{profile}"
     },
     "recording": {
-      "failed-general": "O gravador encerrou com um erro.",
-      "failed-gpu": "gpu-screen-recorder encerrou inesperadamente.",
+      "failed-general": "Gravador encerrou com um erro",
+      "failed-gpu": "gpu-screen-recorder encerrou inesperadamente",
       "failed-start": "Falha ao iniciar a gravação",
       "no-portals": "Portais de desktop não estão em execução",
       "no-portals-desc": "Inicie o xdg-desktop-portal e um portal de compositor (wlr/hyprland/gnome/kde).",
@@ -2408,9 +2531,9 @@
       "stopping": "Parando gravação…"
     },
     "theming-processor-failed": {
-      "desc-generic": "Ocorreu um erro ao processar os templates.",
+      "desc-generic": "Ocorreu um erro ao processar os templates",
       "title-matugen": "Falha no processamento do template Matugen",
-      "title-predefined": "O processamento do esquema de cores predefinido falhou."
+      "title-predefined": "O processamento do esquema de cores predefinido falhou"
     },
     "vpn": {
       "connected": "Conectado a '{name}'",
@@ -2420,7 +2543,7 @@
       "disabled": "Cores do papel de parede desativadas",
       "enabled": "Cores do papel de parede ativadas",
       "label": "Geração de cores para papel de parede",
-      "not-installed": "Matugen não instalado - necessário para extração de cores do papel de parede"
+      "not-installed": "Matugen não instalado — necessário para extração de cores do papel de parede"
     },
     "wifi": {
       "connected": "Conectado a '{ssid}'",
@@ -2438,12 +2561,14 @@
     "click-to-start-recording": "Gravador de tela (iniciar gravação)",
     "click-to-stop-recording": "Gravador de tela (parar gravação)",
     "close": "Fechar",
+    "collapse": "Recolher barra lateral",
     "connect-disconnect-devices": "Dispositivo Bluetooth",
     "delete-notification": "Excluir notificação",
     "disable-keep-awake": "Manter acordado",
     "do-not-disturb-disabled": "Não perturbe",
     "do-not-disturb-enabled": "Não perturbe",
     "enable-keep-awake": "Manter acordado",
+    "expand": "Expandir barra lateral",
     "forget-network": "Esquecer rede",
     "grid-view": "Visualização em grade",
     "hidden-files-hide": "Arquivos ocultos",

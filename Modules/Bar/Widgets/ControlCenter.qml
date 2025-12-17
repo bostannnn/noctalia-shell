@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.Bar.Extras
+import qs.Modules.Panels.Settings
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
@@ -93,6 +94,9 @@ NIconButton {
   colorBorder: Color.transparent
   colorBorderHover: useDistroLogo ? Color.mHover : Color.transparent
 
+  border.color: Style.capsuleBorderColor
+  border.width: Style.capsuleBorderWidth
+
   NPopupContextMenu {
     id: contextMenu
 
@@ -123,7 +127,9 @@ NIconButton {
                    if (action === "open-launcher") {
                      PanelService.getPanel("launcherPanel", screen)?.toggle();
                    } else if (action === "open-settings") {
-                     PanelService.getPanel("settingsPanel", screen)?.toggle();
+                     var panel = PanelService.getPanel("settingsPanel", screen);
+                     panel.requestedTab = SettingsPanel.Tab.General;
+                     panel.toggle();
                    } else if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
                    }

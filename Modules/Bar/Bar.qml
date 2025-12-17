@@ -17,6 +17,16 @@ Item {
   // This property will be set by MainScreen
   property ShellScreen screen: null
 
+  // Filter widgets to only include those that exist in the registry
+  // This prevents errors when plugins are missing or widgets are being cleaned up
+  function filterValidWidgets(widgets: list<var>): list<var> {
+    if (!widgets)
+      return [];
+    return widgets.filter(function (w) {
+      return w && w.id && BarWidgetRegistry.hasWidget(w.id);
+    });
+  }
+
   // Expose bar region for click-through mask
   readonly property var barRegion: barContentLoader.item?.children[0] || null
 
@@ -156,6 +166,27 @@ Item {
           preventStealing: true
           onClicked: function (mouse) {
             if (mouse.button === Qt.RightButton) {
+              // Check if click is over any widget
+              var widgets = BarService.getAllWidgetInstances(null, screen.name);
+              for (var i = 0; i < widgets.length; i++) {
+                var widget = widgets[i];
+                if (!widget || !widget.visible || widget.widgetId === "Spacer") {
+                  continue;
+                }
+                // Map click position to widget's coordinate space
+                var localPos = mapToItem(widget, mouse.x, mouse.y);
+
+                if (root.barIsVertical) {
+                  if (localPos.y >= -Style.marginS && localPos.y <= widget.height + Style.marginS) {
+                    return;
+                  }
+                } else {
+                  if (localPos.x >= -Style.marginS && localPos.x <= widget.width + Style.marginS) {
+                    return;
+                  }
+                }
+              }
+              // Click is on empty bar background - open control center
               var controlCenterPanel = PanelService.getPanel("controlCenterPanel", screen);
               if (Settings.data.controlCenter.position === "close_to_bar_button") {
                 // Will attempt to open the panel next to the bar button if any.
@@ -191,7 +222,7 @@ Item {
         spacing: Style.marginS
 
         Repeater {
-          model: Settings.data.bar.widgets.left
+          model: root.filterValidWidgets(Settings.data.bar.widgets.left)
           delegate: BarWidgetLoader {
             required property var modelData
             required property int index
@@ -217,7 +248,7 @@ Item {
         spacing: Style.marginS
 
         Repeater {
-          model: Settings.data.bar.widgets.center
+          model: root.filterValidWidgets(Settings.data.bar.widgets.center)
           delegate: BarWidgetLoader {
             required property var modelData
             required property int index
@@ -244,7 +275,7 @@ Item {
         spacing: Style.marginS
 
         Repeater {
-          model: Settings.data.bar.widgets.right
+          model: root.filterValidWidgets(Settings.data.bar.widgets.right)
           delegate: BarWidgetLoader {
             required property var modelData
             required property int index
@@ -282,7 +313,7 @@ Item {
         spacing: Style.marginS
 
         Repeater {
-          model: Settings.data.bar.widgets.left
+          model: root.filterValidWidgets(Settings.data.bar.widgets.left)
           delegate: BarWidgetLoader {
             required property var modelData
             required property int index
@@ -310,7 +341,7 @@ Item {
         spacing: Style.marginS
 
         Repeater {
-          model: Settings.data.bar.widgets.center
+          model: root.filterValidWidgets(Settings.data.bar.widgets.center)
           delegate: BarWidgetLoader {
             required property var modelData
             required property int index
@@ -339,7 +370,7 @@ Item {
         spacing: Style.marginS
 
         Repeater {
-          model: Settings.data.bar.widgets.right
+          model: root.filterValidWidgets(Settings.data.bar.widgets.right)
           delegate: BarWidgetLoader {
             required property var modelData
             required property int index

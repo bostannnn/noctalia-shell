@@ -14,6 +14,7 @@ Singleton {
   property bool isNiri: false
   property bool isSway: false
   property bool isMango: false
+  property bool isLabwc: false
 
   // Generic workspace and window data
   property ListModel workspaces: ListModel {}
@@ -57,6 +58,7 @@ Singleton {
     const niriSocket = Quickshell.env("NIRI_SOCKET");
     const swaySock = Quickshell.env("SWAYSOCK");
     const currentDesktop = Quickshell.env("XDG_CURRENT_DESKTOP");
+    const labwcPid = Quickshell.env("LABWC_PID");
 
     // Check for MangoWC using XDG_CURRENT_DESKTOP environment variable
     // MangoWC sets XDG_CURRENT_DESKTOP=mango
@@ -65,24 +67,36 @@ Singleton {
       isNiri = false;
       isSway = false;
       isMango = true;
+      isLabwc = false;
       backendLoader.sourceComponent = mangoComponent;
+    } else if (labwcPid && labwcPid.length > 0) {
+      isHyprland = false;
+      isNiri = false;
+      isSway = false;
+      isMango = false;
+      isLabwc = true;
+      backendLoader.sourceComponent = labwcComponent;
+      Logger.i("CompositorService", "Detected LabWC with PID: " + labwcPid);
     } else if (niriSocket && niriSocket.length > 0) {
       isHyprland = false;
       isNiri = true;
       isSway = false;
       isMango = false;
+      isLabwc = false;
       backendLoader.sourceComponent = niriComponent;
     } else if (hyprlandSignature && hyprlandSignature.length > 0) {
       isHyprland = true;
       isNiri = false;
       isSway = false;
       isMango = false;
+      isLabwc = false;
       backendLoader.sourceComponent = hyprlandComponent;
     } else if (swaySock && swaySock.length > 0) {
       isHyprland = false;
       isNiri = false;
       isSway = true;
       isMango = false;
+      isLabwc = false;
       backendLoader.sourceComponent = swayComponent;
     } else {
       // Always fallback to Niri
@@ -90,9 +104,11 @@ Singleton {
       isNiri = true;
       isSway = false;
       isMango = false;
+      isLabwc = false;
       backendLoader.sourceComponent = niriComponent;
     }
   }
+
   Loader {
     id: backendLoader
     onLoaded: {
@@ -154,6 +170,14 @@ Singleton {
     }
   }
 
+  // Labwc backend component
+  Component {
+    id: labwcComponent
+    LabwcService {
+      id: labwcBackend
+    }
+  }
+
   function setupBackendConnections() {
     if (!backend)
       return;
@@ -167,9 +191,8 @@ Singleton {
                                      });
 
     backend.activeWindowChanged.connect(() => {
-                                          // Sync active window when it changes
-                                          // TODO: Avoid re-syncing all windows
-                                          syncWindows();
+                                          // Only sync focus state, not entire window list
+                                          syncFocusedWindow();
                                           // Forward the signal
                                           activeWindowChanged();
                                         });
@@ -208,8 +231,23 @@ Singleton {
     for (var i = 0; i < ws.length; i++) {
       windows.append(ws[i]);
     }
-    // Emit signal to notify listeners that workspace list has been updated
+    // Emit signal to notify listeners that window list has been updated
     windowListChanged();
+  }
+
+  // Sync only the focused window state, not the entire window list
+  function syncFocusedWindow() {
+    const newIndex = backend.focusedWindowIndex;
+
+    // Update isFocused flags by syncing from backend
+    for (var i = 0; i < windows.count && i < backend.windows.length; i++) {
+      const backendFocused = backend.windows[i].isFocused;
+      if (windows.get(i).isFocused !== backendFocused) {
+        windows.setProperty(i, "isFocused", backendFocused);
+      }
+    }
+
+    focusedWindowIndex = newIndex;
   }
 
   // Update display scales from backend

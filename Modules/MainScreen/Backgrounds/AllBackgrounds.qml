@@ -22,7 +22,7 @@ Item {
   // Reference to MainScreen (for panel access)
   required property var windowRoot
 
-  readonly property color panelBackgroundColor: Qt.alpha(Color.mSurface, Settings.data.ui.panelBackgroundOpacity)
+  readonly property color panelBackgroundColor: Color.mSurface
 
   anchors.fill: parent
 
@@ -33,6 +33,9 @@ Item {
     // Enable layer caching to prevent continuous re-rendering
     // This caches the Shape to a GPU texture, reducing GPU tessellation overhead
     layer.enabled: true
+
+    // Apply opacity to all backgrounds
+    opacity: Settings.data.ui.panelBackgroundOpacity
 
     // The unified Shape container
     Shape {
@@ -55,11 +58,10 @@ Item {
         bar: root.bar
         shapeContainer: backgroundsShape
         windowRoot: root.windowRoot
-        // In framed mode, bar has no background (ScreenBorder provides it)
-        // Otherwise, use appropriate opacity
+// In framed mode or transparent mode, bar has no background
         backgroundColor: {
           var barMode = Settings.data.bar.mode ?? "classic";
-          if (barMode === "framed") {
+          if (barMode === "framed" || Settings.data.bar.transparent) {
             return "transparent";
           }
           return Qt.alpha(Color.mSurface, Settings.data.bar.backgroundOpacity);
@@ -137,7 +139,7 @@ Item {
       PanelBackground {
         panel: root.windowRoot.sessionMenuPanelPlaceholder
         shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
+        backgroundColor: Settings.data.sessionMenu.largeButtonsStyle ? Color.transparent : panelBackgroundColor
       }
 
       // Settings

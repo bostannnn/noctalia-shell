@@ -157,11 +157,11 @@
           "update-text": "Sol tıklamayla görüntülenen metni güncelle"
         },
         "max-text-length-horizontal": {
-          "description": "Yatay çubukta gösterilecek en fazla karakter sayısı (metni gizlemek için 0)",
+          "description": "Yatay çubukta gösterilecek en fazla karakter sayısı (metni gizlemek için 0).",
           "label": "En uzun metin uzunluğu (yatay)"
         },
         "max-text-length-vertical": {
-          "description": "Dikey çubukta gösterilecek en fazla karakter sayısı (metni gizlemek için 0)",
+          "description": "Dikey çubukta gösterilecek en fazla karakter sayısı (metni gizlemek için 0).",
           "label": "En uzun metin uzunluğu (dikey)"
         },
         "middle-click": {
@@ -191,7 +191,7 @@
           "label": "Akış"
         },
         "wheel": {
-          "description": "Kaydırma tekerleği kullanıldığında yürütülecek komut.\nKomutta kaydırma tekerleği deltası için $delta kullanın",
+          "description": "Kaydırma tekerleği kullanıldığında yürütülecek komut.<br>Komutta kaydırma tekerleği deltası için $delta kullanın.",
           "label": "Kaydırma tekerleği",
           "update-text": "Kaydırmada gösterilen metni güncelle"
         },
@@ -200,7 +200,7 @@
           "label": "Kaydırma tekerleği aşağı komutu"
         },
         "wheel-mode-separate": {
-          "description": "Kaydırma tekerleği yukarı ve aşağı için ayrı komutları etkinleştir",
+          "description": "Kaydırma tekerleği yukarı ve aşağı için ayrı komutları etkinleştir.",
           "label": "Ayrı kaydırma tekerleği komutları"
         },
         "wheel-up": {
@@ -294,7 +294,7 @@
       },
       "spacer": {
         "width": {
-          "description": " piksel olarak aralık genişliği",
+          "description": "Piksel olarak aralık genişliği.",
           "label": "Genişlik"
         }
       },
@@ -310,6 +310,10 @@
         "disk-path": {
           "description": "İzlenecek disk bağlama noktasını seçin.",
           "label": "Disk yolu"
+        },
+        "gpu-temperature": {
+          "description": "GPU sıcaklık değerleri varsa göster.",
+          "label": "GPU sıcaklığı"
         },
         "memory-percentage": {
           "description": "Mutlak değerler yerine bellek kullanımını yüzde olarak göster.",
@@ -345,9 +349,9 @@
           "description": "Sadece aktif çalışma alanlarından uygulamaları göster.",
           "label": "Sadece aktif çalışma alanlarından"
         },
-        "only-same-output": {
-          "description": "Sadece çubuğun bulunduğu çıktıdan uygulamaları göster.",
-          "label": "Sadece aynı çıktıdan"
+        "only-same-monitor": {
+          "description": "Çubuğun bulunduğu monitördeki uygulamaları göster.",
+          "label": "Aynı monitörden sadece"
         },
         "show-pinned-apps": {
           "description": "Dock'taki sabitlenmiş uygulamaları görev çubuğunda göster.",
@@ -368,19 +372,13 @@
           "reset-tooltip": "Başlık genişliğini sıfırla"
         }
       },
-      "taskbar-grouped": {
-        "show-labels-only-when-occupied": {
-          "description": "Sadece açık pencereleri olan çalışma alanları için çalışma alanı etiketini göster.",
-          "label": "Sadece dolu olduğunda etiketi göster."
-        }
-      },
       "tray": {
         "colorize-icons": {
           "description": "Tepsi simgelerine tema renklerini uygula.",
           "label": "Simgeleri Renklendir"
         },
         "drawer-enabled": {
-          "description": "Etkinleştirildiğinde, sabitlenmemiş tepsi öğeleri bir çekmece panelinde gösterilir. Devre dışı bırakıldığında, tüm tepsi öğeleri satır içi gösterilir.",
+          "description": "Etkinleştirildiğinde, sabitlenmemiş tepsi öğeleri bir çekmece panelinde gösterilir.<br>Devre dışı bırakıldığında, tüm tepsi öğeleri satır içi gösterilir.",
           "label": "Çekmeceyi Etkinleştir"
         },
         "hide-passive": {
@@ -399,6 +397,10 @@
           "description": "Çalışma alanı adlarından gösterilecek karakter sayısı (1-10).",
           "label": "Karakter sayısı"
         },
+        "enable-scrollwheel": {
+          "description": "Fare tekerleği ile çalışma alanları arasında geçiş yapın.",
+          "label": "Çalışma alanları arasında geçiş yapmak için kaydırın"
+        },
         "follow-focused-screen": {
           "description": "Çubuğun bulunduğu ekran yerine, şu anda odaklanmış ekrandaki çalışma alanlarını göster.",
           "label": "Odaklanmış Ekranı Takip Et"
@@ -410,6 +412,14 @@
         "label-mode": {
           "description": "Çalışma alanı etiketlerinin nasıl gösterileceğini seçin.",
           "label": "Etiket Modu"
+        },
+        "show-applications": {
+          "description": "Her çalışma alanının içinde uygulama simgelerini görüntüle.",
+          "label": "Uygulamaları göster"
+        },
+        "show-labels-only-when-occupied": {
+          "description": "Yalnızca pencere içeren çalışma alanı etiketlerini göster.",
+          "label": "Yalnızca dolu olduğunda etiketleri göster"
         }
       }
     }
@@ -460,6 +470,7 @@
       "minutes": "d",
       "pause": "Duraklat",
       "reset": "Sıfırla",
+      "resume": "Özgeçmiş",
       "seconds": "s",
       "start": "Başla",
       "stopwatch": "Kronometre",
@@ -705,6 +716,11 @@
       "hover": "Üzerine Gelince Kaydır",
       "never": "Asla Kaydırma"
     },
+    "settings-panel-mode": {
+      "attached": "Çubuğa bağlı panel",
+      "centered": "Ortalanmış panel",
+      "window": "Ayrı pencere"
+    },
     "shadow-direction": {
       "bottom": "Alt",
       "bottom_left": "Sol alt",
@@ -752,7 +768,7 @@
   "plugins": {
     "applications": "Uygulamalar",
     "calculator": "Hesap makinesi",
-    "calculator-description": "Hesap makinesi - matematiksel ifadeleri hesapla",
+    "calculator-description": "Hesap makinesi — matematiksel ifadeleri hesapla",
     "calculator-enter-expression": "Matematiksel bir ifade girin",
     "calculator-error": "Hata",
     "calculator-name": "Hesap makinesi",
@@ -970,10 +986,6 @@
     },
     "bar": {
       "appearance": {
-        "background-opacity": {
-          "description": "Araç çubuğu arka plan opaklığını ayarlayın.",
-          "label": "Arka plan opaklığı"
-        },
         "capsule-opacity": {
           "description": "Kapsül gösterildiğinde araç takımı arka planlarının saydamlık seviyesini ayarla.",
           "label": "Kapsül saydamlığı"
@@ -1007,6 +1019,14 @@
         "show-capsule": {
           "description": "Araç takımı arka planlarını göster.",
           "label": "Kapsülü göster"
+        },
+        "show-outline": {
+          "description": "Her widget'ın etrafında görünür bir kenarlık görüntüler.",
+          "label": "Araç kutusu ana hatlarını göster"
+        },
+        "transparent": {
+          "description": "Bu, panellerin çubuğa takılmasını önleyecektir.",
+          "label": "Şeffaf arka plan"
         }
       },
       "monitors": {
@@ -1037,14 +1057,14 @@
       "color-source": {
         "matugen-scheme-type": {
           "description": {
-            "scheme-content": "Temel görüntüye yakın renkler türetir",
-            "scheme-expressive": "Oyuncak doygunlukla canlı palet",
-            "scheme-fidelity": "Kaynak tonlarını koruyan yüksek sadakatli palet",
-            "scheme-fruit-salad": "Canlı kontrast aksanların renkli karışımı",
-            "scheme-monochrome": "Tek bir ton etrafında inşa edilmiş minimal palet",
-            "scheme-neutral": "Sakinleştirici ve bastırılmış tonlarla yumuşak palet",
-            "scheme-rainbow": "Tam spektrumu kapsayan çeşitli palet",
-            "scheme-tonal-spot": "Odaklanmış aksanlarla dengeli palet"
+            "scheme-content": "Temel görüntüye yakın renkler türetir.",
+            "scheme-expressive": "Oyuncak doygunlukla canlı palet.",
+            "scheme-fidelity": "Kaynak tonlarını koruyan yüksek sadakatli palet.",
+            "scheme-fruit-salad": "Canlı kontrast aksanların renkli karışımı.",
+            "scheme-monochrome": "Tek bir ton etrafında inşa edilmiş minimal palet.",
+            "scheme-neutral": "Sakinleştirici ve bastırılmış tonlarla yumuşak palet.",
+            "scheme-rainbow": "Tam spektrumu kapsayan çeşitli palet.",
+            "scheme-tonal-spot": "Odaklanmış aksanlarla dengeli palet."
           },
           "label": "Matugen şema türü"
         },
@@ -1128,23 +1148,27 @@
           "description": "Kendi şablonlarınızı oluşturun",
           "label": "Gelişmiş",
           "user-templates": {
-            "description": "Yalnızca ne yaptığınızı biliyorsanız etkinleştirin, çevrimiçi belgelerimize bakın",
+            "description": "Yalnızca ne yaptığınızı biliyorsanız etkinleştirin — çevrimiçi belgelerimize bakın",
             "label": "Kullanıcı şablonlarını etkinleştir"
           }
         },
         "programs": {
           "cava": {
-            "description": "{filepath} dosyasına yaz.",
+            "description": "{filepath} dosyasına yaz",
             "description-missing": "Kurulum için {app} gereklidir"
           },
           "code": {
-            "description": "{filepath} dosyasına yaz. Hyprluna temasının kurulu ve manuel olarak etkinleştirilmiş olması gerekir.",
-            "description-missing": "Code istemcisi tespit edilmedi. VSCode veya VSCodium kurun."
+            "description": "{filepath} dosyasına yaz — HyprLuna temasının kurulu ve manuel olarak etkinleştirilmiş olması gerekir",
+            "description-missing": "Code istemcisi tespit edilmedi — VSCode veya VSCodium kurun"
           },
           "description": "Uygulamaya özel temalandırma.",
           "discord": {
-            "description": "{client} için {filepath} dosyasına yaz. Hyprluna temasının manuel olarak etkinleştirilmesi gerekir.",
-            "description-missing": "Discord istemcisi tespit edilmedi. Vencord, vesktop, webcord, armcord, equibop, lightcord veya dorion kurun."
+            "description": "{client} için {filepath} dosyasına yaz — HyprLuna temasının manuel olarak etkinleştirilmesi gerekir",
+            "description-missing": "Discord istemcisi tespit edilmedi — Vencord, vesktop, webcord, armcord, equibop, lightcord veya dorion kurun"
+          },
+          "emacs": {
+            "description": "Doom: ~/.config/doom/themes/noctalia.el<br>Standart: ~/.emacs.d/themes/noctalia.el<br>Manuel olarak uygula: (load-theme 'noctalia t)",
+            "description-missing": "{app} uygulamasının yüklü olmasını gerektirir"
           },
           "fuzzel": {
             "description": "{filepath} dosyasına yaz ve yeniden yükle",
@@ -1156,11 +1180,11 @@
             "description-missing": "Kurulum için {app} gereklidir"
           },
           "spicetify": {
-            "description": "{filepath} dosyasına yaz. Comfy temasının kurulu ve manuel olarak etkinleştirilmiş olması gerekir.",
+            "description": "{filepath} dosyasına yaz — Comfy temasının kurulu ve manuel olarak etkinleştirilmiş olması gerekir",
             "description-missing": "Kurulum için {app} gereklidir"
           },
           "telegram": {
-            "description": "{filepath} dosyasına yaz.",
+            "description": "{filepath} dosyasına yaz",
             "description-missing": "Kurulum için {app} gereklidir"
           },
           "vicinae": {
@@ -1169,6 +1193,14 @@
           },
           "walker": {
             "description": "{filepath} dosyasına yaz ve temayı noctalia olarak ayarla",
+            "description-missing": "Kurulum için {app} gereklidir"
+          },
+          "yazi": {
+            "description": "{filepath} dosyasına yaz — flavor manuel etkinleştirilmesi gerekir",
+            "description-missing": "Kurulum için {app} gereklidir"
+          },
+          "zed": {
+            "description": "{filepath} dosyasına yaz ve yeniden yükle",
             "description-missing": "Kurulum için {app} gereklidir"
           }
         },
@@ -1295,6 +1327,96 @@
       },
       "title": "Kontrol Merkezi"
     },
+    "desktop-widgets": {
+      "clock": {
+        "enabled": {
+          "description": "Masaüstünde bir saat aracı göster.",
+          "label": "Saat widget'ını etkinleştir"
+        },
+        "height": {
+          "description": "Saat aracı yüksekliği piksel cinsinden.",
+          "label": "Yükseklik"
+        },
+        "section": {
+          "description": "Saat aracı görünümünü yapılandırın.",
+          "label": "Saat Widget'ı"
+        },
+        "show-background": {
+          "description": "Saat widget'ı için arka plan kabını göster.",
+          "label": "Arka planı göster"
+        },
+        "show-date": {
+          "description": "Saati gösterdikten sonra, mevcut tarihi de göster.",
+          "label": "Tarihi göster"
+        },
+        "show-seconds": {
+          "description": "Saniyeleri saatte göster.",
+          "label": "Saniyeleri göster"
+        },
+        "width": {
+          "description": "Saat widget'ının piksel cinsinden genişliği.",
+          "label": "Genişlik"
+        }
+      },
+      "edit-mode": {
+        "button": {
+          "label": "Düzenleme moduna gir"
+        },
+        "controls-explanation": "Sol fare tuşu: Araç taşı\nSağ fare tuşu: Araç yeniden boyutlandır",
+        "description": "Masaüstü araçlarını taşımak ve yeniden konumlandırmak için düzenleme modunu etkinleştirin. Etkinleştirildiğinde, araçlar bir sürükleme ana hattı gösterir ve yeniden konumlandırılabilir.",
+        "exit-button": "Düzenleme modundan çık",
+        "label": "Düzenleme modu"
+      },
+      "enabled": {
+        "description": "Masaüstü araçlarını tamamen etkinleştir veya devre dışı bırak.",
+        "label": "Masaüstü araçlarını etkinleştir"
+      },
+      "general": {
+        "section": {
+          "description": "Masaüstünüzde görünen araçları yapılandırın.",
+          "label": "Masaüstü Araçları"
+        }
+      },
+      "media-player": {
+        "enabled": {
+          "description": "Masaüstünde bir medya oynatıcı aracı göster.",
+          "label": "Medya oynatıcı widget'ını etkinleştir."
+        },
+        "section": {
+          "description": "Medya oynatıcı araç görünümünü yapılandırın.",
+          "label": "Medya Oynatıcı Aracı"
+        },
+        "show-background": {
+          "description": "Medya oynatıcı widget'ı için arka plan konteynerini göster.",
+          "label": "Arka planı göster"
+        },
+        "visualizer-type": {
+          "description": "Masaüstü medya oynatıcı arka planı için bir görselleştirme türü seçin.",
+          "label": "Görselleştirme türü"
+        }
+      },
+      "title": "Masaüstü Araçları",
+      "weather": {
+        "enabled": {
+          "description": "Masaüstünde bir hava durumu aracı göster.",
+          "label": "Hava durumu araç kutusunu etkinleştir"
+        },
+        "section": {
+          "description": "Hava durumu widget'ının görünümünü yapılandırın.",
+          "label": "Hava Durumu Aracı"
+        },
+        "show-background": {
+          "description": "Hava durumu widget'ı için arka plan konteynerini göster.",
+          "label": "Arka planı göster"
+        }
+      },
+      "widgets": {
+        "section": {
+          "description": "Masaüstü araçlarını ekle ve yapılandır",
+          "label": "Masaüstü Araçları"
+        }
+      }
+    },
     "display": {
       "monitors": {
         "brightness": "Parlaklık",
@@ -1321,7 +1443,7 @@
       },
       "night-light": {
         "auto-schedule": {
-          "description": "<i>{location}</i> konumunda gün batımı ve gün doğumu zamanına göre - önerilen.",
+          "description": "<i>{location}</i> konumunda gün batımı ve gün doğumu zamanına göre — önerilen.",
           "label": "Otomatik zamanlama"
         },
         "enable": {
@@ -1406,9 +1528,9 @@
         "label": "Rıhtımı etkinleştir"
       },
       "monitors": {
-        "only-same-output": {
-          "description": "Sadece rıhtımın bulunduğu çıktıdaki uygulamaları gösterin.",
-          "label": "Sadece aynı çıktıdaki uygulamalar"
+        "only-same-monitor": {
+          "description": "Yalnızca dock'un bulunduğu monitördeki uygulamaları göster.",
+          "label": "Yalnızca aynı monitördeki uygulamalar"
         },
         "section": {
           "description": "Rıhtımı belirli ekranlarda gösterin. Hiçbiri seçilmezse varsayılan olarak tümünde gösterilir.",
@@ -1493,13 +1615,23 @@
     "hooks": {
       "info": {
         "command-info": {
-          "description": "• Komutlar kabuk (sh -c) ile yürütülür\n• Komutlar arka planda yürütülür (ayrık)\n• Test düğmeleri mevcut değerlerle yürütülür",
+          "description": "• Komutlar kabuk (sh -c) ile yürütülür<br>• Komutlar arka planda yürütülür (ayrık)<br>• Test düğmeleri mevcut değerlerle yürütülür",
           "label": "Komut Bilgisi"
         },
         "parameters": {
-          "description": "• Duvar Kâğıdı Kancası: $1 = duvar kâğıdı yolu, $2 = ekran adı\n• Tema Geçiş Kancası: $1 = true/false (koyu mod durumu)",
+          "description": "• Duvar Kâğıdı Kancası: $1 = duvar kâğıdı yolu, $2 = ekran adı<br>• Tema Geçiş Kancası: $1 = true/false (koyu mod durumu)",
           "label": "Kullanılabilir Parametreler"
         }
+      },
+      "screen-lock": {
+        "description": "Ekran kilitlendiğinde çalıştırılacak komut.",
+        "label": "Ekran kilitlendi",
+        "placeholder": "örn., notify-send \"Ekran\" \"Kilitlendi\""
+      },
+      "screen-unlock": {
+        "description": "Ekran kilidi açıldığında çalıştırılacak komut.",
+        "label": "Ekran kilidi açıldı",
+        "placeholder": "örn., notify-send \"Ekran\" \"Açıldı\""
       },
       "system-hooks": {
         "enable": {
@@ -1525,10 +1657,6 @@
     },
     "launcher": {
       "settings": {
-        "background-opacity": {
-          "description": "Başlatıcının arka plan opaklığını ayarlayın.",
-          "label": "Arka plan opaklığı"
-        },
         "clip-preview": {
           "description": ">clip komutu kullanılırken panodaki içeriğin önizlemesini gösterir.",
           "label": "Panoyu önizlemeyi etkinleştir"
@@ -1732,7 +1860,7 @@
           "label": "Ekran görüntüsünü etkinleştir"
         },
         "enabled": {
-          "description": "Bildirim arka plan programını etkinleştir veya devre dışı bırak, noctalia-shell'in yeniden başlatılmasını gerektirir.",
+          "description": "Bildirim arka plan programını etkinleştir veya devre dışı bırak, Noctalia shell'in yeniden başlatılmasını gerektirir.",
           "label": "Bildirimleri etkinleştir"
         },
         "location": {
@@ -1857,6 +1985,10 @@
           "description": "Ekran parlaklığı değiştiğinde OSD'yi göster.",
           "label": "Parlaklık"
         },
+        "custom-text": {
+          "description": "IPC üzerinden özel metin iletileri için OSD göster.",
+          "label": "Özel Metin"
+        },
         "input-volume": {
           "description": "Mikrofon ses düzeyi değiştiğinde OSD'yi göster.",
           "label": "Giriş sesi"
@@ -1918,8 +2050,8 @@
           "title": "Eklenti kaynağı ekle",
           "url": "Depo URL'si"
         },
-        "description": "Eklentilerin indirildiği eklenti depolarını yönetin.",
-        "label": "Eklenti kaynakları",
+        "description": "Eklenti depolarını yönetin.",
+        "label": "Kaynaklar",
         "placeholder": "Havalı depom",
         "remove": {
           "tooltip": "Eklenti kaynağını kaldır"
@@ -2041,6 +2173,10 @@
           "label": "Genel"
         }
       },
+      "large-buttons-style": {
+        "description": "Oturum menüsünü büyük butonlarla ızgara düzeninde görüntüle.",
+        "label": "Büyük düğme stili"
+      },
       "position": {
         "description": "Oturum Menüsü panelinin açıldığında nerede görüneceğini seçin.",
         "label": "Konum"
@@ -2052,14 +2188,8 @@
       "title": "Oturum Menüsü"
     },
     "system-monitor": {
-      "cpu-critical-threshold": {
-        "label": "Kritik Eşiği"
-      },
       "cpu-section": {
         "label": "İşlemci Kullanımı"
-      },
-      "cpu-warning-threshold": {
-        "label": "Uyarı Eşiği"
       },
       "critical-color": {
         "label": "Kritik renk"
@@ -2067,14 +2197,12 @@
       "custom-highlight-colors-title": {
         "label": "Özel vurgulama renkleri"
       },
-      "disk-critical-threshold": {
-        "label": "Kritik Eşiği"
-      },
       "disk-section": {
         "label": "Disk Kullanımı"
       },
-      "disk-warning-threshold": {
-        "label": "Uyarı Eşiği"
+      "enable-nvidia-gpu": {
+        "description": "Uyarı: Bu, NVIDIA GPU'nuzu uyandıracak ve bu da hibrit grafiklere sahip dizüstü bilgisayarlarda pil ömrünü önemli ölçüde etkileyebilir.",
+        "label": "NVIDIA GPU izlemeyi etkinleştir"
       },
       "general": {
         "section": {
@@ -2082,14 +2210,11 @@
           "label": "Genel"
         }
       },
+      "gpu-section": {
+        "label": "GPU sıcaklığı"
+      },
       "highlight-colors-section": {
         "label": "Vurgulama Renkleri"
-      },
-      "mem-critical-threshold": {
-        "label": "Kritik Eşiği"
-      },
-      "mem-warning-threshold": {
-        "label": "Uyarı Eşiği"
       },
       "memory-section": {
         "label": "Bellek Kullanımı"
@@ -2100,14 +2225,12 @@
       "polling-interval": {
         "label": "Yoklama aralığı"
       },
-      "temp-critical-threshold": {
-        "label": "Kritik Eşiği"
-      },
-      "temp-warning-threshold": {
-        "label": "Uyarı Eşiği"
-      },
       "temperature-section": {
         "label": "İşlemci Sıcaklığı"
+      },
+      "threshold": {
+        "critical": "Kritik eşik",
+        "warning": "Uyarı eşiği"
       },
       "thresholds-section": {
         "description": "Her sistem ölçüsü için uyarı/kritik eşiklerini ve yoklama aralıklarını ayarlayın.",
@@ -2156,7 +2279,7 @@
         "reset": "Karartılmış masaüstü opaklığını sıfırla"
       },
       "panel-background-opacity": {
-        "description": "Tüm paneller için arka plan opaklığını ayarlayın (Başlatıcı, Kontrol Merkezi, Ayarlar vb.).",
+        "description": "Tüm panellerin (çubuk, başlatıcı, ayarlar vb.) arka plan opaklığını ayarlayın.",
         "label": "Panel arka plan opaklığı"
       },
       "panels-attached-to-bar": {
@@ -2176,9 +2299,9 @@
         "description": "Arayüzün görünümünü, hissini ve davranışını özelleştirin.",
         "label": "Görünüm"
       },
-      "settings-panel-attached-to-bar": {
-        "description": "Ayarlar penceresini çubukla hizalayarak tutarlı bir görünüm sağlayın.",
-        "label": "Ayarlar penceresini çubuğa hizala"
+      "settings-panel-mode": {
+        "description": "Ayarlar düzenini seçin (yeniden açılması gerekebilir).",
+        "label": "Ayarlar paneli modu"
       },
       "shadows": {
         "description": "Çubukların ve panellerin altında gölgelerin etkinleştirilmesini sağlar.",
@@ -2309,7 +2432,7 @@
       "subheader": "Güzel bir arka planla ortamı ayarlayın."
     },
     "welcome": {
-      "note": "Başlamanız için birkaç temel ayar - tam seçenekler Ayarlar'da"
+      "note": "Başlamanız için birkaç temel ayar — tam seçenekler ayarlar'da"
     }
   },
   "system": {
@@ -2393,11 +2516,11 @@
     },
     "power-profile": {
       "changed": "Güç profili değişti",
-      "profile-name": "\"{profile}\""
+      "profile-name": "{profile}"
     },
     "recording": {
-      "failed-general": "Kayıtçısı bir hata ile kapandı.",
-      "failed-gpu": "gpu-screen-recorder beklenmedik şekilde kapandı.",
+      "failed-general": "Kayıtçı bir hata nedeniyle kapandı",
+      "failed-gpu": "gpu-screen-recorder beklenmedik şekilde kapandı",
       "failed-start": "Kayıt başlatma başarısız oldu",
       "no-portals": "Masaüstü portal çalışmıyor",
       "no-portals-desc": "xdg-desktop-portal ve bir kompozitör portalı (wlr/hyprland/gnome/kde) başlatın.",
@@ -2408,9 +2531,9 @@
       "stopping": "Kayıt durduruluyor..."
     },
     "theming-processor-failed": {
-      "desc-generic": "Şablonlar işlenirken bir hatayla karşılaşıldı.",
-      "title-matugen": "Matugen şablon işleme başarısız oldu.",
-      "title-predefined": "Önceden tanımlanmış renk şeması işleme başarısız oldu."
+      "desc-generic": "Şablonlar işlenirken bir hatayla karşılaşıldı",
+      "title-matugen": "Matugen şablon işleme başarısız oldu",
+      "title-predefined": "Önceden tanımlanmış renk şeması işleme başarısız oldu"
     },
     "vpn": {
       "connected": "'{name}' ile bağlantı kuruldu",
@@ -2420,7 +2543,7 @@
       "disabled": "Duvar kâğıdı renkleri devre dışı",
       "enabled": "Duvar kâğıdı renkleri etkin",
       "label": "Duvar kâğıdı renkleri oluşturma",
-      "not-installed": "Matugen kurulu değil - duvar kâğıdı renk çıkarmak için gerekli"
+      "not-installed": "Matugen kurulu değil — duvar kâğıdı renk çıkarmak için gerekli"
     },
     "wifi": {
       "connected": "'{ssid}' ile bağlandı",
@@ -2438,12 +2561,14 @@
     "click-to-start-recording": "Ekran kaydedici (kaydı başlat)",
     "click-to-stop-recording": "Ekran kaydedici (kaydı durdur)",
     "close": "Kapat",
+    "collapse": "Kenar çubuğunu daralt",
     "connect-disconnect-devices": "Bluetooth cihazı",
     "delete-notification": "Bildiriyi sil",
     "disable-keep-awake": "Uyanık kal",
     "do-not-disturb-disabled": "Rahatsız etme",
     "do-not-disturb-enabled": "Rahatsız etme",
     "enable-keep-awake": "Uyanık kal",
+    "expand": "Kenar çubuğunu genişlet",
     "forget-network": "Ağı unut",
     "grid-view": "Izgara görünümü",
     "hidden-files-hide": "Gizli dosyalar",
@@ -2620,8 +2745,8 @@
         "no-leading-zero": "Sıfır olmadan gün (1-31)"
       },
       "hour": {
-        "leading-zero": "Sıfır ile başlayan saat (00-23) - 24 saat formatı",
-        "no-leading-zero": "Sıfır olmadan saat (0-23) - 24 saat formatı"
+        "leading-zero": "Sıfır ile başlayan saat (00-23) — 24 saat formatı",
+        "no-leading-zero": "Sıfır olmadan saat (0-23) — 24 saat formatı"
       },
       "minute": {
         "leading-zero": "Sıfır ile başlayan dakika (00-59)",

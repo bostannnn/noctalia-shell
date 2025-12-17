@@ -10,11 +10,13 @@ NBox {
   id: root
 
   property string sectionName: ""
+  property string sectionSubtitle: ""
   property string sectionId: ""
   property var widgetModel: []
   property var availableWidgets: []
   property var availableSections: ["left", "center", "right"]
   property int maxWidgets: -1 // -1 means unlimited
+  property bool draggable: true // Enable/disable drag reordering
 
   property var widgetRegistry: null
   property string settingsDialogComponent: "BarWidgetSettingsDialog.qml"
@@ -104,12 +106,41 @@ NBox {
     RowLayout {
       Layout.fillWidth: true
 
-      NText {
-        text: sectionName
-        pointSize: Style.fontSizeL
-        font.weight: Style.fontWeightBold
-        color: Color.mOnSurface
+      ColumnLayout {
+        spacing: Style.marginXXS
         Layout.alignment: Qt.AlignVCenter
+        Layout.fillWidth: false
+        Layout.maximumWidth: {
+          // Reserve space for other elements: count indicator, combo box (~200), button (~50), and margins
+          // Use a reasonable maximum that leaves room for controls on the right
+          // On smaller screens, use a smaller percentage to ensure controls fit
+          var rowLayout = parent;
+          if (rowLayout && rowLayout.width > 0) {
+            // Use smaller percentage on smaller screens, but ensure minimum space for text
+            var minWidth = 150 * Style.uiScaleRatio;
+            var maxWidth = rowLayout.width < 600 ? rowLayout.width * 0.35 : rowLayout.width * 0.4;
+            return Math.max(minWidth, maxWidth);
+          }
+          return 250 * Style.uiScaleRatio;
+        }
+
+        NText {
+          text: sectionName
+          pointSize: Style.fontSizeL
+          font.weight: Style.fontWeightBold
+          color: Color.mOnSurface
+          elide: Text.ElideRight
+          Layout.fillWidth: true
+        }
+
+        NText {
+          visible: sectionSubtitle !== ""
+          text: sectionSubtitle
+          pointSize: Style.fontSizeS
+          color: Color.mOnSurfaceVariant
+          elide: Text.ElideRight
+          Layout.fillWidth: true
+        }
       }
 
       // Widget count indicator (when max is set)
@@ -128,7 +159,7 @@ NBox {
 
       NSearchableComboBox {
         id: comboBox
-        model: availableWidgets
+        model: availableWidgets ?? null
         label: ""
         description: ""
         placeholder: I18n.tr("bar.widget-settings.section-editor.placeholder")
@@ -142,7 +173,8 @@ NBox {
 
         // Re-filter when the model count changes (when widgets are loaded)
         Connections {
-          target: availableWidgets
+          target: availableWidgets ?? null
+          ignoreUnknownSignals: true
           function onCountChanged() {
             // Trigger a re-filter by clearing and re-setting the search text
             var currentSearch = comboBox.searchText;
@@ -480,6 +512,7 @@ NBox {
         id: flowDragArea
         anchors.fill: parent
         z: 100 // Above widgets to ensure it captures events first
+        enabled: root.draggable
 
         acceptedButtons: Qt.LeftButton
         preventStealing: true // Always prevent stealing to ensure we get all events

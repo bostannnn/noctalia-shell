@@ -60,6 +60,9 @@ NBox {
         icon: "settings"
         tooltipText: I18n.tr("tooltips.open-settings")
         onClicked: {
+          // Better close the control center in case the settings open in a separate window
+          PanelService.openedPanel?.close();
+
           var panel = PanelService.getPanel("settingsPanel", screen);
           panel.requestedTab = SettingsPanel.Tab.General;
           panel.open();
