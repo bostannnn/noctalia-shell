@@ -705,9 +705,21 @@ SmartPanel {
       };
       videos.sort(sortByName);
       images.sort(sortByName);
-      
+
       // Combine: videos first, then images
-      wallpapersList = videos.concat(images);
+      var combined = videos.concat(images);
+
+      // Move current wallpaper to the front
+      var current = WallpaperService.getWallpaper(targetScreen.name);
+      if (current) {
+        var currentIndex = combined.indexOf(current);
+        if (currentIndex > 0) {
+          combined.splice(currentIndex, 1);
+          combined.unshift(current);
+        }
+      }
+
+      wallpapersList = combined;
       Logger.d("WallpaperPanel", "Sorted:", videos.length, "videos,", images.length, "images");
 
       // Pre-compute basenames once for better performance
