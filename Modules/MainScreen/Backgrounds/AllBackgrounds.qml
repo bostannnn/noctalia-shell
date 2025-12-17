@@ -142,6 +142,13 @@ Item {
         backgroundColor: panelBackgroundColor
       }
 
+      // TodoList
+      PanelBackground {
+        panel: root.windowRoot.todoPanelPlaceholder
+        shapeContainer: backgroundsShape
+        backgroundColor: panelBackgroundColor
+      }
+
       // TrayDrawer
       PanelBackground {
         panel: root.windowRoot.trayDrawerPanelPlaceholder

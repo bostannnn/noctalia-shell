@@ -40,7 +40,8 @@ Singleton {
                            "VPN": vpnComponent,
                            "WiFi": wiFiComponent,
                            "WallpaperSelector": wallpaperSelectorComponent,
-                           "Workspace": workspaceComponent
+                           "Workspace": workspaceComponent,
+                           "TodoList": todoListComponent
                          })
 
   property var widgetSettingsMap: ({
@@ -242,6 +243,11 @@ Singleton {
                                   "Volume": {
                                     "allowUserSettings": true,
                                     "displayMode": "onhover"
+                                  },
+                                  "TodoList": {
+                                    "allowUserSettings": false,
+                                    "hideWhenZero": false,
+                                    "displayMode": "onhover"
                                   }
                                 })
 
@@ -338,6 +344,9 @@ Singleton {
   }
   property Component taskbarComponent: Component {
     Taskbar {}
+  }
+  property Component todoListComponent: Component {
+    TodoList {}
   }
   function init() {
     Logger.i("BarWidgetRegistry", "Service started");

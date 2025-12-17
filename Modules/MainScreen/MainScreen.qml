@@ -24,6 +24,7 @@ import qs.Modules.Panels.SessionMenu
 import qs.Modules.Panels.Settings
 import qs.Modules.Panels.SetupWizard
 import qs.Modules.Panels.Tray
+import qs.Modules.Panels.TodoList
 import qs.Modules.Panels.Wallpaper
 import qs.Modules.Panels.WiFi
 import qs.Services.Compositor
@@ -48,6 +49,7 @@ PanelWindow {
   readonly property alias sessionMenuPanel: sessionMenuPanel
   readonly property alias settingsPanel: settingsPanel
   readonly property alias setupWizardPanel: setupWizardPanel
+  readonly property alias todoPanel: todoPanel
   readonly property alias trayDrawerPanel: trayDrawerPanel
   readonly property alias wallpaperPanel: wallpaperPanel
   readonly property alias wifiPanel: wifiPanel
@@ -67,6 +69,7 @@ PanelWindow {
   readonly property var sessionMenuPanelPlaceholder: sessionMenuPanel.panelRegion
   readonly property var settingsPanelPlaceholder: settingsPanel.panelRegion
   readonly property var setupWizardPanelPlaceholder: setupWizardPanel.panelRegion
+  readonly property var todoPanelPlaceholder: todoPanel.panelRegion
   readonly property var trayDrawerPanelPlaceholder: trayDrawerPanel.panelRegion
   readonly property var wallpaperPanelPlaceholder: wallpaperPanel.panelRegion
   readonly property var wifiPanelPlaceholder: wifiPanel.panelRegion
@@ -272,6 +275,12 @@ PanelWindow {
     SetupWizard {
       id: setupWizardPanel
       objectName: "setupWizardPanel-" + (root.screen?.name || "unknown")
+      screen: root.screen
+    }
+
+    TodoListPanel {
+      id: todoPanel
+      objectName: "todoPanel-" + (root.screen?.name || "unknown")
       screen: root.screen
     }
 

@@ -2909,6 +2909,28 @@
       "placeholder": "Placeholder"
     }
   },
+  "todolist": {
+    "context": {
+      "refresh": "Refresh tasks"
+    },
+    "panel": {
+      "complete": "Mark as done",
+      "count": "{count} pending tasks",
+      "delete": "Delete task",
+      "empty": "No tasks yet",
+      "install-hint": "Install Taskwarrior to use this feature",
+      "loading": "Loading tasks...",
+      "not-available": "Taskwarrior not installed",
+      "placeholder": "Add a new task...",
+      "refresh": "Refresh",
+      "title": "To-Do List"
+    },
+    "tooltip": {
+      "empty": "No pending tasks",
+      "not-installed": "Taskwarrior not installed",
+      "tasks": "{count} pending tasks"
+    }
+  },
   "wifi": {
     "panel": {
       "available-networks": "Available networks",
