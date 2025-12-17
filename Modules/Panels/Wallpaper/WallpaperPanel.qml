@@ -876,16 +876,16 @@ SmartPanel {
       // Upscale item (for images)
       MenuItem {
         id: upscaleItem
-        visible: ProgramCheckerService.realesrganAvailable && !upscaleVideoItem.isVideo
-        text: WallpaperService.isUpscaling ? I18n.tr("wallpaper.panel.context.upscaling") : I18n.tr("wallpaper.panel.context.upscale")
-        enabled: {
-          if (WallpaperService.isUpscaling || WallpaperService.isUpscalingVideo) return false;
+        property bool isImage: {
           var path = wallpaperContextMenu.wallpaperToDelete;
           if (!path) return false;
           var ext = path.split('.').pop().toLowerCase();
           var imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "pnm"];
           return imageExtensions.indexOf(ext) !== -1;
         }
+        visible: ProgramCheckerService.realesrganAvailable && isImage
+        text: WallpaperService.isUpscaling ? I18n.tr("wallpaper.panel.context.upscaling") : I18n.tr("wallpaper.panel.context.upscale")
+        enabled: !WallpaperService.isUpscaling && !WallpaperService.isUpscalingVideo && isImage
 
         background: Rectangle {
           color: upscaleArea.containsMouse && upscaleItem.enabled ? Color.mHover : Color.transparent
