@@ -116,7 +116,7 @@ NBox {
                 var suffix = "C";
                 if (Settings.data.location.useFahrenheit) {
                   temp = LocationService.celsiusToFahrenheit(temp);
-                  var suffix = "F";
+                  suffix = "F";
                 }
                 temp = Math.round(temp);
                 return `${temp}°${suffix}`;

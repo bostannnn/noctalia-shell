@@ -304,10 +304,13 @@ Singleton {
     if (root._b64Queue.length === 0 || !root.cliphistAvailable)
       return;
     const job = root._b64Queue.shift();
+    // Validate id is numeric to prevent command injection
+    const safeId = String(job.id).replace(/[^0-9]/g, '');
+    if (!safeId) return;
     root._b64CurrentCb = job.cb;
     root._b64CurrentMime = job.mime;
-    root._b64CurrentId = job.id;
-    decodeB64Proc.command = ["sh", "-lc", `cliphist decode ${job.id} | base64 -w 0`];
+    root._b64CurrentId = safeId;
+    decodeB64Proc.command = ["sh", "-lc", `cliphist decode ${safeId} | base64 -w 0`];
     decodeB64Proc.running = true;
   }
 
@@ -315,8 +318,11 @@ Singleton {
     if (!root.cliphistAvailable) {
       return;
     }
+    // Validate id is numeric to prevent command injection
+    const safeId = String(id).replace(/[^0-9]/g, '');
+    if (!safeId) return;
     // decode and pipe to wl-copy; implement via shell to preserve binary
-    copyProc.command = ["sh", "-lc", `cliphist decode ${id} | wl-copy`];
+    copyProc.command = ["sh", "-lc", `cliphist decode ${safeId} | wl-copy`];
     copyProc.running = true;
   }
 
@@ -327,9 +333,11 @@ Singleton {
     if (deleteProc.running) {
       return;
     }
-    const idStr = String(id);
+    // Validate id is numeric to prevent command injection
+    const safeId = String(id).replace(/[^0-9]/g, '');
+    if (!safeId) return;
     // Use Process to wait for deletion to complete before refreshing
-    deleteProc.command = ["sh", "-c", `echo ${idStr} | cliphist delete`];
+    deleteProc.command = ["sh", "-c", `echo ${safeId} | cliphist delete`];
     deleteProc.running = true;
   }
 

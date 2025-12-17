@@ -270,7 +270,7 @@ Singleton {
     stdout: StdioCollector {
       onStreamFinished: {
         const wifiBlocked = text && text.trim().includes("Soft blocked: yes");
-        Logger.d("Network", "Wi-Fi adapter was detected as blocked:", blocked);
+        Logger.d("Network", "Wi-Fi adapter was detected as blocked:", wifiBlocked);
 
         // Check if airplane mode has been toggled
         if (wifiBlocked && wifiBlocked === root.blocked) {

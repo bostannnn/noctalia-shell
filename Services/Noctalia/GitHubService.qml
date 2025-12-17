@@ -351,16 +351,22 @@ Singleton {
   }
 
   function downloadAvatar(url, destPath, callback) {
-    var downloadCmd = `curl -L -s -o '${destPath}' '${url}' || wget -q -O '${destPath}' '${url}'`;
+    // Escape single quotes in paths for shell safety
+    var safeUrl = url.replace(/'/g, "'\\''");
+    var safeDest = destPath.replace(/'/g, "'\\''");
+    var downloadCmd = `curl -L -s -o '${safeDest}' '${safeUrl}' || wget -q -O '${safeDest}' '${safeUrl}'`;
 
     var downloadProcess = Qt.createQmlObject(`
       import QtQuick
       import Quickshell.Io
       Process {
-        command: ["sh", "-c", "${downloadCmd}"]
+        id: proc
+        property string cmd: ""
+        command: ["sh", "-c", cmd]
       }
     `, root, "Download_" + Date.now());
 
+    downloadProcess.cmd = downloadCmd;
     downloadProcess.exited.connect(function (exitCode) {
       callback(exitCode === 0);
       downloadProcess.destroy();
@@ -377,9 +383,15 @@ Singleton {
       import QtQuick
       import Quickshell.Io
       Process {
-        command: ["magick", "${inputPath}", "-resize", "256x256^", "-gravity", "center", "-extent", "256x256", "-alpha", "set", "(", "+clone", "-channel", "A", "-evaluate", "set", "0", "+channel", "-fill", "white", "-draw", "circle 128,128 128,0", ")", "-compose", "DstIn", "-composite", "${outputPath}"]
+        id: proc
+        property string inputFile: ""
+        property string outputFile: ""
+        command: ["magick", inputFile, "-resize", "256x256^", "-gravity", "center", "-extent", "256x256", "-alpha", "set", "(", "+clone", "-channel", "A", "-evaluate", "set", "0", "+channel", "-fill", "white", "-draw", "circle 128,128 128,0", ")", "-compose", "DstIn", "-composite", outputFile]
       }
     `, root, "Convert_" + Date.now());
+
+    convertProcess.inputFile = inputPath;
+    convertProcess.outputFile = outputPath;
 
     convertProcess.exited.connect(function (exitCode) {
       var success = exitCode === 0;

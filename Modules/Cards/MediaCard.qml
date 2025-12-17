@@ -144,7 +144,11 @@ NBox {
     radius: Style.radiusM
     color: Color.transparent
 
-    property var currentPlayer: MediaService.getAvailablePlayers()[MediaService.selectedPlayerIndex]
+    property var currentPlayer: {
+      var players = MediaService.getAvailablePlayers();
+      var idx = MediaService.selectedPlayerIndex;
+      return (players && idx >= 0 && idx < players.length) ? players[idx] : null;
+    }
 
     RowLayout {
       anchors.fill: parent

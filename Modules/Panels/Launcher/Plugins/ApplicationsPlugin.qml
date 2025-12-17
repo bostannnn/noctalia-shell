@@ -140,7 +140,9 @@ Item {
               result.push(cat.trim());
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          // Ignore category parsing errors for malformed app entries
+        }
       }
     }
 

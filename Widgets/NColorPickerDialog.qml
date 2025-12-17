@@ -269,7 +269,6 @@ Popup {
                   ButtonGroup.group: colorValues
                   text: "H"
                   font.weight: Font.Bold
-                  checked: true
                   onClicked: root.editMode = NColorPickerDialog.EditMode.H
                   Layout.fillWidth: false
                 }

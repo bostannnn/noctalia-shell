@@ -296,7 +296,8 @@ Singleton {
   function copy(emojiChar) {
     if (emojiChar) {
       recordUsage(emojiChar);  // Record usage before copying
-      Quickshell.execDetached(["sh", "-c", `echo -n "${emojiChar}" | wl-copy`]);
+      // Use printf with %s to safely handle special characters
+      Quickshell.execDetached(["sh", "-c", "printf '%s' \"$1\" | wl-copy", "sh", emojiChar]);
     }
   }
 }

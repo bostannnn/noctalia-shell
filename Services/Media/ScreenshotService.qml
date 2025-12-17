@@ -71,20 +71,24 @@ Singleton {
     var filename = "screenshot-" + timestamp + ".png";
     var outputFile = screenshotDir + "/" + filename;
 
+    // Escape single quotes in paths for shell safety
+    var safeDirPath = screenshotDir.replace(/'/g, "'\\''");
+    var safeFilePath = outputFile.replace(/'/g, "'\\''");
+
     // Build the command
-    var setupCmd = "mkdir -p '" + screenshotDir + "'";
+    var setupCmd = "mkdir -p '" + safeDirPath + "'";
 
     var captureCmd;
     switch (mode) {
       case modeScreen:
-        captureCmd = "grim '" + outputFile + "'";
+        captureCmd = "grim '" + safeFilePath + "'";
         break;
       case modeWindow:
-        captureCmd = "grim -g \"$(hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"')\" '" + outputFile + "'";
+        captureCmd = "grim -g \"$(hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"')\" '" + safeFilePath + "'";
         break;
       case modeRegion:
       default:
-        captureCmd = "grim -g \"$(slurp -d)\" '" + outputFile + "'";
+        captureCmd = "grim -g \"$(slurp -d)\" '" + safeFilePath + "'";
         break;
     }
 
@@ -92,7 +96,7 @@ Singleton {
 
     // Add clipboard copy if enabled
     if (copyToClipboard) {
-      fullCmd += " && wl-copy < '" + outputFile + "'";
+      fullCmd += " && wl-copy < '" + safeFilePath + "'";
     }
 
     // Set the expected output path for annotation
@@ -164,14 +168,17 @@ Singleton {
       return;
     }
 
+    // Escape single quotes in path for shell safety
+    var safePath = filepath.replace(/'/g, "'\\''");
+
     var cmd;
     switch (annotationTool) {
       case "swappy":
-        cmd = "swappy -f '" + filepath + "' -o '" + filepath + "'";
+        cmd = "swappy -f '" + safePath + "' -o '" + safePath + "'";
         break;
       case "satty":
       default:
-        cmd = "satty --filename '" + filepath + "' --output-filename '" + filepath + "'";
+        cmd = "satty --filename '" + safePath + "' --output-filename '" + safePath + "'";
         break;
     }
 
