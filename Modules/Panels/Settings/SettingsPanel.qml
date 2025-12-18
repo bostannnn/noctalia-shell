@@ -19,8 +19,7 @@ SmartPanel {
   readonly property bool attachToBar: settingsPanelMode === "attached"
 
   readonly property string barPosition: Settings.data.bar.position
-  readonly property string barMode: Settings.data.bar.mode ?? "classic"
-  readonly property bool barFloating: (barMode === "floating") || Settings.data.bar.floating
+  readonly property bool barFloating: BarService.isFloatingMode()
   readonly property real barMarginH: barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0
   readonly property real barMarginV: barFloating ? Math.ceil(Settings.data.bar.marginVertical * Style.marginXL) : 0
 
@@ -235,4 +234,3 @@ SmartPanel {
     }
   }
 }
-

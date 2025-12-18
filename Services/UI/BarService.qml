@@ -49,6 +49,27 @@ Singleton {
     Logger.i("BarService", "Service started");
   }
 
+  // Unified helpers for bar layout mode
+  function currentMode() {
+    const mode = Settings.data.bar.mode;
+    if (mode && mode.length > 0)
+      return mode;
+    return Settings.data.bar.floating ? "floating" : "classic";
+  }
+
+  function isFloatingMode() {
+    return currentMode() === "floating";
+  }
+
+  function isFramedMode() {
+    return currentMode() === "framed";
+  }
+
+  function isFloatingActive() {
+    const screenBorder = Settings.data.general.screenBorderEnabled ?? false;
+    return isFloatingMode() && !screenBorder;
+  }
+
   // Function for the Bar to call when it's ready
   function registerBar(screenName) {
     if (!readyBars[screenName]) {

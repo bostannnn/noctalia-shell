@@ -8,6 +8,7 @@ import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
 import qs.Widgets
+import "../../../Helpers/AppIdUtils.js" as AppIdUtils
 
 Rectangle {
   id: root
@@ -48,8 +49,7 @@ Rectangle {
   readonly property real maxTaskbarWidth: {
     if (!screen || isVerticalBar || !smartWidth || maxTaskbarWidthPercent <= 0)
       return 0;
-    var barMode = Settings.data.bar.mode ?? "classic";
-    var barFloating = (((barMode === "floating") || Settings.data.bar.floating) && !(Settings.data.general.screenBorderEnabled ?? false));
+    var barFloating = (BarService.isFloatingMode() && !(Settings.data.general.screenBorderEnabled ?? false));
     var barMarginH = barFloating ? Math.ceil(Settings.data.bar.marginHorizontal * Style.marginXL) : 0;
     var availableWidth = screen.width - (barMarginH * 2);
     return Math.round(availableWidth * (maxTaskbarWidthPercent / 100));
@@ -84,17 +84,12 @@ Rectangle {
 
   // Helper function to normalize app IDs for case-insensitive matching
   function normalizeAppId(appId) {
-    if (!appId || typeof appId !== 'string')
-      return "";
-    return appId.toLowerCase().trim();
+    return AppIdUtils.normalizeAppId(appId);
   }
 
   // Helper function to check if an app ID matches a pinned app (case-insensitive)
   function isAppIdPinned(appId, pinnedApps) {
-    if (!appId || !pinnedApps || pinnedApps.length === 0)
-      return false;
-    const normalizedId = normalizeAppId(appId);
-    return pinnedApps.some(pinnedId => normalizeAppId(pinnedId) === normalizedId);
+    return AppIdUtils.isPinned(appId, pinnedApps);
   }
 
   // Helper function to get app name from desktop entry
@@ -126,71 +121,19 @@ Rectangle {
 
   // Helper function to get desktop entry ID from an app ID
   function getDesktopEntryId(appId) {
-    if (!appId)
-      return appId;
-
-    // Try to find the desktop entry using heuristic lookup
-    if (typeof DesktopEntries !== 'undefined' && DesktopEntries.heuristicLookup) {
-      try {
-        const entry = DesktopEntries.heuristicLookup(appId);
-        if (entry && entry.id) {
-          return entry.id;
-        }
-      } catch (e)
-        // Fall through to return original appId
-      {}
-    }
-
-    // Try direct lookup
-    if (typeof DesktopEntries !== 'undefined' && DesktopEntries.byId) {
-      try {
-        const entry = DesktopEntries.byId(appId);
-        if (entry && entry.id) {
-          return entry.id;
-        }
-      } catch (e)
-        // Fall through to return original appId
-      {}
-    }
-
-    // Return original appId if we can't find a desktop entry
-    return appId;
+    return AppIdUtils.resolveDesktopEntryId(appId);
   }
 
   // Helper function to check if an app is pinned
   function isAppPinned(appId) {
-    if (!appId)
-      return false;
     const pinnedApps = Settings.data.dock.pinnedApps || [];
-    const normalizedId = normalizeAppId(appId);
-    return pinnedApps.some(pinnedId => normalizeAppId(pinnedId) === normalizedId);
+    return AppIdUtils.isPinned(appId, pinnedApps);
   }
 
   // Helper function to toggle app pin/unpin
   function toggleAppPin(appId) {
-    if (!appId)
-      return;
-
-    // Get the desktop entry ID for consistent pinning
-    const desktopEntryId = getDesktopEntryId(appId);
-    const normalizedId = normalizeAppId(desktopEntryId);
-
-    let pinnedApps = (Settings.data.dock.pinnedApps || []).slice(); // Create a copy
-
-    // Find existing pinned app with case-insensitive matching
-    const existingIndex = pinnedApps.findIndex(pinnedId => normalizeAppId(pinnedId) === normalizedId);
-    const isPinned = existingIndex >= 0;
-
-    if (isPinned) {
-      // Unpin: remove from array
-      pinnedApps.splice(existingIndex, 1);
-    } else {
-      // Pin: add desktop entry ID to array
-      pinnedApps.push(desktopEntryId);
-    }
-
-    // Update the settings
-    Settings.data.dock.pinnedApps = pinnedApps;
+    const next = AppIdUtils.togglePinned(appId, Settings.data.dock.pinnedApps || []);
+    Settings.data.dock.pinnedApps = next;
   }
 
   // Function to update the combined model
@@ -685,4 +628,3 @@ Rectangle {
     }
   }
 }
-

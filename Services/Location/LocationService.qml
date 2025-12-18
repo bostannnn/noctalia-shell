@@ -163,6 +163,7 @@ Singleton {
     Logger.d("Location", "Geocoding location name");
     var geoUrl = "https://assets.noctalia.dev/geocode.php?city=" + encodeURIComponent(locationName) + "&language=en&format=json";
     var xhr = new XMLHttpRequest();
+    xhr.timeout = 10000;
     xhr.onreadystatechange = function () {
       if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
@@ -181,6 +182,12 @@ Singleton {
         }
       }
     };
+    xhr.ontimeout = function () {
+      errorCallback("Location", "Geocoding request timed out");
+    };
+    xhr.onerror = function () {
+      errorCallback("Location", "Geocoding network error");
+    };
     xhr.open("GET", geoUrl);
     xhr.send();
   }
@@ -190,6 +197,7 @@ Singleton {
     Logger.d("Location", "Fetching weather from api.open-meteo.com");
     var url = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude + "&current_weather=true&current=relativehumidity_2m,surface_pressure&daily=temperature_2m_max,temperature_2m_min,weathercode,sunset,sunrise&timezone=auto";
     var xhr = new XMLHttpRequest();
+    xhr.timeout = 10000;
     xhr.onreadystatechange = function () {
       if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
@@ -215,6 +223,12 @@ Singleton {
           errorCallback("Location", "Weather fetch error: " + xhr.status);
         }
       }
+    };
+    xhr.ontimeout = function () {
+      errorCallback("Location", "Weather fetch timed out");
+    };
+    xhr.onerror = function () {
+      errorCallback("Location", "Weather fetch network error");
     };
     xhr.open("GET", url);
     xhr.send();
@@ -279,5 +293,4 @@ Singleton {
     return 32 + celsius * 1.8;
   }
 }
-
 

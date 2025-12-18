@@ -16,9 +16,18 @@ import QtQuick
 import Quickshell
 import qs.Commons
 import qs.Services.System
+import qs.Services.Location
+import qs.Services.Networking
 
 Item {
-  Component.onCompleted: Qt.quit()
+  Component.onCompleted: {
+    // Touch key singletons to catch missing imports early
+    const _s = Settings.settingsVersion;
+    const _loc = LocationService.coordinatesReady;
+    const _net = NetworkService.scanPending;
+    const _prog = ProgramCheckerService.taskwarriorAvailable;
+    Qt.quit();
+  }
 }
 EOF
 

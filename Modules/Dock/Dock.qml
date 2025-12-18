@@ -72,8 +72,7 @@ Loader {
       // Bar detection and positioning properties
       readonly property bool hasBar: modelData && modelData.name ? (Settings.data.bar.monitors.includes(modelData.name) || (Settings.data.bar.monitors.length === 0)) : false
       readonly property bool barAtBottom: hasBar && Settings.data.bar.position === "bottom"
-      readonly property string barMode: Settings.data.bar.mode ?? "classic"
-      readonly property bool barFloating: (barMode === "floating") || Settings.data.bar.floating
+      readonly property bool barFloating: BarService.isFloatingMode()
       readonly property bool barFloatingActive: barFloating && !(Settings.data.general.screenBorderEnabled ?? false)
       readonly property int barHeight: Style.barHeight
 

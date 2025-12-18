@@ -59,8 +59,7 @@ Variants {
       readonly property bool isCentered: location === "top" || location === "bottom"
 
       readonly property string barPos: Settings.data.bar.position
-      readonly property string barMode: Settings.data.bar.mode ?? "classic"
-      readonly property bool isFloating: (barMode === "floating") || Settings.data.bar.floating
+      readonly property bool isFloating: BarService.isFloatingMode()
 
       readonly property int notifWidth: Math.round(400 * Style.uiScaleRatio)
 
@@ -548,4 +547,3 @@ Variants {
     }
   }
 }
-
