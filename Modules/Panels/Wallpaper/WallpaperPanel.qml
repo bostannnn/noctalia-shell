@@ -547,6 +547,22 @@ SmartPanel {
             }
 
             Item { Layout.fillWidth: true }
+
+            NText {
+              text: I18n.tr("wallpaper.panel.fill-mode.label")
+              pointSize: Style.fontSizeS
+              color: Color.mOnSurfaceVariant
+            }
+
+            NComboBox {
+              id: fillModeComboBox
+              Layout.preferredWidth: 120
+              model: WallpaperService.fillModeModel
+              currentKey: Settings.data.wallpaper.fillMode || "crop"
+              onSelected: key => {
+                Settings.data.wallpaper.fillMode = key;
+              }
+            }
           }
         }
       }

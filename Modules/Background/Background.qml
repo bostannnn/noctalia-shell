@@ -142,6 +142,19 @@ Variants {
         return t;
       }
 
+      // Map fillMode setting to swww --resize parameter
+      function getResizeMode() {
+        var mode = Settings.data.wallpaper.fillMode || "crop";
+        // swww supports: no, crop, fit
+        // We map: center->no, crop->crop, fit->fit, stretch->crop (closest approximation)
+        switch (mode) {
+          case "center": return "no";
+          case "fit": return "fit";
+          case "stretch": return "crop"; // swww doesn't have stretch, crop is closest
+          default: return "crop";
+        }
+      }
+
       function doTransition() {
         if (!futureWallpaper || futureWallpaper === "") return;
         if (!swwwReady) {
@@ -165,16 +178,19 @@ Variants {
         var duration = (Settings.data.wallpaper.transitionDuration || 800) / 1000;
         
         transitionTarget = futureWallpaper;
-        
+        var resizeMode = getResizeMode();
+
         if (transitionType === "none") {
           swwwProc.command = ["swww", "img", futureWallpaper,
             "--transition-type", "none",
+            "--resize", resizeMode,
             "--outputs", modelData.name];
         } else {
           swwwProc.command = ["swww", "img", futureWallpaper,
             "--transition-type", transitionType,
             "--transition-duration", duration.toFixed(1),
             "--transition-fps", "60",
+            "--resize", resizeMode,
             "--outputs", modelData.name];
         }
         
@@ -208,8 +224,10 @@ Variants {
         futureWallpaper = wallpaperPath;
         transitionTarget = wallpaperPath;
         root.transitioning = true;
+        var resizeMode = getResizeMode();
         swwwProc.command = ["swww", "img", wallpaperPath,
           "--transition-type", "none",
+          "--resize", resizeMode,
           "--outputs", modelData.name];
         swwwProc.running = true;
       }
