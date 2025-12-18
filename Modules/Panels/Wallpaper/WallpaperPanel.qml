@@ -554,7 +554,10 @@ SmartPanel {
               model: WallpaperService.fillModeModel
               currentKey: Settings.data.wallpaper.fillMode || "crop"
               onSelected: key => {
+                if (Settings.data.wallpaper.fillMode === key) return;
                 Settings.data.wallpaper.fillMode = key;
+                // Re-apply current wallpaper with new fill mode
+                WallpaperService.reapplyCurrentWallpapers();
               }
             }
           }

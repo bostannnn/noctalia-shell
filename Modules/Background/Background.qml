@@ -69,13 +69,13 @@ Variants {
 
       // Re-apply wallpaper when fill mode changes
       Connections {
-        target: Settings.data.wallpaper
-        function onFillModeChanged() {
+        target: WallpaperService
+        function onReapplyWallpapers() {
           if (!swwwReady || !lastDisplayedSource || lastDisplayedSource === "") return;
           // Skip if currently showing video
           if (VideoWallpaperService.isVideoFile(lastDisplayedSource)) return;
 
-          Logger.d("Background", "Fill mode changed, re-applying wallpaper")
+          Logger.d("Background", "Re-applying wallpaper with new fill mode")
           // Re-apply with instant transition to show fill mode change immediately
           var resizeMode = getResizeMode();
           swwwProc.command = ["swww", "img", lastDisplayedSource,

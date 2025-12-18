@@ -261,6 +261,15 @@ Singleton {
   }
 
   // -------------------------------------------------------------------
+  // Re-apply current wallpapers (e.g., when fill mode changes)
+  signal reapplyWallpapers()
+
+  function reapplyCurrentWallpapers() {
+    Logger.d("Wallpaper", "Re-applying current wallpapers");
+    root.reapplyWallpapers();
+  }
+
+  // -------------------------------------------------------------------
   function _setWallpaper(screenName, path) {
     if (path === "" || path === undefined) {
       return;
