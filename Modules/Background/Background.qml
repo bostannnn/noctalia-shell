@@ -54,16 +54,35 @@ Variants {
         target: WallpaperService
         function onWallpaperChanged(screenName, path) {
           if (screenName !== modelData.name) return;
-          
+
           // Skip for video files - VideoWallpaper handles those
           if (VideoWallpaperService.isVideoFile(path)) {
             Logger.d("Background", "Video wallpaper requested:", path)
             return;
           }
-          
+
           // Queue image transition
           futureWallpaper = path;
           debounceTimer.restart();
+        }
+      }
+
+      // Re-apply wallpaper when fill mode changes
+      Connections {
+        target: Settings.data.wallpaper
+        function onFillModeChanged() {
+          if (!swwwReady || !lastDisplayedSource || lastDisplayedSource === "") return;
+          // Skip if currently showing video
+          if (VideoWallpaperService.isVideoFile(lastDisplayedSource)) return;
+
+          Logger.d("Background", "Fill mode changed, re-applying wallpaper")
+          // Re-apply with instant transition to show fill mode change immediately
+          var resizeMode = getResizeMode();
+          swwwProc.command = ["swww", "img", lastDisplayedSource,
+            "--transition-type", "none",
+            "--resize", resizeMode,
+            "--outputs", modelData.name];
+          swwwProc.running = true;
         }
       }
 

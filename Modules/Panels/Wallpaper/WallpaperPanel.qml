@@ -548,12 +548,6 @@ SmartPanel {
 
             Item { Layout.fillWidth: true }
 
-            NText {
-              text: I18n.tr("wallpaper.panel.fill-mode.label")
-              pointSize: Style.fontSizeS
-              color: Color.mOnSurfaceVariant
-            }
-
             NComboBox {
               id: fillModeComboBox
               Layout.preferredWidth: 120
