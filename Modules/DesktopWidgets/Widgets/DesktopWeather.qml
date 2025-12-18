@@ -38,6 +38,10 @@ DraggableDesktopWidget {
     }
     return Math.round(temp);
   }
+  readonly property bool hasDailyExtremes: weatherReady
+      && LocationService.data.weather.daily
+      && LocationService.data.weather.daily.temperature_2m_max.length > 0
+      && LocationService.data.weather.daily.temperature_2m_min.length > 0
   readonly property string tempUnit: Settings.data.location.useFahrenheit ? "F" : "C"
   readonly property string locationName: {
     const chunks = Settings.data.location.name.split(",");
@@ -93,7 +97,7 @@ DraggableDesktopWidget {
 
       RowLayout {
         spacing: Style.marginXS
-        visible: weatherReady && todayMax > 0 && todayMin > 0
+        visible: hasDailyExtremes
 
         NText {
           text: "H:"
