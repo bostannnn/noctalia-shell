@@ -102,6 +102,13 @@ Singleton {
             return
         }
 
+        // Check filesystem and prime cache if already generated
+        if (Quickshell.fileExists(outPath)) {
+            thumbnailCache[outPath] = true
+            if (callback) callback(outPath)
+            return
+        }
+
         // Add to queue
         thumbnailQueue.push({
             videoPath: videoPath,
@@ -118,6 +125,13 @@ Singleton {
         // Don't exceed max concurrent processes
         while (activeProcesses < maxConcurrentProcesses && thumbnailQueue.length > 0) {
             var item = thumbnailQueue.shift()
+
+            // Skip work if file was generated while queued
+            if (Quickshell.fileExists(item.outPath)) {
+                thumbnailCache[item.outPath] = true
+                if (item.callback) item.callback(item.outPath)
+                continue
+            }
             startThumbnailProcess(item)
         }
     }
@@ -180,4 +194,3 @@ Singleton {
         value: Settings.data.wallpaper.videoPauseOnFullscreen ?? true
     }
 }
-
