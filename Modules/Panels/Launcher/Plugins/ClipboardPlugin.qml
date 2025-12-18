@@ -145,7 +145,7 @@ Item {
     const items = ClipboardService.items || [];
 
     // If no items and we haven't tried loading yet, trigger a load
-    if (items.count === 0 && !ClipboardService.loading) {
+    if (items.length === 0 && !ClipboardService.loading) {
       isWaitingForData = true;
       ClipboardService.list(100);
       return [
@@ -271,5 +271,4 @@ Item {
     return ClipboardService.getImageData ? ClipboardService.getImageData(clipboardId) : null;
   }
 }
-
 
