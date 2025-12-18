@@ -32,6 +32,7 @@ NIconButton {
 
   // Task data from service
   readonly property int pendingCount: TaskService.pendingCount
+  readonly property string formattedCount: pendingCount > 99 ? "99+" : pendingCount.toString()
   readonly property bool isAvailable: TaskService.isAvailable
 
   // Resolve settings
@@ -104,12 +105,22 @@ NIconButton {
     z: 2
     active: pendingCount > 0 || !hideWhenZero
     sourceComponent: Rectangle {
-      height: 8
-      width: height
-      radius: Style.radiusXS
+      readonly property real horizontalPadding: 4
+      height: Math.max(Style.fontSizeS + 4, 14)
+      width: countLabel.implicitWidth + horizontalPadding * 2
+      radius: height / 2
       color: Color.mPrimary
       border.color: Color.mSurface
       border.width: Style.borderS
+
+      NText {
+        id: countLabel
+        anchors.centerIn: parent
+        text: root.formattedCount
+        color: Color.mOnPrimary
+        font.pixelSize: Style.fontSizeS
+        font.weight: Font.DemiBold
+      }
     }
   }
 }
