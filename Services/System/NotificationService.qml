@@ -544,8 +544,10 @@ Singleton {
   }
 
   function updateImagePath(id, path) {
-    updateModel(activeList, id, "cachedImage", path);
-    updateModel(historyList, id, "cachedImage", path);
+    if (path) {
+      updateModel(activeList, id, "cachedImage", path);
+      updateModel(historyList, id, "cachedImage", path);
+    }
     saveHistory();
   }
 
@@ -629,6 +631,9 @@ Singleton {
             cachedImage = Settings.cacheDirImagesNotifications + imageId + ".png";
           }
         }
+        if (cachedImage && !Quickshell.fileExists(cachedImage)) {
+          cachedImage = "";
+        }
 
         historyList.append({
                              "id": item.id || "",
@@ -641,6 +646,7 @@ Singleton {
                              "cachedImage": cachedImage
                            });
       }
+      validateCachedImages();
     } catch (e) {
       Logger.e("Notifications", "Load failed:", e);
     }
@@ -840,6 +846,15 @@ Singleton {
     saveHistory();
   }
 
+  function validateCachedImages() {
+    for (var i = historyList.count - 1; i >= 0; i--) {
+      const notif = historyList.get(i);
+      if (notif.cachedImage && notif.cachedImage.startsWith(Settings.cacheDirImagesNotifications) && !Quickshell.fileExists(notif.cachedImage)) {
+        historyList.setProperty(i, "cachedImage", "");
+      }
+    }
+  }
+
   // Signals
   signal animateAndRemove(string notificationId)
 
@@ -847,5 +862,3 @@ Singleton {
     ToastService.showNotice(doNotDisturb ? I18n.tr("toast.do-not-disturb.enabled") : I18n.tr("toast.do-not-disturb.disabled"), doNotDisturb ? I18n.tr("toast.do-not-disturb.enabled-desc") : I18n.tr("toast.do-not-disturb.disabled-desc"), doNotDisturb ? "bell-off" : "bell");
   }
 }
-
-
