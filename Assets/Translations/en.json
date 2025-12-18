@@ -3015,9 +3015,46 @@
     "context": {
       "refresh": "Refresh tasks"
     },
+    "date": {
+      "overdue": "{days}d overdue",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
+    },
+    "details": {
+      "add-note": "Add Note",
+      "add-tag": "Add tag...",
+      "complete": "Complete",
+      "deadline": "Deadline",
+      "deadline-placeholder": "e.g. tomorrow, friday, 2024-12-25",
+      "delete": "Delete",
+      "next-week": "Next Week",
+      "notes": "Notes",
+      "notes-placeholder": "Add notes...",
+      "project": "Project",
+      "project-placeholder": "Assign to project...",
+      "someday": "Someday",
+      "tags": "Tags",
+      "when": "When"
+    },
+    "empty": {
+      "anytime": "Tasks without specific dates appear here",
+      "inbox": "Add tasks to get started",
+      "logbook": "Completed tasks will appear here",
+      "someday": "Ideas for later go here",
+      "today": "Nothing scheduled for today",
+      "upcoming": "No upcoming tasks scheduled"
+    },
+    "filter": {
+      "anytime": "Anytime",
+      "inbox": "Inbox",
+      "logbook": "Logbook",
+      "someday": "Someday",
+      "today": "Today",
+      "upcoming": "Upcoming"
+    },
     "panel": {
       "complete": "Mark as done",
-      "count": "{count} pending tasks",
+      "count": "{count} tasks",
       "delete": "Delete task",
       "empty": "No tasks yet",
       "install-hint": "Install Taskwarrior to use this feature",
@@ -3025,7 +3062,13 @@
       "not-available": "Taskwarrior not installed",
       "placeholder": "Add a new task...",
       "refresh": "Refresh",
-      "title": "To-Do List"
+      "title": "Tasks"
+    },
+    "section": {
+      "no-projects": "No projects",
+      "no-tags": "No tags",
+      "projects": "PROJECTS",
+      "tags": "TAGS"
     },
     "tooltip": {
       "empty": "No pending tasks",
