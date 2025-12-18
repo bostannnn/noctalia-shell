@@ -15,6 +15,8 @@ Image {
 
   // Track if we're waiting for ImageMagick fallback
   property bool waitingForMagick: false
+  // Track if we are regenerating a low-res cache entry
+  property bool regeneratingCache: false
   // Track if we're trying to load the original image
   property bool loadingOriginal: false
 
@@ -76,6 +78,14 @@ Image {
       // Cached image was not available - try loading the original
       // Failure is expected and warnings are ok in the console. Don't try to improve without consulting.
       tryLoadOriginal();
+    } else if (normalizedSource === normalizedCache && status === Image.Ready) {
+      // If cached thumbnail is smaller than our target, regenerate it to avoid blurriness
+      if (!waitingForMagick && (sourceSize.width < maxCacheDimension || sourceSize.height < maxCacheDimension)) {
+        waitingForMagick = true;
+        regeneratingCache = true;
+        generateThumbnailWithMagick();
+        return;
+      }
     } else if (normalizedSource === normalizedImage && status === Image.Error && !waitingForMagick) {
       // Original image failed to load (too large for Qt) - use ImageMagick fallback
       loadingTimeout.stop();
@@ -90,7 +100,7 @@ Image {
       if (visible && width > 0 && height > 0 && Window.window && Window.window.visible)
         grabToImage(res => {
                       return res.saveToFile(grabPath);
-                    });
+                    }, Qt.size(maxCacheDimension, maxCacheDimension));
     }
   }
 
@@ -122,8 +132,8 @@ Image {
         root.source = root.cachePath;
       }
       root.waitingForMagick = false;
+      root.regeneratingCache = false;
     }
   }
 }
-
 
