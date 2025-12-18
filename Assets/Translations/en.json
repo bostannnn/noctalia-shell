@@ -2870,7 +2870,8 @@
     "sort": {
       "name": "Name",
       "date": "Date",
-      "random": "Random"
+      "asc": "Ascending",
+      "desc": "Descending"
     },
     "wallhaven-sort": {
       "random": "Random",

@@ -351,6 +351,8 @@ Singleton {
       property bool setWallpaperOnAllMonitors: true
       property string fillMode: "crop"
       property color fillColor: "#000000"
+      property string localSort: "date" // name, date
+      property string localSortOrder: "desc" // asc, desc
       property bool randomEnabled: false
       property int randomIntervalSec: 300 // 5 min
       property int transitionDuration: 1500 // 1500 ms
@@ -362,6 +364,7 @@ Singleton {
       property bool useWallhaven: false
       property string wallhavenQuery: ""
       property string wallhavenSorting: "relevance"
+      property string wallhavenSortPreset: "random" // random, trending-day, trending-week, popular-month, popular-year, most-viewed, most-favorites, newest
       property string wallhavenOrder: "desc"
       property string wallhavenCategories: "111" // general,anime,people
       property string wallhavenPurity: "100" // sfw only

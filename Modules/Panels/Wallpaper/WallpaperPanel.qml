@@ -466,13 +466,19 @@ SmartPanel {
                 }
               }
             }
+          }
 
-            // Discover button (only visible for Wallhaven) - random wallpaper discovery
+          // Wallhaven controls row (only visible for Wallhaven)
+          RowLayout {
+            Layout.fillWidth: true
+            spacing: Style.marginS
+            visible: Settings.data.wallpaper.useWallhaven
+
+            // Discover button - random wallpaper discovery
             NIconButton {
               icon: "dice-5"
               tooltipText: I18n.tr("tooltips.discover-wallpapers")
               baseSize: Style.baseWidgetSize * 0.8
-              visible: Settings.data.wallpaper.useWallhaven
               onClicked: {
                 if (typeof WallhavenService !== "undefined") {
                   wallhavenView.loading = true;
@@ -481,12 +487,11 @@ SmartPanel {
               }
             }
 
-            // Anime discover button (only visible for Wallhaven) - random anime wallpaper discovery
+            // Anime discover button - random anime wallpaper discovery
             NIconButton {
               icon: "cherry-filled"
               tooltipText: I18n.tr("tooltips.discover-anime")
               baseSize: Style.baseWidgetSize * 0.8
-              visible: Settings.data.wallpaper.useWallhaven
               onClicked: {
                 if (typeof WallhavenService !== "undefined") {
                   wallhavenView.loading = true;
@@ -495,11 +500,28 @@ SmartPanel {
               }
             }
 
+            // Settings button
+            NIconButton {
+              id: wallhavenSettingsButton
+              icon: "settings"
+              tooltipText: I18n.tr("wallpaper.panel.wallhaven-settings.title")
+              baseSize: Style.baseWidgetSize * 0.8
+              onClicked: {
+                if (searchInput.inputItem) {
+                  searchInput.inputItem.focus = false;
+                }
+                if (wallhavenSettingsPopup.item) {
+                  wallhavenSettingsPopup.item.showAt(wallhavenSettingsButton);
+                }
+              }
+            }
+
+            Item { Layout.fillWidth: true }
+
             // Wallhaven sort dropdown
             NComboBox {
               id: wallhavenSortComboBox
               Layout.preferredWidth: 140
-              visible: Settings.data.wallpaper.useWallhaven
               model: WallpaperService.wallhavenSortModel
               currentKey: Settings.data.wallpaper.wallhavenSortPreset || "random"
               onSelected: key => {
@@ -523,20 +545,15 @@ SmartPanel {
               }
             }
 
-            // Settings button (only visible for Wallhaven)
-            NIconButton {
-              id: wallhavenSettingsButton
-              icon: "settings"
-              tooltipText: I18n.tr("wallpaper.panel.wallhaven-settings.title")
-              baseSize: Style.baseWidgetSize * 0.8
-              visible: Settings.data.wallpaper.useWallhaven
-              onClicked: {
-                if (searchInput.inputItem) {
-                  searchInput.inputItem.focus = false;
-                }
-                if (wallhavenSettingsPopup.item) {
-                  wallhavenSettingsPopup.item.showAt(wallhavenSettingsButton);
-                }
+            NComboBox {
+              id: wallhavenFillModeComboBox
+              Layout.preferredWidth: 80
+              model: WallpaperService.fillModeModel
+              currentKey: Settings.data.wallpaper.fillMode || "crop"
+              onSelected: key => {
+                if (Settings.data.wallpaper.fillMode === key) return;
+                Settings.data.wallpaper.fillMode = key;
+                WallpaperService.reapplyCurrentWallpapers();
               }
             }
           }
@@ -598,9 +615,9 @@ SmartPanel {
 
             NComboBox {
               id: localSortComboBox
-              Layout.preferredWidth: 100
+              Layout.preferredWidth: 80
               model: WallpaperService.localSortModel
-              currentKey: Settings.data.wallpaper.localSort || "name"
+              currentKey: Settings.data.wallpaper.localSort || "date"
               onSelected: key => {
                 if (Settings.data.wallpaper.localSort === key) return;
                 Settings.data.wallpaper.localSort = key;
@@ -613,8 +630,24 @@ SmartPanel {
             }
 
             NComboBox {
-              id: fillModeComboBox
+              id: localSortOrderComboBox
               Layout.preferredWidth: 100
+              model: WallpaperService.sortOrderModel
+              currentKey: Settings.data.wallpaper.localSortOrder || "desc"
+              onSelected: key => {
+                if (Settings.data.wallpaper.localSortOrder === key) return;
+                Settings.data.wallpaper.localSortOrder = key;
+                // Trigger re-sort of wallpapers
+                for (var i = 0; i < screenRepeater.count; i++) {
+                  let item = screenRepeater.itemAt(i)
+                  if (item && item.updateFiltered) item.updateFiltered()
+                }
+              }
+            }
+
+            NComboBox {
+              id: fillModeComboBox
+              Layout.preferredWidth: 80
               model: WallpaperService.fillModeModel
               currentKey: Settings.data.wallpaper.fillMode || "crop"
               onSelected: key => {
@@ -713,23 +746,24 @@ SmartPanel {
       }
 
       // Apply sorting
-      var sortMode = Settings.data.wallpaper.localSort || "name";
+      var sortMode = Settings.data.wallpaper.localSort || "date";
+      var sortOrder = Settings.data.wallpaper.localSortOrder || "desc";
+      var isAsc = (sortOrder === "asc");
+
       if (sortMode === "name") {
         baseList.sort(function(a, b) {
           var nameA = a.split('/').pop().toLowerCase();
           var nameB = b.split('/').pop().toLowerCase();
-          return nameA.localeCompare(nameB);
+          var result = nameA.localeCompare(nameB);
+          return isAsc ? result : -result;
         });
-      } else if (sortMode === "random") {
-        // Fisher-Yates shuffle
-        for (var i = baseList.length - 1; i > 0; i--) {
-          var j = Math.floor(Math.random() * (i + 1));
-          var temp = baseList[i];
-          baseList[i] = baseList[j];
-          baseList[j] = temp;
+      } else if (sortMode === "date") {
+        // FolderListModel already provides date-sorted (newest first)
+        // For ascending (oldest first), reverse the list
+        if (isAsc) {
+          baseList.reverse();
         }
       }
-      // "date" - keep original order (FolderListModel provides date-sorted)
 
       // Apply text search filter
       if (!wallpaperPanel.filterText || wallpaperPanel.filterText.trim().length === 0) {

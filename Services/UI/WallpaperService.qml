@@ -16,6 +16,9 @@ Singleton {
   // Local wallpaper sort options
   readonly property ListModel localSortModel: ListModel {}
 
+  // Sort order options (asc/desc)
+  readonly property ListModel sortOrderModel: ListModel {}
+
   // Wallhaven sort/filter presets (trending, popular, etc.)
   readonly property ListModel wallhavenSortModel: ListModel {}
 
@@ -183,9 +186,15 @@ Singleton {
                             "key": "date",
                             "name": I18n.tr("wallpaper.sort.date")
                           });
-    localSortModel.append({
-                            "key": "random",
-                            "name": I18n.tr("wallpaper.sort.random")
+
+    // Populate sortOrderModel
+    sortOrderModel.append({
+                            "key": "desc",
+                            "name": I18n.tr("wallpaper.sort.desc")
+                          });
+    sortOrderModel.append({
+                            "key": "asc",
+                            "name": I18n.tr("wallpaper.sort.asc")
                           });
 
     // Populate wallhavenSortModel with translated names
