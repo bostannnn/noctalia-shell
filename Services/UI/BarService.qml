@@ -65,7 +65,6 @@ Singleton {
 
   // Register a widget instance
   function registerWidget(screenName, section, widgetId, index, instance) {
-    if (!widgetInstances) widgetInstances = {};
     const key = [screenName, section, widgetId, index].join("|");
     widgetInstances[key] = {
       "key": key,
@@ -84,7 +83,6 @@ Singleton {
 
   // Unregister a widget instance
   function unregisterWidget(screenName, section, widgetId, index) {
-    if (!widgetInstances) return;
     const key = [screenName, section, widgetId, index].join("|");
     delete widgetInstances[key];
     Logger.d("BarService", "Unregistered widget:", key);
@@ -93,13 +91,12 @@ Singleton {
 
   // Lookup a specific widget instance (returns the actual QML instance)
   function lookupWidget(widgetId, screenName = null, section = null, index = null) {
-    if (!widgetInstances) return undefined;
-    
     // If looking for a specific instance
     if (screenName && section !== null) {
       for (var key in widgetInstances) {
         var widget = widgetInstances[key];
-        if (!widget) continue;
+        if (!widget)
+          continue;
         if (widget.widgetId === widgetId && widget.screenName === screenName && widget.section === section) {
           if (index === null) {
             return widget.instance;
@@ -113,7 +110,8 @@ Singleton {
     // Return first match if no specific screen/section specified
     for (var key in widgetInstances) {
       var widget = widgetInstances[key];
-      if (!widget) continue;
+      if (!widget)
+        continue;
       if (widget.widgetId === widgetId) {
         if (!screenName || widget.screenName === screenName) {
           if (section === null || widget.section === section) {
@@ -129,11 +127,11 @@ Singleton {
   // Get all instances of a widget type
   function getAllWidgetInstances(widgetId = null, screenName = null, section = null) {
     var instances = [];
-    if (!widgetInstances) return instances;
 
     for (var key in widgetInstances) {
       var widget = widgetInstances[key];
-      if (!widget) continue;
+      if (!widget)
+        continue;
 
       var matches = true;
       if (widgetId && widget.widgetId !== widgetId)
@@ -153,10 +151,10 @@ Singleton {
 
   // Get widget with full metadata
   function getWidgetWithMetadata(widgetId, screenName = null, section = null) {
-    if (!widgetInstances) return undefined;
     for (var key in widgetInstances) {
       var widget = widgetInstances[key];
-      if (!widget) continue;
+      if (!widget)
+        continue;
       if (widget.widgetId === widgetId) {
         if (!screenName || widget.screenName === screenName) {
           if (section === null || widget.section === section) {
@@ -171,11 +169,11 @@ Singleton {
   // Get all widgets in a specific section
   function getWidgetsBySection(section, screenName = null) {
     var widgets = [];
-    if (!widgetInstances) return widgets;
 
     for (var key in widgetInstances) {
       var widget = widgetInstances[key];
-      if (!widget) continue;
+      if (!widget)
+        continue;
       if (widget.section === section) {
         if (!screenName || widget.screenName === screenName) {
           widgets.push(widget.instance);
@@ -196,10 +194,10 @@ Singleton {
   // Get all registered widgets (for debugging)
   function getAllRegisteredWidgets() {
     var result = [];
-    if (!widgetInstances) return result;
     for (var key in widgetInstances) {
       var widget = widgetInstances[key];
-      if (!widget) continue;
+      if (!widget)
+        continue;
       result.push({
                     "key": key,
                     "widgetId": widget.widgetId,
@@ -213,10 +211,10 @@ Singleton {
 
   // Check if a widget type exists in a section
   function hasWidget(widgetId, section = null, screenName = null) {
-    if (!widgetInstances) return false;
     for (var key in widgetInstances) {
       var widget = widgetInstances[key];
-      if (!widget) continue;
+      if (!widget)
+        continue;
       if (widget.widgetId === widgetId) {
         if (section === null || widget.section === section) {
           if (!screenName || widget.screenName === screenName) {
@@ -226,6 +224,32 @@ Singleton {
       }
     }
     return false;
+  }
+
+  // Unregister all widget instances for a plugin (used during hot reload)
+  // Note: We don't destroy instances here - the Loader manages that when the component is unregistered
+  function destroyPluginWidgetInstances(pluginId) {
+    var widgetId = "plugin:" + pluginId;
+    var keysToRemove = [];
+
+    // Find all instances of this plugin's widget
+    for (var key in widgetInstances) {
+      var widget = widgetInstances[key];
+      if (widget && widget.widgetId === widgetId) {
+        keysToRemove.push(key);
+        Logger.d("BarService", "Unregistering plugin widget instance:", key);
+      }
+    }
+
+    // Remove from registry
+    for (var i = 0; i < keysToRemove.length; i++) {
+      delete widgetInstances[keysToRemove[i]];
+    }
+
+    if (keysToRemove.length > 0) {
+      Logger.i("BarService", "Unregistered", keysToRemove.length, "instance(s) of plugin widget:", widgetId);
+      root.activeWidgetsChanged();
+    }
   }
 
   // Get pill direction for a widget instance
@@ -378,5 +402,3 @@ Singleton {
     }
   }
 }
-
-

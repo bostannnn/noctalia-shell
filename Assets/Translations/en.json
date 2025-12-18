@@ -1382,14 +1382,33 @@
     },
     "desktop-widgets": {
       "clock": {
+        "clock-display": {
+          "description": "Customize your clock's display by adding tokens from the list below. To use the 12-hour format, you must include the 'AP' token.",
+          "label": "Clock display"
+        },
+        "custom-font": {
+          "description": "Select a custom font for the clock display.",
+          "label": "Custom font",
+          "placeholder": "Select custom font...",
+          "search-placeholder": "Search fonts..."
+        },
         "enabled": {
           "description": "Show a clock widget on the desktop.",
           "label": "Enable clock widget"
+        },
+        "format": {
+          "description": "Tip: Use \\n to create a line break.",
+          "label": "Format"
         },
         "height": {
           "description": "Height of the clock widget in pixels.",
           "label": "Height"
         },
+        "minimal-mode": {
+          "description": "Use a minimal clock display with time and date.",
+          "label": "Minimal mode"
+        },
+        "preview": "Preview",
         "section": {
           "description": "Configure the clock widget appearance.",
           "label": "Clock Widget"
@@ -1405,6 +1424,21 @@
         "show-seconds": {
           "description": "Display seconds in the time.",
           "label": "Show seconds"
+        },
+        "style": {
+          "analog": "Analog",
+          "description": "Choose the clock display style.",
+          "digital": "Digital",
+          "label": "Clock style",
+          "minimal": "Minimal"
+        },
+        "use-custom-font": {
+          "description": "Override the default font selection with a custom font for the clock.",
+          "label": "Use custom font"
+        },
+        "use-primary-color": {
+          "description": "When enabled, this applies the primary color for emphasis.",
+          "label": "Use primary color"
         },
         "width": {
           "description": "Width of the clock widget in pixels.",
@@ -1434,6 +1468,10 @@
         "enabled": {
           "description": "Show a media player widget on the desktop.",
           "label": "Enable media player widget"
+        },
+        "hide-mode": {
+          "description": "Controls how the widget behaves when no media is playing.",
+          "label": "Hiding mode"
         },
         "section": {
           "description": "Configure the media player widget appearance.",
@@ -2127,7 +2165,12 @@
       "update-incompatible": "Requires Noctalia v{version} or higher",
       "update-success": "Updated {plugin} to v{version}",
       "update-version": "v{current} → v{new}",
-      "updating": "Updating {plugin}..."
+      "updating": "Updating {plugin}...",
+      "hot-reload": {
+        "description": "Automatically reload plugins when their files change. Useful for plugin development.",
+        "label": "Hot reload (dev mode)"
+      },
+      "hot-reloaded": "Reloaded plugin: {name}"
     },
     "screen-recorder": {
       "audio": {

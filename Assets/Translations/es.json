@@ -1329,14 +1329,33 @@
     },
     "desktop-widgets": {
       "clock": {
+        "clock-display": {
+          "description": "Personaliza la visualización de tu reloj añadiendo tokens de la lista de abajo. Para usar el formato de 12 horas, debes incluir el token 'AP'.",
+          "label": "Visualización del reloj"
+        },
+        "custom-font": {
+          "description": "Seleccionar una fuente personalizada para la visualización del reloj.",
+          "label": "Fuente personalizada",
+          "placeholder": "Seleccionar fuente personalizada...",
+          "search-placeholder": "Buscar fuentes..."
+        },
         "enabled": {
           "description": "Mostrar un widget de reloj en el escritorio.",
           "label": "Activar widget de reloj"
+        },
+        "format": {
+          "description": "Consejo: Usa \\n para crear un salto de línea.",
+          "label": "Formato"
         },
         "height": {
           "description": "Altura del widget de reloj en píxeles.",
           "label": "Altura"
         },
+        "minimal-mode": {
+          "description": "Usar una visualización de reloj minimalista con hora y fecha.",
+          "label": "Modo minimalista"
+        },
+        "preview": "Vista previa",
         "section": {
           "description": "Configurar la apariencia del widget de reloj.",
           "label": "Widget de reloj"
@@ -1352,6 +1371,21 @@
         "show-seconds": {
           "description": "Mostrar los segundos en la hora.",
           "label": "Mostrar segundos"
+        },
+        "style": {
+          "analog": "Analógico",
+          "description": "Elige el estilo de visualización del reloj.",
+          "digital": "Digital",
+          "label": "Estilo de reloj",
+          "minimal": "Minimal"
+        },
+        "use-custom-font": {
+          "description": "Anular la selección de fuente predeterminada con una fuente personalizada para el reloj.",
+          "label": "Usar fuente personalizada"
+        },
+        "use-primary-color": {
+          "description": "Cuando está activado, se aplica el color primario para dar énfasis.",
+          "label": "Usar color primario"
         },
         "width": {
           "description": "Ancho del widget de reloj en píxeles.",
@@ -1381,6 +1415,10 @@
         "enabled": {
           "description": "Mostrar un widget de reproductor multimedia en el escritorio.",
           "label": "Habilitar widget de reproductor multimedia"
+        },
+        "hide-mode": {
+          "description": "Controla el comportamiento del widget cuando no se está reproduciendo ningún medio.",
+          "label": "Modo de ocultación"
         },
         "section": {
           "description": "Configurar la apariencia del widget del reproductor multimedia.",

@@ -41,18 +41,37 @@ Three bar display modes for different aesthetics:
 
 A beautiful, minimal desktop shell for Wayland that actually gets out of your way. Built on Quickshell with a warm lavender aesthetic that you can easily customize to match your vibe.
 
-**Key Features:**
-- Native support for Niri, Hyprland, Sway and MangoWC
-- Built on Quickshell for performance
-- Minimalist design philosophy
-- Easily customizable to match your style
-- Many color schemes available
+**✨ Key Features:**
+- 🪟 Native support for Niri, Hyprland, Sway, MangoWC and labwc
+- ⚡ Built on Quickshell for performance
+- 🎯 Minimalist design philosophy
+- 🔧 Easily customizable to match your style
+- 🎨 Many color schemes available
+
+---
+
+## Preview
+
+https://github.com/user-attachments/assets/bf46f233-8d66-439a-a1ae-ab0446270f2d
+
+<details>
+<summary>Screenshots</summary>
+
+![Dark 1](/Assets/Screenshots/noctalia-dark-1.png)
+![Dark 2](/Assets/Screenshots/noctalia-dark-2.png)
+![Dark 3](/Assets/Screenshots/noctalia-dark-3.png)
+
+![Light 1](/Assets/Screenshots/noctalia-light-1.png)
+![Light 2](/Assets/Screenshots/noctalia-light-2.png)
+![Light 3](/Assets/Screenshots/noctalia-light-3.png)
+
+</details>
 
 ---
 
 ## Requirements
 
-- Wayland compositor (Hyprland recommended for full feature support)
+- Wayland compositor (Niri, Hyprland, Sway, MangoWC or labwc recommended)
 - Quickshell
 - Additional dependencies listed in [upstream documentation](https://docs.noctalia.dev)
 
@@ -182,6 +201,25 @@ This fork is based on [noctalia-dev/noctalia-shell](https://github.com/noctalia-
 
 - [Upstream Documentation](https://docs.noctalia.dev)
 - [Upstream Discord](https://discord.noctalia.dev)
+
+<a href="https://ko-fi.com/lysec">
+  <img src="https://img.shields.io/badge/donate-ko--fi-A8AEFF?style=for-the-badge&logo=kofi&logoColor=FFFFFF&labelColor=0C0D11" alt="Ko-Fi" />
+</a>
+
+### Thank you to everyone who supports the project 💜!
+* Gohma
+* DiscoCevapi
+* <a href="https://pika-os.com/" target="_blank">PikaOS</a>
+* LionHeartP
+* Nyxion ツ
+* RockDuck
+* Eynix
+* MrDowntempo
+* Tempus Thales
+* Raine
+* JustCurtis
+* llego
+* Grune
 
 ---
 

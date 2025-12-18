@@ -8,6 +8,9 @@ import qs.Modules.Bar.Widgets
 Singleton {
   id: root
 
+  // Signal emitted when plugin widgets are registered/unregistered
+  signal pluginWidgetRegistryUpdated
+
   // Widget registry object mapping widget names to components
   property var widgets: ({
                            "ActiveWindow": activeWindowComponent,
@@ -398,6 +401,7 @@ Singleton {
     widgetMetadata[widgetId] = metadata || {};
 
     Logger.i("BarWidgetRegistry", "Registered plugin widget:", widgetId);
+    root.pluginWidgetRegistryUpdated();
     return true;
   }
 
@@ -416,6 +420,7 @@ Singleton {
     delete widgetMetadata[widgetId];
 
     Logger.i("BarWidgetRegistry", "Unregistered plugin widget:", widgetId);
+    root.pluginWidgetRegistryUpdated();
     return true;
   }
 
