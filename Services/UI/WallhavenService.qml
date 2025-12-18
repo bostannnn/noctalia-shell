@@ -336,11 +336,15 @@ Singleton {
     return query;
   }
 
+  // Signal emitted when discover generates a random query (so UI can update search box)
+  signal discoveryQueryGenerated(string query)
+
   // -------------------------------------------------
   // Discover random wallpapers with random query and sorting
+  // Returns the generated query
   function discover() {
     if (fetching) {
-      return;
+      return "";
     }
 
     // Generate random query
@@ -355,6 +359,9 @@ Singleton {
 
     Logger.d("Wallhaven", "Discovering with query:", randomQuery);
 
+    // Emit signal so UI can update search box
+    discoveryQueryGenerated(randomQuery);
+
     // Perform search with random query
     search(randomQuery, 1);
 
@@ -363,6 +370,8 @@ Singleton {
     Qt.callLater(function() {
       sorting = originalSorting;
     });
+
+    return randomQuery;
   }
 }
 

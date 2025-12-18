@@ -368,6 +368,19 @@ SmartPanel {
                 }
               }
 
+              // Update search box when discover generates a random query
+              Connections {
+                target: typeof WallhavenService !== "undefined" ? WallhavenService : null
+                function onDiscoveryQueryGenerated(query) {
+                  searchInput.initializing = true;
+                  searchInput.text = query;
+                  Settings.data.wallpaper.wallhavenQuery = query;
+                  Qt.callLater(function() {
+                    searchInput.initializing = false;
+                  });
+                }
+              }
+
               onTextChanged: {
                 // Don't trigger search during initialization - Component.onCompleted will handle initial search
                 if (initializing) {
@@ -1614,9 +1627,9 @@ SmartPanel {
           WallhavenService.resolutions = "";
         }
 
-        // Now check if we can actually search (fetching check is in WallhavenService.search)
+        // Start with random discovery for fresh experience each time
         loading = true;
-        WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", 1);
+        WallhavenService.discover();
       }
     }
 
