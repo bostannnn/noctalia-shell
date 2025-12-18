@@ -493,16 +493,6 @@ NOCTALIA_DEBUG=1 quickshell -c .
 
 ---
 
-## Smoke Tests
-
-Run a minimal QML import check (skips if `qmlscene` is unavailable):
-
-```bash
-./Bin/dev/qml-smoke.sh
-```
-
----
-
 ## Troubleshooting
 
 ### Bar gaps not working
