@@ -74,56 +74,94 @@ Singleton {
     function pause() { isPlaying = false; playbackStateChanged(false) }
     function togglePlayback() { isPlaying ? pause() : play() }
 
-    // Thumbnail generation with callbacks stored by unique key
+    // Thumbnail generation with queue to prevent file descriptor exhaustion
     property var pendingCallbacks: ({})
+    property var thumbnailCache: ({})  // Cache of known existing thumbnails
+    property var thumbnailQueue: []    // Queue of pending thumbnail requests
+    property int activeProcesses: 0
+    readonly property int maxConcurrentProcesses: 4  // Limit concurrent ffmpeg processes
+
+    function getThumbnailPath(videoPath, size) {
+        var sz = size || "preview"
+        var suffix = sz === "full" ? "_full" : ""
+        var hash = Qt.md5(videoPath)
+        return thumbnailCacheDir + "/" + hash + suffix + ".jpg"
+    }
 
     function generateThumbnail(videoPath, callback, size) {
         if (!videoPath) {
             if (callback) callback(null)
             return
         }
-        
-        var sz = size || "preview"
-        var suffix = sz === "full" ? "_full" : ""
-        var hash = Qt.md5(videoPath)
-        var outPath = thumbnailCacheDir + "/" + hash + suffix + ".jpg"
-        
-        // Unique key includes a timestamp to prevent callback overwrites
-        var callbackKey = hash + suffix + "_" + Date.now()
-        
-        if (callback) {
-            pendingCallbacks[callbackKey] = callback
+
+        var outPath = getThumbnailPath(videoPath, size)
+
+        // Check cache first - if we know it exists, return immediately
+        if (thumbnailCache[outPath]) {
+            if (callback) callback(outPath)
+            return
         }
-        
-        var proc = procComponent.createObject(root, {
+
+        // Add to queue
+        thumbnailQueue.push({
             videoPath: videoPath,
             outPath: outPath,
-            callbackKey: callbackKey,
-            scale: sz === "full" ? "-1:-1" : "320:-1"
+            callback: callback,
+            scale: (size === "full") ? "-1:-1" : "320:-1"
+        })
+
+        // Process queue
+        processQueue()
+    }
+
+    function processQueue() {
+        // Don't exceed max concurrent processes
+        while (activeProcesses < maxConcurrentProcesses && thumbnailQueue.length > 0) {
+            var item = thumbnailQueue.shift()
+            startThumbnailProcess(item)
+        }
+    }
+
+    function startThumbnailProcess(item) {
+        activeProcesses++
+
+        var proc = procComponent.createObject(root, {
+            videoPath: item.videoPath,
+            outPath: item.outPath,
+            callback: item.callback,
+            scale: item.scale
         })
         proc.running = true
     }
-    
+
     Component {
         id: procComponent
-        
+
         Process {
             property string videoPath
             property string outPath
-            property string callbackKey
+            property var callback
             property string scale
-            
-            command: ["bash", "-c", 
+
+            command: ["bash", "-c",
                 '[ -f "' + outPath + '" ] && exit 0; ' +
                 'ffmpeg -y -i "' + videoPath + '" -ss 00:00:01 -vframes 1 -vf scale=' + scale + ' -q:v 2 "' + outPath + '" 2>/dev/null'
             ]
-            
+
             onExited: (code, status) => {
-                var cb = root.pendingCallbacks[callbackKey]
-                if (cb) {
-                    delete root.pendingCallbacks[callbackKey]
-                    cb(code === 0 ? outPath : null)
+                root.activeProcesses--
+
+                if (code === 0) {
+                    // Cache the result
+                    root.thumbnailCache[outPath] = true
+                    if (callback) callback(outPath)
+                } else {
+                    if (callback) callback(null)
                 }
+
+                // Process next item in queue
+                root.processQueue()
+
                 destroy()
             }
         }
