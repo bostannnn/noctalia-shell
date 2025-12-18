@@ -98,7 +98,7 @@ Singleton {
           "path": "~/.config/fuzzel/themes/noctalia"
         }
       ],
-      "postProcess": () => `${colorsApplyScript} fuzzel`
+      "postProcess": () => `bash ${colorsApplyScript} fuzzel`
     },
     {
       "id": "vicinae",
@@ -110,7 +110,7 @@ Singleton {
           "path": "~/.local/share/vicinae/themes/matugen.toml"
         }
       ],
-      "postProcess": () => `cp --update=none ${Quickshell.shellDir}/Assets/noctalia.svg ~/.local/share/vicinae/themes/noctalia.svg && ${colorsApplyScript} vicinae`
+      "postProcess": () => `cp --update=none ${Quickshell.shellDir}/Assets/noctalia.svg ~/.local/share/vicinae/themes/noctalia.svg && bash ${colorsApplyScript} vicinae`
     },
     {
       "id": "walker",
@@ -122,7 +122,7 @@ Singleton {
           "path": "~/.config/walker/themes/noctalia/style.css"
         }
       ],
-      "postProcess": () => `${colorsApplyScript} walker`,
+      "postProcess": () => `bash ${colorsApplyScript} walker`,
       "strict": true // Use strict mode for palette generation (preserves custom surface/outline values)
     },
     {
@@ -135,7 +135,7 @@ Singleton {
           "path": "~/.cache/wal/colors.json"
         }
       ],
-      "postProcess": () => `${colorsApplyScript} pywalfox`
+      "postProcess": () => `bash ${colorsApplyScript} pywalfox`
     } // CONSOLIDATED DISCORD CLIENTS
     ,
     {
@@ -246,7 +246,7 @@ Singleton {
           "path": "~/.config/cava/themes/noctalia"
         }
       ],
-      "postProcess": () => `${colorsApplyScript} cava`
+      "postProcess": () => `bash ${colorsApplyScript} cava`
     },
     {
       "id": "yazi",
@@ -284,7 +284,7 @@ Singleton {
           "path": "~/.config/niri/noctalia.kdl"
         }
       ],
-      "postProcess": () => `${colorsApplyScript} niri`
+      "postProcess": () => `bash ${colorsApplyScript} niri`
     },
     {
       "id": "hyprland",
