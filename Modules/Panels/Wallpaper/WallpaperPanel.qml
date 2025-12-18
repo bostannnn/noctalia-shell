@@ -483,7 +483,7 @@ SmartPanel {
 
             // Anime discover button (only visible for Wallhaven) - random anime wallpaper discovery
             NIconButton {
-              icon: "star"
+              icon: "cherry-filled"
               tooltipText: I18n.tr("tooltips.discover-anime")
               baseSize: Style.baseWidgetSize * 0.8
               visible: Settings.data.wallpaper.useWallhaven
@@ -491,6 +491,34 @@ SmartPanel {
                 if (typeof WallhavenService !== "undefined") {
                   wallhavenView.loading = true;
                   WallhavenService.discoverAnime();
+                }
+              }
+            }
+
+            // Wallhaven sort dropdown
+            NComboBox {
+              id: wallhavenSortComboBox
+              Layout.preferredWidth: 140
+              visible: Settings.data.wallpaper.useWallhaven
+              model: WallpaperService.wallhavenSortModel
+              currentKey: Settings.data.wallpaper.wallhavenSortPreset || "random"
+              onSelected: key => {
+                if (Settings.data.wallpaper.wallhavenSortPreset === key) return;
+                Settings.data.wallpaper.wallhavenSortPreset = key;
+                // Apply the sort preset and trigger search
+                if (typeof WallhavenService !== "undefined") {
+                  for (var i = 0; i < WallpaperService.wallhavenSortModel.count; i++) {
+                    var preset = WallpaperService.wallhavenSortModel.get(i);
+                    if (preset.key === key) {
+                      WallhavenService.sorting = preset.sorting;
+                      if (preset.topRange) {
+                        WallhavenService.topRange = preset.topRange;
+                      }
+                      break;
+                    }
+                  }
+                  wallhavenView.loading = true;
+                  WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", 1);
                 }
               }
             }
@@ -569,8 +597,24 @@ SmartPanel {
             Item { Layout.fillWidth: true }
 
             NComboBox {
+              id: localSortComboBox
+              Layout.preferredWidth: 100
+              model: WallpaperService.localSortModel
+              currentKey: Settings.data.wallpaper.localSort || "name"
+              onSelected: key => {
+                if (Settings.data.wallpaper.localSort === key) return;
+                Settings.data.wallpaper.localSort = key;
+                // Trigger re-sort of wallpapers
+                for (var i = 0; i < screenRepeater.count; i++) {
+                  let item = screenRepeater.itemAt(i)
+                  if (item && item.updateFiltered) item.updateFiltered()
+                }
+              }
+            }
+
+            NComboBox {
               id: fillModeComboBox
-              Layout.preferredWidth: 120
+              Layout.preferredWidth: 100
               model: WallpaperService.fillModeModel
               currentKey: Settings.data.wallpaper.fillMode || "crop"
               onSelected: key => {
@@ -655,19 +699,38 @@ SmartPanel {
     // Expose updateFiltered as a proper function property
     function updateFiltered() {
       // Start with full list
-      var baseList = wallpapersList;
-      
+      var baseList = wallpapersList.slice(); // Clone the array
+
       // Apply media type filter
       if (wallpaperPanel.mediaFilter === "images") {
-        baseList = wallpapersList.filter(function(p) {
+        baseList = baseList.filter(function(p) {
           return !VideoWallpaperService.isVideoFile(p);
         });
       } else if (wallpaperPanel.mediaFilter === "videos") {
-        baseList = wallpapersList.filter(function(p) {
+        baseList = baseList.filter(function(p) {
           return VideoWallpaperService.isVideoFile(p);
         });
       }
-      
+
+      // Apply sorting
+      var sortMode = Settings.data.wallpaper.localSort || "name";
+      if (sortMode === "name") {
+        baseList.sort(function(a, b) {
+          var nameA = a.split('/').pop().toLowerCase();
+          var nameB = b.split('/').pop().toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+      } else if (sortMode === "random") {
+        // Fisher-Yates shuffle
+        for (var i = baseList.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var temp = baseList[i];
+          baseList[i] = baseList[j];
+          baseList[j] = temp;
+        }
+      }
+      // "date" - keep original order (FolderListModel provides date-sorted)
+
       // Apply text search filter
       if (!wallpaperPanel.filterText || wallpaperPanel.filterText.trim().length === 0) {
         filteredWallpapers = baseList;
@@ -678,7 +741,7 @@ SmartPanel {
       var searchList = baseList.map(function(p) {
         return { "path": p, "name": p.split('/').pop() };
       });
-      
+
       const results = FuzzySort.go(wallpaperPanel.filterText.trim(), searchList, {
                                      "key": 'name',
                                      "limit": 200

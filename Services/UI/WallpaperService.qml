@@ -13,6 +13,12 @@ Singleton {
   readonly property ListModel fillModeModel: ListModel {}
   readonly property string defaultDirectory: Settings.preprocessPath(Settings.data.wallpaper.directory)
 
+  // Local wallpaper sort options
+  readonly property ListModel localSortModel: ListModel {}
+
+  // Wallhaven sort/filter presets (trending, popular, etc.)
+  readonly property ListModel wallhavenSortModel: ListModel {}
+
   // All available wallpaper transitions
   readonly property ListModel transitionsModel: ListModel {}
 
@@ -167,6 +173,70 @@ Singleton {
                               "key": "wipe",
                               "name": I18n.tr("wallpaper.transitions.wipe")
                             });
+
+    // Populate localSortModel with translated names
+    localSortModel.append({
+                            "key": "name",
+                            "name": I18n.tr("wallpaper.sort.name")
+                          });
+    localSortModel.append({
+                            "key": "date",
+                            "name": I18n.tr("wallpaper.sort.date")
+                          });
+    localSortModel.append({
+                            "key": "random",
+                            "name": I18n.tr("wallpaper.sort.random")
+                          });
+
+    // Populate wallhavenSortModel with translated names
+    wallhavenSortModel.append({
+                                "key": "random",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.random"),
+                                "sorting": "random",
+                                "topRange": ""
+                              });
+    wallhavenSortModel.append({
+                                "key": "trending-day",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.trending-day"),
+                                "sorting": "toplist",
+                                "topRange": "1d"
+                              });
+    wallhavenSortModel.append({
+                                "key": "trending-week",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.trending-week"),
+                                "sorting": "toplist",
+                                "topRange": "1w"
+                              });
+    wallhavenSortModel.append({
+                                "key": "popular-month",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.popular-month"),
+                                "sorting": "toplist",
+                                "topRange": "1M"
+                              });
+    wallhavenSortModel.append({
+                                "key": "popular-year",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.popular-year"),
+                                "sorting": "toplist",
+                                "topRange": "1y"
+                              });
+    wallhavenSortModel.append({
+                                "key": "most-viewed",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.most-viewed"),
+                                "sorting": "views",
+                                "topRange": ""
+                              });
+    wallhavenSortModel.append({
+                                "key": "most-favorites",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.most-favorites"),
+                                "sorting": "favorites",
+                                "topRange": ""
+                              });
+    wallhavenSortModel.append({
+                                "key": "newest",
+                                "name": I18n.tr("wallpaper.wallhaven-sort.newest"),
+                                "sorting": "date_added",
+                                "topRange": ""
+                              });
   }
 
   // -------------------------------------------------------------------
@@ -917,7 +987,8 @@ Singleton {
       folder: "file://" + currentDirectory
       nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.gif", "*.pnm", "*.bmp", "*.mp4", "*.webm", "*.mkv", "*.avi", "*.mov", "*.ogv", "*.m4v"]
       showDirs: false
-      sortField: FolderListModel.Name
+      sortField: FolderListModel.Time
+      sortReversed: true // Newest first
 
       // Watch for directory changes via property binding
       onCurrentDirectoryChanged: {

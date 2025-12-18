@@ -432,33 +432,16 @@ Singleton {
   }
 
   // -------------------------------------------------
-  // Generate a random search query for discovery
+  // Generate a random search query for discovery (single term for best results)
   function generateRandomQuery() {
-    var query = "";
-
     // 70% chance to use a random word, 30% chance to use a tag
     if (Math.random() < 0.7) {
-      // Pick 1-2 random words
-      var numWords = Math.random() < 0.6 ? 1 : 2;
-      var usedIndices = [];
-
-      for (var i = 0; i < numWords; i++) {
-        var idx;
-        do {
-          idx = Math.floor(Math.random() * discoveryWords.length);
-        } while (usedIndices.indexOf(idx) !== -1);
-
-        usedIndices.push(idx);
-        if (query !== "") query += " ";
-        query += discoveryWords[idx];
-      }
+      var idx = Math.floor(Math.random() * discoveryWords.length);
+      return discoveryWords[idx];
     } else {
-      // Pick a random tag
       var tagIdx = Math.floor(Math.random() * discoveryTags.length);
-      query = discoveryTags[tagIdx];
+      return discoveryTags[tagIdx];
     }
-
-    return query;
   }
 
   // Signal emitted when discover generates a random query (so UI can update search box)
@@ -500,25 +483,10 @@ Singleton {
   }
 
   // -------------------------------------------------
-  // Generate a random anime-specific search query
+  // Generate a random anime-specific search query (single term for best results)
   function generateAnimeQuery() {
-    // Pick 1-2 random anime words
-    var numWords = Math.random() < 0.7 ? 1 : 2;
-    var query = "";
-    var usedIndices = [];
-
-    for (var i = 0; i < numWords; i++) {
-      var idx;
-      do {
-        idx = Math.floor(Math.random() * animeDiscoveryWords.length);
-      } while (usedIndices.indexOf(idx) !== -1);
-
-      usedIndices.push(idx);
-      if (query !== "") query += " ";
-      query += animeDiscoveryWords[idx];
-    }
-
-    return query;
+    var idx = Math.floor(Math.random() * animeDiscoveryWords.length);
+    return animeDiscoveryWords[idx];
   }
 
   // -------------------------------------------------

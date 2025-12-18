@@ -2867,6 +2867,21 @@
       "stripes": "Stripes",
       "wipe": "Wipe"
     },
+    "sort": {
+      "name": "Name",
+      "date": "Date",
+      "random": "Random"
+    },
+    "wallhaven-sort": {
+      "random": "Random",
+      "trending-day": "Trending (Today)",
+      "trending-week": "Trending (Week)",
+      "popular-month": "Popular (Month)",
+      "popular-year": "Popular (Year)",
+      "most-viewed": "Most Viewed",
+      "most-favorites": "Most Favorites",
+      "newest": "Newest"
+    },
     "upscale": {
       "already-in-progress": "Upscaling in progress",
       "already-in-progress-desc": "Please wait for the current upscale to complete.",
