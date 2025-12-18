@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../Helpers/sha256.js" as Checksum
+import "../Helpers/FileUtils.js" as FileUtils
 import qs.Commons
 
 Image {
@@ -39,9 +40,14 @@ Image {
   }
   onCachePathChanged: {
     if (imageHash && cachePath) {
-      // Try to load the cached version, failure will be detected below in onStatusChanged
-      // Failure is expected and warnings are ok in the console. Don't try to improve without consulting.
-      source = cachePath;
+      if (FileUtils.fileExists(cachePath, root)) {
+        // Try to load the cached version, failure will be detected below in onStatusChanged
+        // Failure is expected and warnings are ok in the console. Don't try to improve without consulting.
+        source = cachePath;
+      } else {
+        // Cache missing - go straight to original to avoid warning spam
+        tryLoadOriginal();
+      }
     }
   }
 
@@ -136,4 +142,3 @@ Image {
     }
   }
 }
-
