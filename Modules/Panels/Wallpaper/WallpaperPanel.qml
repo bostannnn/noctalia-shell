@@ -1217,6 +1217,28 @@ SmartPanel {
 
         model: filteredWallpapers
 
+        // Faster wheel scrolling - Qt Quick default is too slow
+        MouseArea {
+          anchors.fill: parent
+          z: 100
+          acceptedButtons: Qt.NoButton
+          onWheel: wheel => {
+            let pixelDelta = wheel.angleDelta.y / 120 * wallpaperGridView.cellHeight * 0.8;
+            wallpaperGridView.contentY = Math.max(0,
+              Math.min(wallpaperGridView.contentHeight - wallpaperGridView.height,
+                wallpaperGridView.contentY - pixelDelta));
+            // Show scrollbar
+            wallpaperScrollbarTimer.restart();
+            wallpaperGridView.ScrollBar.vertical.active = true;
+          }
+        }
+
+        Timer {
+          id: wallpaperScrollbarTimer
+          interval: 1000
+          onTriggered: wallpaperGridView.ScrollBar.vertical.active = false
+        }
+
         // Capture clicks on empty areas to give focus to GridView
         MouseArea {
           anchors.fill: parent
@@ -1826,6 +1848,28 @@ SmartPanel {
           keyNavigationWraps: false
 
           model: wallpapers || []
+
+          // Faster wheel scrolling - Qt Quick default is too slow
+          MouseArea {
+            anchors.fill: parent
+            z: 100
+            acceptedButtons: Qt.NoButton
+            onWheel: wheel => {
+              let pixelDelta = wheel.angleDelta.y / 120 * wallhavenGridView.cellHeight * 0.8;
+              wallhavenGridView.contentY = Math.max(0,
+                Math.min(wallhavenGridView.contentHeight - wallhavenGridView.height,
+                  wallhavenGridView.contentY - pixelDelta));
+              // Show scrollbar
+              wallhavenScrollbarTimer.restart();
+              wallhavenGridView.ScrollBar.vertical.active = true;
+            }
+          }
+
+          Timer {
+            id: wallhavenScrollbarTimer
+            interval: 1000
+            onTriggered: wallhavenGridView.ScrollBar.vertical.active = false
+          }
 
           property int columns: 4
           property int itemSize: cellWidth
