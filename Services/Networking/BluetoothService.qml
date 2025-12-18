@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Io
 import qs.Commons
+import qs.Services.Networking
 import qs.Services.UI
 
 Singleton {
@@ -292,5 +293,4 @@ Singleton {
     }
   }
 }
-
 
