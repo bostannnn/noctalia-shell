@@ -61,20 +61,7 @@ A beautiful, minimal desktop shell for Wayland that actually gets out of your wa
 
 ## Preview
 
-https://github.com/user-attachments/assets/bf46f233-8d66-439a-a1ae-ab0446270f2d
 
-<details>
-<summary>Screenshots</summary>
-
-![Dark 1](/Assets/Screenshots/noctalia-dark-1.png)
-![Dark 2](/Assets/Screenshots/noctalia-dark-2.png)
-![Dark 3](/Assets/Screenshots/noctalia-dark-3.png)
-
-![Light 1](/Assets/Screenshots/noctalia-light-1.png)
-![Light 2](/Assets/Screenshots/noctalia-light-2.png)
-![Light 3](/Assets/Screenshots/noctalia-light-3.png)
-
-</details>
 
 ---
 
