@@ -86,6 +86,131 @@ Singleton {
     "mountains", "ocean", "forest", "digital art", "artwork", "photography"
   ]
 
+  // Anime-specific word list for anime discovery (500+ terms)
+  readonly property var animeDiscoveryWords: [
+    // Popular Anime Series
+    "naruto", "one piece", "attack on titan", "demon slayer", "my hero academia",
+    "jujutsu kaisen", "chainsaw man", "spy x family", "bleach", "dragon ball",
+    "death note", "fullmetal alchemist", "hunter x hunter", "one punch man", "mob psycho",
+    "code geass", "steins gate", "cowboy bebop", "samurai champloo", "trigun",
+    "evangelion", "ghost in the shell", "akira", "tokyo ghoul", "parasyte",
+    "violet evergarden", "your lie in april", "clannad", "anohana", "toradora",
+    "sword art online", "re zero", "konosuba", "overlord", "no game no life",
+    "fate stay night", "fate zero", "fate grand order", "monogatari", "bunny girl senpai",
+    "kaguya sama", "quintessential quintuplets", "rent a girlfriend", "horimiya", "tonikawa",
+    "bocchi the rock", "k-on", "lucky star", "nichijou", "daily lives of high school boys",
+    "gintama", "grand blue", "komi can't communicate", "spy classroom", "oshi no ko",
+    "frieren", "solo leveling", "blue lock", "haikyuu", "kuroko no basket",
+    "slam dunk", "initial d", "wangan midnight", "yowamushi pedal", "run with the wind",
+    "made in abyss", "promised neverland", "erased", "monster", "psycho pass",
+    "black lagoon", "hellsing", "berserk", "vinland saga", "kingdom",
+    "golden kamuy", "dororo", "mushishi", "natsume yuujinchou", "mononoke",
+    "jojo bizarre adventure", "fist of the north star", "yu yu hakusho", "inuyasha", "rurouni kenshin",
+
+    // Studio Ghibli
+    "studio ghibli", "spirited away", "howl's moving castle", "princess mononoke", "my neighbor totoro",
+    "kiki's delivery service", "castle in the sky", "nausicaa", "ponyo", "arrietty",
+    "the wind rises", "porco rosso", "grave of the fireflies", "whisper of the heart", "only yesterday",
+
+    // Makoto Shinkai
+    "makoto shinkai", "your name", "weathering with you", "5 centimeters per second", "garden of words",
+    "suzume", "children who chase lost voices", "she and her cat", "voices of a distant star",
+
+    // Anime Aesthetics
+    "anime aesthetic", "anime scenery", "anime landscape", "anime city", "anime night",
+    "anime sunset", "anime sunrise", "anime sky", "anime clouds", "anime stars",
+    "anime rain", "anime snow", "anime cherry blossom", "anime sakura", "anime spring",
+    "anime summer", "anime autumn", "anime winter", "anime beach", "anime ocean",
+    "anime forest", "anime mountains", "anime countryside", "anime village", "anime shrine",
+    "anime temple", "anime school", "anime classroom", "anime rooftop", "anime train station",
+    "anime train", "anime subway", "anime street", "anime alley", "anime market",
+    "anime cafe", "anime room", "anime bedroom", "anime window", "anime balcony",
+
+    // Anime Art Styles
+    "anime art", "anime wallpaper", "anime background", "anime illustration", "anime digital art",
+    "anime painting", "anime watercolor", "anime pastel", "anime vibrant", "anime colorful",
+    "anime dark", "anime moody", "anime atmospheric", "anime dreamy", "anime ethereal",
+    "anime fantasy", "anime magical", "anime mystical", "anime surreal", "anime abstract",
+    "lofi anime", "vaporwave anime", "synthwave anime", "retrowave anime", "pixel art anime",
+
+    // Character Types
+    "anime girl", "anime boy", "anime couple", "anime group", "anime friends",
+    "waifu", "husbando", "chibi", "kawaii", "moe",
+    "bishoujo", "bishounen", "ikemen", "megane", "kemonomimi",
+    "catgirl", "foxgirl", "wolfgirl", "bunny girl", "maid",
+    "schoolgirl", "idol", "magical girl", "warrior", "samurai",
+    "ninja", "witch", "vampire", "demon", "angel",
+    "elf", "fairy", "mermaid", "goddess", "princess",
+
+    // Emotions & Moods
+    "anime happy", "anime sad", "anime crying", "anime smile", "anime laugh",
+    "anime peaceful", "anime serene", "anime melancholy", "anime nostalgic", "anime lonely",
+    "anime romantic", "anime love", "anime heartwarming", "anime wholesome", "anime cute",
+    "anime cool", "anime epic", "anime badass", "anime intense", "anime dramatic",
+
+    // Actions & Scenes
+    "anime fighting", "anime battle", "anime action", "anime running", "anime flying",
+    "anime walking", "anime sitting", "anime sleeping", "anime reading", "anime studying",
+    "anime cooking", "anime eating", "anime drinking tea", "anime playing music", "anime singing",
+    "anime dancing", "anime swimming", "anime cycling", "anime driving", "anime traveling",
+
+    // Objects & Items
+    "anime katana", "anime sword", "anime weapon", "anime magic", "anime spell",
+    "anime book", "anime letter", "anime phone", "anime headphones", "anime umbrella",
+    "anime flower", "anime rose", "anime butterfly", "anime lantern", "anime fireworks",
+
+    // Weather & Atmosphere
+    "anime rainy day", "anime stormy", "anime thunderstorm", "anime foggy", "anime misty",
+    "anime sunny", "anime cloudy", "anime windy", "anime snowing", "anime blizzard",
+    "anime rainbow", "anime aurora", "anime northern lights", "anime starry night", "anime moonlight",
+    "anime golden hour", "anime blue hour", "anime twilight", "anime dusk", "anime dawn",
+
+    // Genres
+    "isekai", "slice of life", "romance anime", "comedy anime", "action anime",
+    "adventure anime", "fantasy anime", "sci-fi anime", "mecha anime", "sports anime",
+    "horror anime", "mystery anime", "thriller anime", "psychological anime", "seinen",
+    "shounen", "shoujo", "josei", "ecchi", "harem",
+
+    // Specific Visual Elements
+    "anime eyes", "anime hair", "anime uniform", "anime kimono", "anime yukata",
+    "anime dress", "anime costume", "anime armor", "anime wings", "anime halo",
+    "anime tears", "anime blush", "anime sparkles", "anime petals", "anime feathers",
+
+    // Time Periods
+    "feudal japan anime", "edo period anime", "meiji era anime", "modern anime", "futuristic anime",
+    "post apocalyptic anime", "steampunk anime", "cyberpunk anime", "medieval anime", "ancient anime",
+
+    // Popular Characters (generic searches)
+    "anime protagonist", "anime antagonist", "anime villain", "anime hero", "anime heroine",
+    "anime side character", "anime mascot", "anime pet", "anime familiar", "anime spirit",
+
+    // Music & Sound
+    "anime concert", "anime band", "anime orchestra", "anime piano", "anime guitar",
+    "anime violin", "anime drums", "anime dj", "vocaloid", "hatsune miku",
+
+    // Food & Cuisine
+    "anime food", "anime ramen", "anime sushi", "anime bento", "anime onigiri",
+    "anime takoyaki", "anime dango", "anime pocky", "anime cake", "anime parfait",
+
+    // Japanese Culture
+    "anime festival", "anime matsuri", "anime hanami", "anime tanabata", "anime new year",
+    "anime shrine visit", "anime torii", "anime temple gate", "anime zen garden", "anime hot spring",
+    "anime onsen", "anime ryokan", "anime tatami", "anime futon", "anime kotatsu",
+
+    // Transportation
+    "anime bullet train", "anime shinkansen", "anime airplane", "anime ship", "anime boat",
+    "anime motorcycle", "anime car", "anime bicycle", "anime scooter", "anime skateboard",
+
+    // Technology
+    "anime robot", "anime mecha", "anime gundam", "anime eva", "anime cyborg",
+    "anime ai", "anime virtual reality", "anime hologram", "anime spaceship", "anime space station",
+
+    // Nature Elements
+    "anime garden", "anime park", "anime river", "anime waterfall", "anime lake",
+    "anime pond", "anime bamboo forest", "anime maple", "anime pine", "anime wisteria",
+    "anime sunflower", "anime lotus", "anime hydrangea", "anime cosmos flower", "anime lavender"
+  ]
+
   // -------------------------------------------------
   function search(query, page) {
     if (fetching) {
@@ -369,6 +494,65 @@ Singleton {
     // The actual search already captured the "random" sorting
     Qt.callLater(function() {
       sorting = originalSorting;
+    });
+
+    return randomQuery;
+  }
+
+  // -------------------------------------------------
+  // Generate a random anime-specific search query
+  function generateAnimeQuery() {
+    // Pick 1-2 random anime words
+    var numWords = Math.random() < 0.7 ? 1 : 2;
+    var query = "";
+    var usedIndices = [];
+
+    for (var i = 0; i < numWords; i++) {
+      var idx;
+      do {
+        idx = Math.floor(Math.random() * animeDiscoveryWords.length);
+      } while (usedIndices.indexOf(idx) !== -1);
+
+      usedIndices.push(idx);
+      if (query !== "") query += " ";
+      query += animeDiscoveryWords[idx];
+    }
+
+    return query;
+  }
+
+  // -------------------------------------------------
+  // Discover random anime wallpapers
+  // Returns the generated query
+  function discoverAnime() {
+    if (fetching) {
+      return "";
+    }
+
+    // Generate random anime query
+    var randomQuery = generateAnimeQuery();
+
+    // Store original sorting and categories, set to anime-focused
+    var originalSorting = sorting;
+    var originalCategories = categories;
+    sorting = "random";
+    categories = "010"; // Only anime category
+
+    // Clear seed to get truly random results
+    seed = "";
+
+    Logger.d("Wallhaven", "Discovering anime with query:", randomQuery);
+
+    // Emit signal so UI can update search box
+    discoveryQueryGenerated(randomQuery);
+
+    // Perform search with random query
+    search(randomQuery, 1);
+
+    // Restore original settings after search starts
+    Qt.callLater(function() {
+      sorting = originalSorting;
+      categories = originalCategories;
     });
 
     return randomQuery;

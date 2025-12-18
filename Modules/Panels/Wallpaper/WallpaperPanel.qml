@@ -184,6 +184,13 @@ SmartPanel {
                          searchInput.inputItem.forceActiveFocus();
                        }
                      });
+        // Trigger random discovery when opening in Wallhaven mode
+        if (Settings.data.wallpaper.useWallhaven && typeof WallhavenService !== "undefined") {
+          if (!WallhavenService.fetching) {
+            wallhavenView.loading = true;
+            WallhavenService.discover();
+          }
+        }
       }
     }
 
@@ -418,60 +425,46 @@ SmartPanel {
               }
             }
 
-            NComboBox {
-              id: sourceComboBox
-              Layout.fillWidth: false
+            // Source switcher tabs
+            RowLayout {
+              spacing: 0
 
-              model: [
-                {
-                  "key": "local",
-                  "name": I18n.tr("wallpaper.panel.source.local")
-                },
-                {
-                  "key": "wallhaven",
-                  "name": I18n.tr("wallpaper.panel.source.wallhaven")
+              NButton {
+                text: I18n.tr("wallpaper.panel.source.local")
+                icon: "folder"
+                backgroundColor: !Settings.data.wallpaper.useWallhaven ? Color.mPrimary : Color.mSurfaceVariant
+                textColor: !Settings.data.wallpaper.useWallhaven ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                onClicked: {
+                  if (Settings.data.wallpaper.useWallhaven) {
+                    Settings.data.wallpaper.useWallhaven = false;
+                    searchInput.text = wallpaperPanel.filterText || "";
+                  }
                 }
-              ]
-              currentKey: Settings.data.wallpaper.useWallhaven ? "wallhaven" : "local"
-              property bool skipNextSelected: false
-              Component.onCompleted: {
-                // Skip the first onSelected if it fires during initialization
-                skipNextSelected = true;
-                Qt.callLater(function () {
-                  skipNextSelected = false;
-                });
               }
-              onSelected: key => {
-                            if (skipNextSelected) {
-                              return;
-                            }
-                            var useWallhaven = (key === "wallhaven");
-                            Settings.data.wallpaper.useWallhaven = useWallhaven;
-                            // Update search input text based on mode
-                            if (useWallhaven) {
-                              searchInput.text = Settings.data.wallpaper.wallhavenQuery || "";
-                            } else {
-                              searchInput.text = wallpaperPanel.filterText || "";
-                            }
-                            if (useWallhaven && typeof WallhavenService !== "undefined") {
-                              // Update service properties when switching to Wallhaven
-                              // Don't search here - Component.onCompleted will handle it when the component is created
-                              // This prevents duplicate searches
-                              WallhavenService.categories = Settings.data.wallpaper.wallhavenCategories;
-                              WallhavenService.purity = Settings.data.wallpaper.wallhavenPurity;
-                              WallhavenService.sorting = Settings.data.wallpaper.wallhavenSorting;
-                              WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
 
-                              // Update resolution settings
-                              wallpaperPanel.updateWallhavenResolution();
-
-                              // If the view is already initialized, trigger a new search when switching to it
-                              if (wallhavenView && wallhavenView.initialized && !WallhavenService.fetching) {
-                                wallhavenView.loading = true;
-                                WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", 1);
-                              }
-                            }
-                          }
+              NButton {
+                text: I18n.tr("wallpaper.panel.source.wallhaven")
+                icon: "world"
+                backgroundColor: Settings.data.wallpaper.useWallhaven ? Color.mPrimary : Color.mSurfaceVariant
+                textColor: Settings.data.wallpaper.useWallhaven ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                onClicked: {
+                  if (!Settings.data.wallpaper.useWallhaven) {
+                    Settings.data.wallpaper.useWallhaven = true;
+                    searchInput.text = Settings.data.wallpaper.wallhavenQuery || "";
+                    if (typeof WallhavenService !== "undefined") {
+                      WallhavenService.categories = Settings.data.wallpaper.wallhavenCategories;
+                      WallhavenService.purity = Settings.data.wallpaper.wallhavenPurity;
+                      WallhavenService.sorting = Settings.data.wallpaper.wallhavenSorting;
+                      WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
+                      wallpaperPanel.updateWallhavenResolution();
+                      if (wallhavenView && wallhavenView.initialized && !WallhavenService.fetching) {
+                        wallhavenView.loading = true;
+                        WallhavenService.discover();
+                      }
+                    }
+                  }
+                }
+              }
             }
 
             // Discover button (only visible for Wallhaven) - random wallpaper discovery
@@ -484,6 +477,20 @@ SmartPanel {
                 if (typeof WallhavenService !== "undefined") {
                   wallhavenView.loading = true;
                   WallhavenService.discover();
+                }
+              }
+            }
+
+            // Anime discover button (only visible for Wallhaven) - random anime wallpaper discovery
+            NIconButton {
+              icon: "star"
+              tooltipText: I18n.tr("tooltips.discover-anime")
+              baseSize: Style.baseWidgetSize * 0.8
+              visible: Settings.data.wallpaper.useWallhaven
+              onClicked: {
+                if (typeof WallhavenService !== "undefined") {
+                  wallhavenView.loading = true;
+                  WallhavenService.discoverAnime();
                 }
               }
             }
