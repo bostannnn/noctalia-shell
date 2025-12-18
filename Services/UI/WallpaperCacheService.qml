@@ -20,7 +20,7 @@ Singleton {
   // Queue system to prevent file descriptor exhaustion
   property var processQueue: []
   property int activeProcesses: 0
-  readonly property int maxConcurrentProcesses: 6  // Limit concurrent processes
+  readonly property int maxConcurrentProcesses: 3  // Limit concurrent processes
 
   // Signals
   signal preprocessComplete(string cacheKey, string cachedPath, string screenName)

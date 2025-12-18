@@ -79,7 +79,7 @@ Singleton {
     property var thumbnailCache: ({})  // Cache of known existing thumbnails
     property var thumbnailQueue: []    // Queue of pending thumbnail requests
     property int activeProcesses: 0
-    readonly property int maxConcurrentProcesses: 4  // Limit concurrent ffmpeg processes
+    readonly property int maxConcurrentProcesses: 2  // Limit concurrent ffmpeg processes
 
     function getThumbnailPath(videoPath, size) {
         var sz = size || "preview"
@@ -180,5 +180,4 @@ Singleton {
         value: Settings.data.wallpaper.videoPauseOnFullscreen ?? true
     }
 }
-
 
