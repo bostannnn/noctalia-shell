@@ -114,8 +114,8 @@ Item {
                 acceptedButtons: Qt.LeftButton
                 onClicked: {
                   if (root.draggingTargetWorkspace === -1) {
+                    OverviewService.setCurrentWorkspace(workspace.workspaceValue);
                     OverviewService.close();
-                    Hyprland.dispatch(`workspace ${workspace.workspaceValue}`);
                   }
                 }
               }

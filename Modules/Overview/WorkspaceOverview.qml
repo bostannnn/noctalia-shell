@@ -28,12 +28,12 @@ Scope {
       id: bgWindow
       required property var modelData
       screen: modelData
-      visible: OverviewService.isOpen
+      visible: OverviewService.backgroundVisible
 
       WlrLayershell.namespace: "noctalia-overview-bg"
-      WlrLayershell.layer: WlrLayer.Top
+      WlrLayershell.layer: WlrLayer.Overlay
       WlrLayershell.exclusionMode: ExclusionMode.Ignore
-      color: Qt.rgba(Color.mSurface.r, Color.mSurface.g, Color.mSurface.b, 0.85)
+      color: Color.mSurface  // Fully opaque to mask transition
 
       // Use screen dimensions directly to cover full screen
       implicitWidth: screen?.width ?? 1920
@@ -44,10 +44,10 @@ Scope {
         left: true
       }
 
-      // Click anywhere on background to close
+      // Click anywhere on background to cancel
       MouseArea {
         anchors.fill: parent
-        onClicked: OverviewService.close()
+        onClicked: OverviewService.cancel()
       }
     }
   }
@@ -82,40 +82,6 @@ Scope {
         item: OverviewService.isOpen ? keyHandler : null
       }
 
-      HyprlandFocusGrab {
-        id: grab
-        windows: [root]
-        property bool canBeActive: root.monitorIsFocused
-        active: false
-        onCleared: () => {
-          if (!active)
-            OverviewService.close();
-        }
-      }
-
-      Connections {
-        target: OverviewService
-        function onOverviewToggled(open) {
-          if (open) {
-            delayedGrabTimer.start();
-          } else {
-            // Reset grab state when closing
-            grab.active = false;
-          }
-        }
-      }
-
-      Timer {
-        id: delayedGrabTimer
-        interval: OverviewService.raceConditionDelay
-        repeat: false
-        onTriggered: {
-          if (!grab.canBeActive)
-            return;
-          grab.active = OverviewService.isOpen;
-        }
-      }
-
       implicitWidth: columnLayout.implicitWidth
       implicitHeight: columnLayout.implicitHeight
 
@@ -126,8 +92,15 @@ Scope {
         focus: OverviewService.isOpen
 
         Keys.onPressed: event => {
-          // close: Escape or Enter
-          if (event.key === Qt.Key_Escape || event.key === Qt.Key_Return) {
+          // Escape: cancel and return to original workspace
+          if (event.key === Qt.Key_Escape) {
+            OverviewService.cancel();
+            event.accepted = true;
+            return;
+          }
+
+          // Enter: close and stay on current workspace
+          if (event.key === Qt.Key_Return) {
             OverviewService.close();
             event.accepted = true;
             return;
@@ -171,6 +144,7 @@ Scope {
 
           if (targetId !== null) {
             Hyprland.dispatch("workspace " + targetId);
+            OverviewService.setCurrentWorkspace(targetId);
             event.accepted = true;
           }
         }
