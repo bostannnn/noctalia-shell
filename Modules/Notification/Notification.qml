@@ -6,6 +6,7 @@ import Quickshell.Services.Notifications
 import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.Commons
+import qs.Services.UI
 import qs.Services.System
 import qs.Widgets
 
