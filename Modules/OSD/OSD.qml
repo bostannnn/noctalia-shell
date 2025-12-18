@@ -505,7 +505,9 @@ Variants {
         let base = Style.marginM;
         if (Settings.data.bar.position === position) {
           const isVertical = position === "top" || position === "bottom";
-          const floatExtra = Math.ceil(Settings.data.bar.floating ? (isVertical ? Settings.data.bar.marginVertical : Settings.data.bar.marginHorizontal) * Style.marginXL : 0);
+          const barMode = Settings.data.bar.mode ?? "classic";
+          const barFloating = (barMode === "floating") || Settings.data.bar.floating;
+          const floatExtra = Math.ceil(barFloating ? (isVertical ? Settings.data.bar.marginVertical : Settings.data.bar.marginHorizontal) * Style.marginXL : 0);
           return Style.barHeight + base + floatExtra;
         }
         return base;
@@ -864,5 +866,4 @@ Variants {
     }
   }
 }
-
 

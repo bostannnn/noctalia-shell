@@ -118,7 +118,8 @@ Variants {
           visible: Settings.data.desktopWidgets.editMode && Settings.data.desktopWidgets.enabled
 
           readonly property string barPos: Settings.data.bar.position || "top"
-          readonly property bool barFloating: Settings.data.bar.floating || false
+          readonly property string barMode: Settings.data.bar.mode ?? "classic"
+          readonly property bool barFloating: (barMode === "floating") || Settings.data.bar.floating || false
           // Calculate offset from bar based on position and floating state
           readonly property int barOffsetTop: {
             if (barPos !== "top")

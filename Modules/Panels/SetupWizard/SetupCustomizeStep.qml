@@ -413,8 +413,9 @@ ColumnLayout {
           }
         }
         NToggle {
-          checked: Settings.data.bar.floating
+          checked: (Settings.data.bar.mode ?? "classic") === "floating"
           onToggled: function (checked) {
+            Settings.data.bar.mode = checked ? "floating" : "classic";
             Settings.data.bar.floating = checked;
           }
         }
@@ -543,5 +544,4 @@ ColumnLayout {
     }
   }
 }
-
 
