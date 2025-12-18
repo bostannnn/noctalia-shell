@@ -17,6 +17,11 @@ Singleton {
   // key: cacheKey, value: { callbacks: [], sourcePath: string, screenName: string }
   property var pendingRequests: ({})
 
+  // Queue system to prevent file descriptor exhaustion
+  property var processQueue: []
+  property int activeProcesses: 0
+  readonly property int maxConcurrentProcesses: 6  // Limit concurrent processes
+
   // Signals
   signal preprocessComplete(string cacheKey, string cachedPath, string screenName)
   signal preprocessFailed(string cacheKey, string error, string screenName)
@@ -134,58 +139,22 @@ Singleton {
   function startPreprocessing(sourcePath, outputPath, width, height, cacheKey, screenName) {
     const command = buildCommand(sourcePath, outputPath, width, height);
 
-    // Create dynamic process for this request
-    const processString = `
-      import QtQuick
-      import Quickshell.Io
-      Process {
-        property string cacheKey: ""
-        property string cachedPath: ""
-        property string screenName: ""
-        command: ["bash", "-c", ""]
-        stdout: StdioCollector {}
-        stderr: StdioCollector {}
-      }
-    `;
-
-    try {
-      const processObj = Qt.createQmlObject(processString, root, "PreprocessProcess_" + cacheKey);
-      processObj.cacheKey = cacheKey;
-      processObj.cachedPath = outputPath;
-      processObj.screenName = screenName;
-      processObj.command = ["bash", "-c", command];
-
-      processObj.exited.connect(function (exitCode) {
-        handleProcessComplete(processObj, exitCode);
-      });
-
-      processObj.running = true;
-    } catch (e) {
-      Logger.e("WallpaperCache", "Failed to create process:", e);
-      notifyCallbacks(cacheKey, sourcePath, false);
-    }
-  }
-
-  // -------------------------------------------------
-  function handleProcessComplete(processObj, exitCode) {
-    const cacheKey = processObj.cacheKey;
-    const cachedPath = processObj.cachedPath;
-    const screenName = processObj.screenName;
-    const stderrText = processObj.stderr.text || "";
-
-    if (exitCode !== 0) {
-      Logger.e("WallpaperCache", "Preprocessing failed:", stderrText);
-      const sourcePath = pendingRequests[cacheKey] ? pendingRequests[cacheKey].sourcePath : "";
-      notifyCallbacks(cacheKey, sourcePath, false);
-      preprocessFailed(cacheKey, stderrText, screenName);
-    } else {
-      Logger.d("WallpaperCache", "Preprocessing complete:", cachedPath);
-      notifyCallbacks(cacheKey, cachedPath, true);
-      preprocessComplete(cacheKey, cachedPath, screenName);
-    }
-
-    // Clean up
-    processObj.destroy();
+    queueProcess(
+      ["bash", "-c", command],
+      function(exitCode, stdout, stderrText) {
+        if (exitCode !== 0) {
+          Logger.e("WallpaperCache", "Preprocessing failed:", stderrText);
+          const srcPath = pendingRequests[cacheKey] ? pendingRequests[cacheKey].sourcePath : "";
+          notifyCallbacks(cacheKey, srcPath, false);
+          preprocessFailed(cacheKey, stderrText, screenName);
+        } else {
+          Logger.d("WallpaperCache", "Preprocessing complete:", outputPath);
+          notifyCallbacks(cacheKey, outputPath, true);
+          preprocessComplete(cacheKey, outputPath, screenName);
+        }
+      },
+      "PreprocessProcess_" + cacheKey
+    );
   }
 
   // -------------------------------------------------
@@ -200,97 +169,97 @@ Singleton {
   }
 
   // -------------------------------------------------
-  function getMtime(filePath, callback) {
-    const pathEsc = filePath.replace(/'/g, "'\\''");
+  // Queue a process for execution with concurrency limiting
+  function queueProcess(command, onComplete, name) {
+    processQueue.push({
+      command: command,
+      onComplete: onComplete,
+      name: name || "QueuedProcess"
+    });
+    runNextProcess();
+  }
+
+  function runNextProcess() {
+    while (activeProcesses < maxConcurrentProcesses && processQueue.length > 0) {
+      const item = processQueue.shift();
+      executeProcess(item);
+    }
+  }
+
+  function executeProcess(item) {
+    activeProcesses++;
+
     const processString = `
       import QtQuick
       import Quickshell.Io
       Process {
-        command: ["stat", "-c", "%Y", "${pathEsc}"]
         stdout: StdioCollector {}
         stderr: StdioCollector {}
       }
     `;
 
     try {
-      const processObj = Qt.createQmlObject(processString, root, "MtimeProcess");
+      const processObj = Qt.createQmlObject(processString, root, item.name);
+      processObj.command = item.command;
 
       processObj.exited.connect(function (exitCode) {
-        const mtime = exitCode === 0 ? processObj.stdout.text.trim() : "";
+        root.activeProcesses--;
+        item.onComplete(exitCode, processObj.stdout.text, processObj.stderr.text);
         processObj.destroy();
-        callback(mtime);
+        root.runNextProcess();
       });
 
       processObj.running = true;
     } catch (e) {
-      Logger.e("WallpaperCache", "Failed to get mtime:", e);
-      callback("");
+      Logger.e("WallpaperCache", "Failed to create process:", e);
+      activeProcesses--;
+      item.onComplete(-1, "", "Failed to create process");
+      runNextProcess();
     }
   }
 
   // -------------------------------------------------
-  function checkFileExists(filePath, callback) {
+  function getMtime(filePath, callback) {
     const pathEsc = filePath.replace(/'/g, "'\\''");
-    const processString = `
-      import QtQuick
-      import Quickshell.Io
-      Process {
-        command: ["test", "-f", "${pathEsc}"]
-        stdout: StdioCollector {}
-        stderr: StdioCollector {}
-      }
-    `;
+    queueProcess(
+      ["stat", "-c", "%Y", pathEsc],
+      function(exitCode, stdout, stderr) {
+        callback(exitCode === 0 ? stdout.trim() : "");
+      },
+      "MtimeProcess"
+    );
+  }
 
-    try {
-      const processObj = Qt.createQmlObject(processString, root, "FileExistsProcess");
-
-      processObj.exited.connect(function (exitCode) {
-        processObj.destroy();
+  // -------------------------------------------------
+  function checkFileExists(filePath, callback) {
+    queueProcess(
+      ["test", "-f", filePath],
+      function(exitCode, stdout, stderr) {
         callback(exitCode === 0);
-      });
-
-      processObj.running = true;
-    } catch (e) {
-      Logger.e("WallpaperCache", "Failed to check file:", e);
-      callback(false);
-    }
+      },
+      "FileExistsProcess"
+    );
   }
 
   // -------------------------------------------------
   // Get image dimensions using ImageMagick identify
   function getImageDimensions(filePath, callback) {
     const pathEsc = filePath.replace(/'/g, "'\\''");
-    const processString = `
-      import QtQuick
-      import Quickshell.Io
-      Process {
-        command: ["identify", "-format", "%w %h", "${pathEsc}[0]"]
-        stdout: StdioCollector {}
-        stderr: StdioCollector {}
-      }
-    `;
-
-    try {
-      const processObj = Qt.createQmlObject(processString, root, "IdentifyProcess");
-
-      processObj.exited.connect(function (exitCode) {
+    queueProcess(
+      ["identify", "-format", "%w %h", pathEsc + "[0]"],
+      function(exitCode, stdout, stderr) {
         let width = 0, height = 0;
         if (exitCode === 0) {
-          const parts = processObj.stdout.text.trim().split(" ");
+          const parts = stdout.trim().split(" ");
           if (parts.length >= 2) {
             width = parseInt(parts[0], 10) || 0;
             height = parseInt(parts[1], 10) || 0;
           }
         }
-        processObj.destroy();
         callback(width, height);
-      });
-
-      processObj.running = true;
-    } catch (e) {
-      Logger.e("WallpaperCache", "Failed to get image dimensions:", e);
-      callback(0, 0);
-    }
+      },
+      "IdentifyProcess"
+    );
   }
 
   // -------------------------------------------------
