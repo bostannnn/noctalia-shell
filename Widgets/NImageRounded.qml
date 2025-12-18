@@ -14,8 +14,9 @@ Item {
   property real borderWidth: 0
   property color borderColor: Color.transparent
   property int imageFillMode: Image.PreserveAspectFit
-
-  readonly property bool showFallback: (fallbackIcon !== undefined && fallbackIcon !== "") && (imagePath === undefined || imagePath === "")
+  readonly property bool loadFailed: imageSource.status === Image.Error || imageSource.status === Image.Null
+  readonly property bool showFallback: (fallbackIcon !== undefined && fallbackIcon !== "") &&
+                                      ((imagePath === undefined || imagePath === "") || loadFailed)
 
   signal statusChanged(int status)
 
@@ -67,5 +68,3 @@ Item {
     }
   }
 }
-
-
