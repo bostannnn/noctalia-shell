@@ -528,48 +528,44 @@ SmartPanel {
               }
             }
 
-            RowLayout {
-              Layout.fillWidth: true
-              Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-              spacing: Style.marginS
+            Item { Layout.fillWidth: true }
 
-              // Wallhaven sort dropdown
-              NComboBox {
-                id: wallhavenSortComboBox
-                Layout.preferredWidth: 140
-                model: WallpaperService.wallhavenSortModel
-                currentKey: Settings.data.wallpaper.wallhavenSortPreset || "random"
-                onSelected: key => {
-                  if (Settings.data.wallpaper.wallhavenSortPreset === key) return;
-                  Settings.data.wallpaper.wallhavenSortPreset = key;
-                  // Apply the sort preset and trigger search
-                  if (typeof WallhavenService !== "undefined") {
-                    for (var i = 0; i < WallpaperService.wallhavenSortModel.count; i++) {
-                      var preset = WallpaperService.wallhavenSortModel.get(i);
-                      if (preset.key === key) {
-                        WallhavenService.sorting = preset.sorting;
-                        if (preset.topRange) {
-                          WallhavenService.topRange = preset.topRange;
-                        }
-                        break;
+            // Wallhaven sort dropdown
+            NComboBox {
+              id: wallhavenSortComboBox
+              Layout.preferredWidth: 140
+              model: WallpaperService.wallhavenSortModel
+              currentKey: Settings.data.wallpaper.wallhavenSortPreset || "random"
+              onSelected: key => {
+                if (Settings.data.wallpaper.wallhavenSortPreset === key) return;
+                Settings.data.wallpaper.wallhavenSortPreset = key;
+                // Apply the sort preset and trigger search
+                if (typeof WallhavenService !== "undefined") {
+                  for (var i = 0; i < WallpaperService.wallhavenSortModel.count; i++) {
+                    var preset = WallpaperService.wallhavenSortModel.get(i);
+                    if (preset.key === key) {
+                      WallhavenService.sorting = preset.sorting;
+                      if (preset.topRange) {
+                        WallhavenService.topRange = preset.topRange;
                       }
+                      break;
                     }
-                    wallhavenView.loading = true;
-                    WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", 1);
                   }
+                  wallhavenView.loading = true;
+                  WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", 1);
                 }
               }
+            }
 
-              NComboBox {
-                id: wallhavenFillModeComboBox
-                Layout.preferredWidth: 80
-                model: WallpaperService.fillModeModel
-                currentKey: Settings.data.wallpaper.fillMode || "crop"
-                onSelected: key => {
-                  if (Settings.data.wallpaper.fillMode === key) return;
-                  Settings.data.wallpaper.fillMode = key;
-                  WallpaperService.reapplyCurrentWallpapers();
-                }
+            NComboBox {
+              id: wallhavenFillModeComboBox
+              Layout.preferredWidth: 80
+              model: WallpaperService.fillModeModel
+              currentKey: Settings.data.wallpaper.fillMode || "crop"
+              onSelected: key => {
+                if (Settings.data.wallpaper.fillMode === key) return;
+                Settings.data.wallpaper.fillMode = key;
+                WallpaperService.reapplyCurrentWallpapers();
               }
             }
           }
@@ -2204,4 +2200,5 @@ SmartPanel {
     }
   }
 }
+
 
