@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import qs.Services.Networking
 import qs.Services.UI
 
 Singleton {
@@ -726,5 +727,4 @@ Singleton {
     }
   }
 }
-
 
