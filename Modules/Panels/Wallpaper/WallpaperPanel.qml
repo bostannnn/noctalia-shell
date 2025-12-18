@@ -1157,6 +1157,45 @@ SmartPanel {
           }
         }
       }
+
+      // Clear cache item
+      MenuItem {
+        id: clearCacheItem
+        text: "Clear Cache"
+
+        background: Rectangle {
+          color: clearCacheArea.containsMouse ? Color.mHover : Color.transparent
+          radius: Style.radiusXS
+        }
+
+        contentItem: RowLayout {
+          spacing: Style.marginS
+          NIcon {
+            icon: "refresh"
+            pointSize: Style.fontSizeM
+            color: clearCacheArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+          }
+          NText {
+            text: clearCacheItem.text
+            pointSize: Style.fontSizeS
+            color: clearCacheArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+            Layout.fillWidth: true
+          }
+        }
+
+        MouseArea {
+          id: clearCacheArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: {
+            if (wallpaperContextMenu.wallpaperToDelete) {
+              WallpaperService.clearCacheForPath(wallpaperContextMenu.wallpaperToDelete);
+            }
+            wallpaperContextMenu.close();
+          }
+        }
+      }
     }
 
     ColumnLayout {

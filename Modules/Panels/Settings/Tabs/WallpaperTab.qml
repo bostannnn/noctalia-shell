@@ -532,6 +532,41 @@ ColumnLayout {
   }
 
   NDivider {
+    visible: Settings.data.wallpaper.enabled
+    Layout.fillWidth: true
+    Layout.topMargin: Style.marginL
+    Layout.bottomMargin: Style.marginL
+  }
+
+  // Cache Management
+  ColumnLayout {
+    visible: Settings.data.wallpaper.enabled
+    spacing: Style.marginL
+    Layout.fillWidth: true
+
+    NHeader {
+      label: "Cache"
+      description: "Manage wallpaper thumbnail and preview cache"
+    }
+
+    RowLayout {
+      spacing: Style.marginM
+
+      NLabel {
+        label: "Clear All Cache"
+        description: "Remove all cached thumbnails and previews"
+        Layout.fillWidth: true
+      }
+
+      NButton {
+        text: "Clear"
+        icon: "trash"
+        onClicked: WallpaperService.clearAllCache()
+      }
+    }
+  }
+
+  NDivider {
     Layout.fillWidth: true
     Layout.topMargin: Style.marginL
     Layout.bottomMargin: Style.marginL

@@ -847,6 +847,88 @@ Singleton {
   }
 
   // -------------------------------------------------------------------
+  // Clear all wallpaper-related caches
+  function clearAllCache() {
+    Logger.i("Wallpaper", "Clearing all wallpaper caches");
+
+    // Clear WallpaperCacheService preprocessed images
+    WallpaperCacheService.clearAllCache();
+
+    // Clear VideoWallpaperService thumbnails
+    var videoThumbDir = VideoWallpaperService.thumbnailCacheDir;
+    Quickshell.execDetached(["rm", "-rf", videoThumbDir]);
+    Quickshell.execDetached(["mkdir", "-p", videoThumbDir]);
+    VideoWallpaperService.thumbnailCache = {};
+
+    // Clear NImageCached thumbnails (image grid thumbnails)
+    var imageCacheDir = Settings.cacheDirImages;
+    Quickshell.execDetached(["rm", "-rf", imageCacheDir]);
+    Quickshell.execDetached(["mkdir", "-p", imageCacheDir]);
+
+    ToastService.showNotice(
+      "Cache Cleared",
+      "All wallpaper caches have been cleared"
+    );
+
+    // Refresh wallpapers list to reload thumbnails
+    Qt.callLater(refreshWallpapersList);
+  }
+
+  // -------------------------------------------------------------------
+  // Clear cache for a specific wallpaper path
+  function clearCacheForPath(wallpaperPath) {
+    if (!wallpaperPath) return;
+
+    Logger.i("Wallpaper", "Clearing cache for:", wallpaperPath);
+
+    // Check if it's a video or image
+    var isVideo = VideoWallpaperService.isVideoFile(wallpaperPath);
+
+    if (isVideo) {
+      // Clear video thumbnail - uses MD5 hash
+      var videoHash = Qt.md5(wallpaperPath);
+      var videoThumbDir = VideoWallpaperService.thumbnailCacheDir;
+      Quickshell.execDetached(["rm", "-f", videoThumbDir + "/" + videoHash + ".jpg"]);
+      Quickshell.execDetached(["rm", "-f", videoThumbDir + "/" + videoHash + "_full.jpg"]);
+      // Clear from memory cache
+      delete VideoWallpaperService.thumbnailCache[videoThumbDir + "/" + videoHash + ".jpg"];
+      delete VideoWallpaperService.thumbnailCache[videoThumbDir + "/" + videoHash + "_full.jpg"];
+    } else {
+      // Clear image caches using grep to find files containing the path hash
+      // NImageCached uses sha256 of path
+      var imageCacheDir = Settings.cacheDirImages;
+      var preprocessedDir = WallpaperCacheService.cacheDir;
+
+      // Use find to delete files matching the sha256 hash pattern
+      // Since we can't easily compute sha256 here, use a simpler approach:
+      // Delete files that match based on the path
+      var cleanPath = wallpaperPath.replace(/^file:\/\//, "");
+      var pathEsc = cleanPath.replace(/'/g, "'\\''");
+
+      // Clear NImageCached thumbnails (all sizes for this path)
+      // The hash is sha256(imagePath), so we need to compute it
+      // For simplicity, we'll use a shell command to find and delete
+      var clearCmd = "sha256sum <<< '" + pathEsc + "' | cut -d' ' -f1 | xargs -I{} find '" + imageCacheDir + "' -name '{}*' -delete 2>/dev/null";
+      Quickshell.execDetached(["bash", "-c", clearCmd]);
+
+      // Also clear WallpaperCacheService preprocessed versions
+      // These use sha256(sourcePath + "@" + width + "x" + height + "@" + mtime)
+      // Since we don't know all variations, just clear files that start with a computed base
+      var clearPreprocessedCmd = "find '" + preprocessedDir + "' -type f -name '*.jpg' 2>/dev/null | while read f; do rm -f \"$f\"; done";
+      // Actually, better to just invalidate for this source
+      WallpaperCacheService.invalidateForSource(cleanPath);
+    }
+
+    ToastService.showNotice(
+      "Cache Cleared",
+      "Cache cleared for this wallpaper"
+    );
+
+    // Refresh to reload thumbnail
+    Qt.callLater(refreshWallpapersList);
+  }
+
+  // -------------------------------------------------------------------
   function restartRandomWallpaperTimer() {
     if (Settings.data.wallpaper.randomEnabled) {
       randomWallpaperTimer.restart();
