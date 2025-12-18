@@ -1,3 +1,6 @@
+// Shared JS library for simple file existence checks
+.pragma library
+
 // Minimal file existence helper using FolderListModel to avoid spawning processes
 function fileExists(path, parent) {
   if (!path)
@@ -25,5 +28,3 @@ function fileExists(path, parent) {
     return false;
   }
 }
-
-export { fileExists };
