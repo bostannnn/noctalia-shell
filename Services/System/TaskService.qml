@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import qs.Services.System
 
 // Service for Taskwarrior integration with Things 3-style smart lists
 Singleton {
