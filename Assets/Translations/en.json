@@ -2868,10 +2868,10 @@
       "wipe": "Wipe"
     },
     "sort": {
-      "name": "Name",
-      "date": "Date",
-      "asc": "Ascending",
-      "desc": "Descending"
+      "date-newest": "Date (Newest)",
+      "date-oldest": "Date (Oldest)",
+      "name-az": "Name (A-Z)",
+      "name-za": "Name (Z-A)"
     },
     "wallhaven-sort": {
       "random": "Random",

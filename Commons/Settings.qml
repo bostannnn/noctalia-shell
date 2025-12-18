@@ -351,8 +351,7 @@ Singleton {
       property bool setWallpaperOnAllMonitors: true
       property string fillMode: "crop"
       property color fillColor: "#000000"
-      property string localSort: "date" // name, date
-      property string localSortOrder: "desc" // asc, desc
+      property string localSort: "date-desc" // date-desc, date-asc, name-asc, name-desc
       property bool randomEnabled: false
       property int randomIntervalSec: 300 // 5 min
       property int transitionDuration: 1500 // 1500 ms

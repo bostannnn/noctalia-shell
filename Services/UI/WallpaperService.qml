@@ -13,11 +13,8 @@ Singleton {
   readonly property ListModel fillModeModel: ListModel {}
   readonly property string defaultDirectory: Settings.preprocessPath(Settings.data.wallpaper.directory)
 
-  // Local wallpaper sort options
+  // Local wallpaper sort options (combined field + order)
   readonly property ListModel localSortModel: ListModel {}
-
-  // Sort order options (asc/desc)
-  readonly property ListModel sortOrderModel: ListModel {}
 
   // Wallhaven sort/filter presets (trending, popular, etc.)
   readonly property ListModel wallhavenSortModel: ListModel {}
@@ -177,24 +174,22 @@ Singleton {
                               "name": I18n.tr("wallpaper.transitions.wipe")
                             });
 
-    // Populate localSortModel with translated names
+    // Populate localSortModel with combined sort options
     localSortModel.append({
-                            "key": "name",
-                            "name": I18n.tr("wallpaper.sort.name")
+                            "key": "date-desc",
+                            "name": I18n.tr("wallpaper.sort.date-newest")
                           });
     localSortModel.append({
-                            "key": "date",
-                            "name": I18n.tr("wallpaper.sort.date")
+                            "key": "date-asc",
+                            "name": I18n.tr("wallpaper.sort.date-oldest")
                           });
-
-    // Populate sortOrderModel
-    sortOrderModel.append({
-                            "key": "desc",
-                            "name": I18n.tr("wallpaper.sort.desc")
+    localSortModel.append({
+                            "key": "name-asc",
+                            "name": I18n.tr("wallpaper.sort.name-az")
                           });
-    sortOrderModel.append({
-                            "key": "asc",
-                            "name": I18n.tr("wallpaper.sort.asc")
+    localSortModel.append({
+                            "key": "name-desc",
+                            "name": I18n.tr("wallpaper.sort.name-za")
                           });
 
     // Populate wallhavenSortModel with translated names
@@ -924,13 +919,14 @@ Singleton {
     Logger.i("Wallpaper", "Starting recursive scan for", screenName, "in", directory);
 
     // Create Process component inline
+    // Use find with -printf to get modification time, then sort by time (newest first)
     var processComponent = Qt.createComponent("", root);
     var processString = `
     import QtQuick
     import Quickshell.Io
     Process {
     id: process
-    command: ["find", "-L", "` + directory + `", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.gif", "-o", "-iname", "*.pnm", "-o", "-iname", "*.bmp", "-o", "-iname", "*.mp4", "-o", "-iname", "*.webm", "-o", "-iname", "*.mkv", "-o", "-iname", "*.avi", "-o", "-iname", "*.mov", "-o", "-iname", "*.ogv", "-o", "-iname", "*.m4v", ")"]
+    command: ["sh", "-c", "find -L '` + directory.replace(/'/g, "'\\''") + `' -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' -o -iname '*.pnm' -o -iname '*.bmp' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.avi' -o -iname '*.mov' -o -iname '*.ogv' -o -iname '*.m4v' \\) -printf '%T@ %p\\n' 2>/dev/null | sort -rn | cut -d' ' -f2-"]
     stdout: StdioCollector {}
     stderr: StdioCollector {}
     }
@@ -953,8 +949,7 @@ Singleton {
             files.push(line);
           }
         }
-        // Sort files for consistent ordering
-        files.sort();
+        // Files are already sorted by modification time (newest first) from the command
         wallpaperLists[screenName] = files;
         Logger.i("Wallpaper", "Recursive scan completed for", screenName, "found", files.length, "files");
         wallpaperListChanged(screenName, files.length);

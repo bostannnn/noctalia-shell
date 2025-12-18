@@ -184,12 +184,23 @@ SmartPanel {
                          searchInput.inputItem.forceActiveFocus();
                        }
                      });
-        // Trigger random discovery when opening in Wallhaven mode
-        if (Settings.data.wallpaper.useWallhaven && typeof WallhavenService !== "undefined") {
-          if (!WallhavenService.fetching) {
-            wallhavenView.loading = true;
-            WallhavenService.discover();
-          }
+        // Trigger random discovery when opening in Wallhaven mode (with delay to ensure service is ready)
+        if (Settings.data.wallpaper.useWallhaven) {
+          wallhavenDiscoverTimer.start();
+        }
+      }
+    }
+
+    // Timer to trigger Wallhaven discovery after a short delay
+    Timer {
+      id: wallhavenDiscoverTimer
+      interval: 150
+      repeat: false
+      onTriggered: {
+        if (typeof WallhavenService !== "undefined" && !WallhavenService.fetching && wallhavenView) {
+          wallhavenView.initialized = true;
+          wallhavenView.loading = true;
+          WallhavenService.discover();
         }
       }
     }
@@ -454,10 +465,11 @@ SmartPanel {
                     if (typeof WallhavenService !== "undefined") {
                       WallhavenService.categories = Settings.data.wallpaper.wallhavenCategories;
                       WallhavenService.purity = Settings.data.wallpaper.wallhavenPurity;
-                      WallhavenService.sorting = Settings.data.wallpaper.wallhavenSorting;
                       WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
                       wallpaperPanel.updateWallhavenResolution();
-                      if (wallhavenView && wallhavenView.initialized && !WallhavenService.fetching) {
+                      // Always trigger a discover when switching to Wallhaven mode
+                      if (wallhavenView && !WallhavenService.fetching) {
+                        wallhavenView.initialized = true;
                         wallhavenView.loading = true;
                         WallhavenService.discover();
                       }
@@ -615,32 +627,16 @@ SmartPanel {
 
             NComboBox {
               id: localSortComboBox
-              Layout.preferredWidth: 80
+              Layout.preferredWidth: 120
               model: WallpaperService.localSortModel
-              currentKey: Settings.data.wallpaper.localSort || "date"
+              currentKey: Settings.data.wallpaper.localSort || "date-desc"
               onSelected: key => {
                 if (Settings.data.wallpaper.localSort === key) return;
                 Settings.data.wallpaper.localSort = key;
-                // Trigger re-sort of wallpapers
+                // Trigger re-sort of wallpapers (need full refresh to get proper base order)
                 for (var i = 0; i < screenRepeater.count; i++) {
                   let item = screenRepeater.itemAt(i)
-                  if (item && item.updateFiltered) item.updateFiltered()
-                }
-              }
-            }
-
-            NComboBox {
-              id: localSortOrderComboBox
-              Layout.preferredWidth: 100
-              model: WallpaperService.sortOrderModel
-              currentKey: Settings.data.wallpaper.localSortOrder || "desc"
-              onSelected: key => {
-                if (Settings.data.wallpaper.localSortOrder === key) return;
-                Settings.data.wallpaper.localSortOrder = key;
-                // Trigger re-sort of wallpapers
-                for (var i = 0; i < screenRepeater.count; i++) {
-                  let item = screenRepeater.itemAt(i)
-                  if (item && item.updateFiltered) item.updateFiltered()
+                  if (item && item.refreshWallpaperScreenData) item.refreshWallpaperScreenData()
                 }
               }
             }
@@ -745,23 +741,33 @@ SmartPanel {
         });
       }
 
-      // Apply sorting
-      var sortMode = Settings.data.wallpaper.localSort || "date";
-      var sortOrder = Settings.data.wallpaper.localSortOrder || "desc";
-      var isAsc = (sortOrder === "asc");
+      // Apply sorting based on combined key (e.g., "date-desc", "name-asc")
+      var sortKey = Settings.data.wallpaper.localSort || "date-desc";
 
-      if (sortMode === "name") {
+      if (sortKey === "name-asc") {
         baseList.sort(function(a, b) {
           var nameA = a.split('/').pop().toLowerCase();
           var nameB = b.split('/').pop().toLowerCase();
-          var result = nameA.localeCompare(nameB);
-          return isAsc ? result : -result;
+          return nameA.localeCompare(nameB);
         });
-      } else if (sortMode === "date") {
-        // FolderListModel already provides date-sorted (newest first)
-        // For ascending (oldest first), reverse the list
-        if (isAsc) {
-          baseList.reverse();
+      } else if (sortKey === "name-desc") {
+        baseList.sort(function(a, b) {
+          var nameA = a.split('/').pop().toLowerCase();
+          var nameB = b.split('/').pop().toLowerCase();
+          return nameB.localeCompare(nameA);
+        });
+      } else if (sortKey === "date-desc") {
+        // Base list is oldest first, reverse to get newest first
+        baseList.reverse();
+      }
+      // "date-asc" - keep original order (oldest first)
+
+      // Ensure current wallpaper stays at front after sorting
+      if (currentWallpaper) {
+        var currentIdx = baseList.indexOf(currentWallpaper);
+        if (currentIdx > 0) {
+          baseList.splice(currentIdx, 1);
+          baseList.unshift(currentWallpaper);
         }
       }
 
@@ -813,9 +819,14 @@ SmartPanel {
 
     // Move a wallpaper to the front of the list without full refresh
     function moveWallpaperToFront(path) {
-      if (!path) return;
+      if (!path) {
+        Logger.w("WallpaperPanel", "moveWallpaperToFront: no path provided");
+        return;
+      }
 
       var idx = wallpapersList.indexOf(path);
+      Logger.d("WallpaperPanel", "moveWallpaperToFront: path=", path.split('/').pop(), "idx=", idx, "listSize=", wallpapersList.length);
+
       if (idx > 0) {
         // Remove from current position and add to front
         var newList = wallpapersList.slice();
@@ -832,6 +843,10 @@ SmartPanel {
         updateFiltered();
 
         Logger.d("WallpaperPanel", "Moved wallpaper to front:", path.split('/').pop());
+      } else if (idx === 0) {
+        Logger.d("WallpaperPanel", "Wallpaper already at front:", path.split('/').pop());
+      } else {
+        Logger.w("WallpaperPanel", "Wallpaper not found in list:", path.split('/').pop());
       }
     }
 
@@ -842,28 +857,41 @@ SmartPanel {
       var rawList = WallpaperService.getWallpapersList(targetScreen.name);
       Logger.d("WallpaperPanel", "Got", rawList.length, "wallpapers for screen", targetScreen.name);
 
-      // Sort videos first, then images (alphabetically within each group)
-      var videos = [];
-      var images = [];
-      for (var i = 0; i < rawList.length; i++) {
-        if (VideoWallpaperService.isVideoFile(rawList[i])) {
-          videos.push(rawList[i]);
-        } else {
-          images.push(rawList[i]);
-        }
-      }
-      
-      // Sort each group alphabetically by filename
-      var sortByName = function(a, b) {
-        var nameA = a.split('/').pop().toLowerCase();
-        var nameB = b.split('/').pop().toLowerCase();
-        return nameA.localeCompare(nameB);
-      };
-      videos.sort(sortByName);
-      images.sort(sortByName);
+      // Check current sort mode
+      var sortKey = Settings.data.wallpaper.localSort || "date-desc";
+      var isDateSort = sortKey.startsWith("date-");
 
-      // Combine: videos first, then images
-      var combined = videos.concat(images);
+      var combined;
+
+      if (isDateSort) {
+        // For date sorting, preserve the FolderListModel order (already sorted by time)
+        // Don't separate videos/images to maintain proper time order
+        combined = rawList.slice();
+      } else {
+        // For name sorting, separate videos and images, sort each alphabetically
+        var videos = [];
+        var images = [];
+        for (var i = 0; i < rawList.length; i++) {
+          if (VideoWallpaperService.isVideoFile(rawList[i])) {
+            videos.push(rawList[i]);
+          } else {
+            images.push(rawList[i]);
+          }
+        }
+
+        // Sort each group alphabetically by filename
+        var sortByName = function(a, b) {
+          var nameA = a.split('/').pop().toLowerCase();
+          var nameB = b.split('/').pop().toLowerCase();
+          return nameA.localeCompare(nameB);
+        };
+        videos.sort(sortByName);
+        images.sort(sortByName);
+
+        // Combine: videos first, then images
+        combined = videos.concat(images);
+        Logger.d("WallpaperPanel", "Name sorted:", videos.length, "videos,", images.length, "images");
+      }
 
       // Move current wallpaper to the front
       var current = WallpaperService.getWallpaper(targetScreen.name);
@@ -876,7 +904,6 @@ SmartPanel {
       }
 
       wallpapersList = combined;
-      Logger.d("WallpaperPanel", "Sorted:", videos.length, "videos,", images.length, "images");
 
       // Pre-compute basenames once for better performance
       wallpapersWithNames = wallpapersList.map(function (p) {
@@ -1695,45 +1722,47 @@ SmartPanel {
       }
     }
 
-    Component.onCompleted: {
-      // Initialize service properties and perform initial search if Wallhaven is active
-      if (typeof WallhavenService !== "undefined" && Settings.data.wallpaper.useWallhaven && !initialized) {
-        // Set flags immediately to prevent race conditions
-        if (WallhavenService.initialSearchScheduled) {
-          // Another instance already scheduled the search, just initialize properties
-          initialized = true;
-          return;
-        }
+    // Delayed initialization timer for Wallhaven
+    Timer {
+      id: wallhavenInitTimer
+      interval: 100
+      repeat: false
+      onTriggered: {
+        if (typeof WallhavenService !== "undefined" && Settings.data.wallpaper.useWallhaven && !wallhavenViewRoot.initialized) {
+          wallhavenViewRoot.initialized = true;
+          WallhavenService.categories = Settings.data.wallpaper.wallhavenCategories;
+          WallhavenService.purity = Settings.data.wallpaper.wallhavenPurity;
+          WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
 
-        // We're the first one - claim the search
-        initialized = true;
-        WallhavenService.initialSearchScheduled = true;
-        WallhavenService.categories = Settings.data.wallpaper.wallhavenCategories;
-        WallhavenService.purity = Settings.data.wallpaper.wallhavenPurity;
-        WallhavenService.sorting = Settings.data.wallpaper.wallhavenSorting;
-        WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
-
-        // Initialize resolution settings
-        var width = Settings.data.wallpaper.wallhavenResolutionWidth || "";
-        var height = Settings.data.wallpaper.wallhavenResolutionHeight || "";
-        var mode = Settings.data.wallpaper.wallhavenResolutionMode || "atleast";
-        if (width && height) {
-          var resolution = width + "x" + height;
-          if (mode === "atleast") {
-            WallhavenService.minResolution = resolution;
-            WallhavenService.resolutions = "";
+          // Initialize resolution settings
+          var width = Settings.data.wallpaper.wallhavenResolutionWidth || "";
+          var height = Settings.data.wallpaper.wallhavenResolutionHeight || "";
+          var mode = Settings.data.wallpaper.wallhavenResolutionMode || "atleast";
+          if (width && height) {
+            var resolution = width + "x" + height;
+            if (mode === "atleast") {
+              WallhavenService.minResolution = resolution;
+              WallhavenService.resolutions = "";
+            } else {
+              WallhavenService.minResolution = "";
+              WallhavenService.resolutions = resolution;
+            }
           } else {
             WallhavenService.minResolution = "";
-            WallhavenService.resolutions = resolution;
+            WallhavenService.resolutions = "";
           }
-        } else {
-          WallhavenService.minResolution = "";
-          WallhavenService.resolutions = "";
-        }
 
-        // Start with random discovery for fresh experience each time
-        loading = true;
-        WallhavenService.discover();
+          // Start with random discovery for fresh experience each time
+          wallhavenViewRoot.loading = true;
+          WallhavenService.discover();
+        }
+      }
+    }
+
+    Component.onCompleted: {
+      // Use timer to ensure all services are loaded
+      if (Settings.data.wallpaper.useWallhaven) {
+        wallhavenInitTimer.start();
       }
     }
 
