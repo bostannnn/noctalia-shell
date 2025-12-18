@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.Commons
+import qs.Services.Location
 
 Singleton {
   id: root
@@ -171,5 +172,4 @@ Singleton {
     }
   }
 }
-
 
