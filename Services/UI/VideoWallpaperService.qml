@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import "../../Helpers/FileUtils.js" as FileUtils
 
 Singleton {
     id: root
@@ -103,7 +104,7 @@ Singleton {
         }
 
         // Check filesystem and prime cache if already generated
-        if (Quickshell.fileExists(outPath)) {
+        if (FileUtils.fileExists(outPath, root)) {
             thumbnailCache[outPath] = true
             if (callback) callback(outPath)
             return
@@ -127,7 +128,7 @@ Singleton {
             var item = thumbnailQueue.shift()
 
             // Skip work if file was generated while queued
-            if (Quickshell.fileExists(item.outPath)) {
+            if (FileUtils.fileExists(item.outPath, root)) {
                 thumbnailCache[item.outPath] = true
                 if (item.callback) item.callback(item.outPath)
                 continue

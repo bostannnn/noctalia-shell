@@ -11,6 +11,7 @@ import qs.Commons
 import qs.Services.Media
 import qs.Services.Power
 import qs.Services.UI
+import "../../Helpers/FileUtils.js" as FileUtils
 
 Singleton {
   id: root
@@ -631,7 +632,7 @@ Singleton {
             cachedImage = Settings.cacheDirImagesNotifications + imageId + ".png";
           }
         }
-        if (cachedImage && !Quickshell.fileExists(cachedImage)) {
+        if (cachedImage && !FileUtils.fileExists(cachedImage, root)) {
           cachedImage = "";
         }
 
@@ -849,7 +850,7 @@ Singleton {
   function validateCachedImages() {
     for (var i = historyList.count - 1; i >= 0; i--) {
       const notif = historyList.get(i);
-      if (notif.cachedImage && notif.cachedImage.startsWith(Settings.cacheDirImagesNotifications) && !Quickshell.fileExists(notif.cachedImage)) {
+      if (notif.cachedImage && notif.cachedImage.startsWith(Settings.cacheDirImagesNotifications) && !FileUtils.fileExists(notif.cachedImage, root)) {
         historyList.setProperty(i, "cachedImage", "");
       }
     }
