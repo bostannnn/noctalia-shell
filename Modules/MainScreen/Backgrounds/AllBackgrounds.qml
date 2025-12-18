@@ -32,165 +32,166 @@ Item {
     anchors.fill: parent
     layer.enabled: true
 
-    Shape {
-      id: backgroundsShape
+    // Content container - holds both border frame and shape backgrounds
+    Item {
+      id: backgroundsContainer
       anchors.fill: parent
-      preferredRendererType: Shape.CurveRenderer
-      enabled: false
 
-      /**
-      *  Border frame (framed mode only) - renders border + bar area as one shape
-      */
-      BorderFrameBackground {
-        shapeContainer: backgroundsShape
+      // Border frame (framed mode only) - must be rendered before Shape for correct z-order
+      BorderFrameMasked {
         backgroundColor: panelBackgroundColor
       }
 
-      // Bar background - transparent in framed mode (BorderFrameBackground provides it)
-      BarBackground {
-        bar: root.bar
-        shapeContainer: backgroundsShape
-        windowRoot: root.windowRoot
-        backgroundColor: (Settings.data.bar.transparent || root.isFramedMode) ? "transparent" : panelBackgroundColor
-      }
+      Shape {
+        id: backgroundsShape
+        anchors.fill: parent
+        preferredRendererType: Shape.CurveRenderer
+        enabled: false
 
-      /**
-      *  Panels
-      */
+        // Bar background - transparent in framed mode (BorderFrameMasked provides it)
+        BarBackground {
+          bar: root.bar
+          shapeContainer: backgroundsShape
+          windowRoot: root.windowRoot
+          backgroundColor: (Settings.data.bar.transparent || root.isFramedMode) ? "transparent" : panelBackgroundColor
+        }
 
-      // Audio
-      PanelBackground {
-        panel: root.windowRoot.audioPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        /**
+        *  Panels
+        */
 
-      // Battery
-      PanelBackground {
-        panel: root.windowRoot.batteryPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Audio
+        PanelBackground {
+          panel: root.windowRoot.audioPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Bluetooth
-      PanelBackground {
-        panel: root.windowRoot.bluetoothPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Battery
+        PanelBackground {
+          panel: root.windowRoot.batteryPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Brightness
-      PanelBackground {
-        panel: root.windowRoot.brightnessPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Bluetooth
+        PanelBackground {
+          panel: root.windowRoot.bluetoothPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Clock
-      PanelBackground {
-        panel: root.windowRoot.clockPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Brightness
+        PanelBackground {
+          panel: root.windowRoot.brightnessPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Control Center
-      PanelBackground {
-        panel: root.windowRoot.controlCenterPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Clock
+        PanelBackground {
+          panel: root.windowRoot.clockPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Changelog
-      PanelBackground {
-        panel: root.windowRoot.changelogPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Control Center
+        PanelBackground {
+          panel: root.windowRoot.controlCenterPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Launcher
-      PanelBackground {
-        panel: root.windowRoot.launcherPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Changelog
+        PanelBackground {
+          panel: root.windowRoot.changelogPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Notification History
-      PanelBackground {
-        panel: root.windowRoot.notificationHistoryPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Launcher
+        PanelBackground {
+          panel: root.windowRoot.launcherPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Session Menu
-      PanelBackground {
-        panel: root.windowRoot.sessionMenuPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: Settings.data.sessionMenu.largeButtonsStyle ? Color.transparent : panelBackgroundColor
-      }
+        // Notification History
+        PanelBackground {
+          panel: root.windowRoot.notificationHistoryPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Settings
-      PanelBackground {
-        panel: root.windowRoot.settingsPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Session Menu
+        PanelBackground {
+          panel: root.windowRoot.sessionMenuPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: Settings.data.sessionMenu.largeButtonsStyle ? Color.transparent : panelBackgroundColor
+        }
 
-      // Setup Wizard
-      PanelBackground {
-        panel: root.windowRoot.setupWizardPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Settings
+        PanelBackground {
+          panel: root.windowRoot.settingsPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // TodoList
-      PanelBackground {
-        panel: root.windowRoot.todoPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Setup Wizard
+        PanelBackground {
+          panel: root.windowRoot.setupWizardPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // TrayDrawer
-      PanelBackground {
-        panel: root.windowRoot.trayDrawerPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // TodoList
+        PanelBackground {
+          panel: root.windowRoot.todoPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Wallpaper
-      PanelBackground {
-        panel: root.windowRoot.wallpaperPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // TrayDrawer
+        PanelBackground {
+          panel: root.windowRoot.trayDrawerPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // WiFi
-      PanelBackground {
-        panel: root.windowRoot.wifiPanelPlaceholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // Wallpaper
+        PanelBackground {
+          panel: root.windowRoot.wallpaperPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Plugin Panel Slot 1
-      PanelBackground {
-        panel: root.windowRoot.pluginPanel1Placeholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
-      }
+        // WiFi
+        PanelBackground {
+          panel: root.windowRoot.wifiPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
 
-      // Plugin Panel Slot 2
-      PanelBackground {
-        panel: root.windowRoot.pluginPanel2Placeholder
-        shapeContainer: backgroundsShape
-        backgroundColor: panelBackgroundColor
+        // Plugin Panel Slot 1
+        PanelBackground {
+          panel: root.windowRoot.pluginPanel1Placeholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
+
+        // Plugin Panel Slot 2
+        PanelBackground {
+          panel: root.windowRoot.pluginPanel2Placeholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
       }
     }
 
-    // Shadow disabled in framed mode
+    // Unified shadow for all backgrounds (including border frame in framed mode)
     NDropShadow {
       anchors.fill: parent
-      source: backgroundsShape
-      visible: !root.isFramedMode
+      source: backgroundsContainer
     }
   }
 }
-

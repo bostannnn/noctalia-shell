@@ -3,10 +3,11 @@ import QtQuick.Shapes
 import qs.Commons
 
 /**
- * BorderFrameBackground - ShapePath for rendering screen border frame (framed mode only)
+ * BorderFrameBackground - ShapePath for rendering screen border frame
  *
- * Uses OddEvenFill to create a "donut" shape (outer rectangle minus inner rounded rectangle).
- * The inner cutout starts after borderThickness + barWidth on the bar side.
+ * NOTE: This component is now DEPRECATED for framed mode rendering.
+ * BorderFrameMasked.qml handles framed mode with proper inner shadows.
+ * This remains for potential future use or fallback.
  */
 ShapePath {
   id: root
@@ -30,10 +31,10 @@ ShapePath {
   readonly property real iBottom: barPosition === "bottom" ? borderThickness + barWidth : borderThickness
   readonly property real iLeft: barPosition === "left" ? borderThickness + barWidth : borderThickness
 
-  // Only render in framed mode
-  readonly property bool active: (Settings.data.bar.mode ?? "classic") === "framed"
+  // Disabled - BorderFrameMasked handles framed mode rendering with proper shadows
+  readonly property bool active: false
 
-  fillColor: active ? backgroundColor : "transparent"
+  fillColor: "transparent"
   strokeWidth: -1
   fillRule: ShapePath.OddEvenFill
 
