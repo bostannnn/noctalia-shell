@@ -49,6 +49,7 @@ Singleton {
     "lock-pause": "lock-pause",
     "logout": "logout",
     "reboot": "refresh",
+    "reboot-windows": "brand-windows",
     "suspend": "player-pause",
     "hibernate": "zzz",
     "nightlight-on": "moon",

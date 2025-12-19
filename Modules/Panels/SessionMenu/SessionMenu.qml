@@ -85,6 +85,11 @@ SmartPanel {
       "title": I18n.tr("session-menu.reboot"),
       "isShutdown": false
     },
+    "reboot-windows": {
+      "icon": "reboot-windows",
+      "title": I18n.tr("session-menu.reboot-windows"),
+      "isShutdown": false
+    },
     "logout": {
       "icon": "logout",
       "title": I18n.tr("session-menu.logout"),
@@ -241,6 +246,9 @@ SmartPanel {
       break;
     case "reboot":
       CompositorService.reboot();
+      break;
+    case "reboot-windows":
+      CompositorService.rebootToWindows();
       break;
     case "logout":
       CompositorService.logout();

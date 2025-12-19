@@ -38,6 +38,12 @@ ColumnLayout {
       "required": false
     },
     {
+      "id": "reboot-windows",
+      "text": I18n.tr("session-menu.reboot-windows"),
+      "enabled": false,
+      "required": false
+    },
+    {
       "id": "logout",
       "text": I18n.tr("session-menu.logout"),
       "enabled": true,

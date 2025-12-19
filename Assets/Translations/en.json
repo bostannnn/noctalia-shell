@@ -884,6 +884,7 @@
     "lock-and-suspend": "Lock and Suspend",
     "logout": "Logout",
     "reboot": "Reboot",
+    "reboot-windows": "Reboot to Windows",
     "shutdown": "Shutdown",
     "suspend": "Suspend",
     "title": "Session Menu"

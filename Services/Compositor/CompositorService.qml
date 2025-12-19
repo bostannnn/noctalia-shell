@@ -403,6 +403,12 @@ Singleton {
     Quickshell.execDetached(["sh", "-c", "systemctl reboot || loginctl reboot"]);
   }
 
+  function rebootToWindows() {
+    Logger.i("Compositor", "Reboot to Windows requested");
+    // Auto-detect Windows boot entry and set it as next boot, then reboot
+    Quickshell.execDetached(["sh", "-c", "WINDOWS_ENTRY=$(efibootmgr | grep -i 'Windows Boot Manager' | grep -oP 'Boot\\K[0-9A-Fa-f]{4}' | head -1) && sudo efibootmgr -n $WINDOWS_ENTRY && systemctl reboot"]);
+  }
+
   function suspend() {
     Logger.i("Compositor", "Suspend requested");
     Quickshell.execDetached(["sh", "-c", "systemctl suspend || loginctl suspend"]);
