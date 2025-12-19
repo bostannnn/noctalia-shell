@@ -10,8 +10,14 @@ Singleton {
   id: root
 
   readonly property string cacheDir: Settings.cacheDirImagesWallpapers + "preprocessed/"
+   // Manifest persisted to disk to skip revalidation across sessions
+  readonly property string manifestPath: cacheDir + "manifest.json"
   property bool imageMagickAvailable: false
   property bool initialized: false
+  property var sessionCache: ({})
+  property var manifestData: ({})
+  property bool manifestLoaded: false
+  readonly property int sessionCacheTtlMs: 5 * 60 * 1000
 
   // Track pending preprocessing operations
   // key: cacheKey, value: { callbacks: [], sourcePath: string, screenName: string }
@@ -30,6 +36,7 @@ Singleton {
   function init() {
     Logger.i("WallpaperCache", "Service started");
     Quickshell.execDetached(["mkdir", "-p", cacheDir]);
+    loadManifest();
     checkMagickProcess.running = true;
   }
 
@@ -42,9 +49,41 @@ Singleton {
       return;
     }
 
+    const sessionKey = sourcePath + "@" + width + "x" + height;
+    const cachedEntry = sessionCache[sessionKey];
+    if (cachedEntry && (Date.now() - cachedEntry.ts) < sessionCacheTtlMs) {
+      Logger.i("WallpaperCache", "Session cache hit", JSON.stringify({
+                 "source": sourcePath,
+                 "screen": screenName,
+                 "width": width,
+                 "height": height,
+                 "path": cachedEntry.path
+               }));
+      callback(cachedEntry.path, cachedEntry.success);
+      return;
+    }
+
+    if (tryPersistentCacheHit(sessionKey, sourcePath, screenName, width, height, callback)) {
+      return;
+    }
+
+    Logger.i("WallpaperCache", "Request", JSON.stringify({
+                "source": sourcePath,
+                "screen": screenName,
+                "width": width,
+                "height": height
+              }));
+
     if (!imageMagickAvailable) {
       // Fallback: return original path
       Logger.d("WallpaperCache", "ImageMagick not available, using original:", sourcePath);
+      storeSessionCache(sessionKey, sourcePath, false, sourcePath, width, height, "");
+      Logger.i("WallpaperCache", "Callback (no magick)", JSON.stringify({
+                 "source": sourcePath,
+                 "screen": screenName,
+                 "width": width,
+                 "height": height
+               }));
       callback(sourcePath, false);
       return;
     }
@@ -54,17 +93,24 @@ Singleton {
       if (imgWidth > 0 && imgHeight > 0 && imgWidth <= width && imgHeight <= height) {
         // Image is smaller than or equal to screen - no preprocessing needed
         Logger.d("WallpaperCache", `Image ${imgWidth}x${imgHeight} <= screen ${width}x${height}, using original`);
+        storeSessionCache(sessionKey, sourcePath, false, sourcePath, width, height, "");
+        Logger.i("WallpaperCache", "Callback (small image)", JSON.stringify({
+                   "source": sourcePath,
+                   "screen": screenName,
+                   "width": width,
+                   "height": height
+                 }));
         callback(sourcePath, false);
         return;
       }
 
       // Image is larger - proceed with preprocessing
-      proceedWithPreprocessing(sourcePath, screenName, width, height, callback);
+      proceedWithPreprocessing(sourcePath, screenName, width, height, callback, sessionKey);
     });
   }
 
   // -------------------------------------------------
-  function proceedWithPreprocessing(sourcePath, screenName, width, height, callback) {
+  function proceedWithPreprocessing(sourcePath, screenName, width, height, callback, sessionKey) {
     // Get mtime for cache invalidation
     getMtime(sourcePath, function (mtime) {
       const cacheKey = generateCacheKey(sourcePath, width, height, mtime);
@@ -83,7 +129,15 @@ Singleton {
       // Check cache first
       checkFileExists(cachedPath, function (exists) {
         if (exists) {
-          Logger.d("WallpaperCache", "Cache hit:", cachedPath);
+          Logger.i("WallpaperCache", "Cache hit", JSON.stringify({
+                     "cachedPath": cachedPath,
+                     "source": sourcePath,
+                     "screen": screenName,
+                     "width": width,
+                     "height": height
+                   }));
+          storeSessionCache(sessionKey, cachedPath, true, sourcePath, width, height, mtime);
+          // Callback immediately with cached path
           callback(cachedPath, true);
           return;
         }
@@ -100,7 +154,14 @@ Singleton {
         }
 
         // Start new processing
-        Logger.d("WallpaperCache", `Preprocessing ${sourcePath} to ${width}x${height}`);
+        Logger.i("WallpaperCache", "Preprocess start", JSON.stringify({
+                   "source": sourcePath,
+                   "cachedPath": cachedPath,
+                   "screen": screenName,
+                   "width": width,
+                   "height": height,
+                   "mtime": mtime
+                 }));
         pendingRequests[cacheKey] = {
           callbacks: [
             {
@@ -111,7 +172,7 @@ Singleton {
           sourcePath: sourcePath
         };
 
-        startPreprocessing(sourcePath, cachedPath, width, height, cacheKey, screenName);
+        startPreprocessing(sourcePath, cachedPath, width, height, cacheKey, screenName, sessionKey, mtime);
       });
     });
   }
@@ -136,19 +197,29 @@ Singleton {
   }
 
   // -------------------------------------------------
-  function startPreprocessing(sourcePath, outputPath, width, height, cacheKey, screenName) {
+  function startPreprocessing(sourcePath, outputPath, width, height, cacheKey, screenName, sessionKey, mtime) {
     const command = buildCommand(sourcePath, outputPath, width, height);
 
     queueProcess(
       ["bash", "-c", command],
       function(exitCode, stdout, stderrText) {
         if (exitCode !== 0) {
-          Logger.e("WallpaperCache", "Preprocessing failed:", stderrText);
+          Logger.e("WallpaperCache", "Preprocess failed", JSON.stringify({
+                     "cacheKey": cacheKey,
+                     "source": sourcePath,
+                     "output": outputPath,
+                     "error": stderrText
+                   }));
           const srcPath = pendingRequests[cacheKey] ? pendingRequests[cacheKey].sourcePath : "";
           notifyCallbacks(cacheKey, srcPath, false);
           preprocessFailed(cacheKey, stderrText, screenName);
         } else {
-          Logger.d("WallpaperCache", "Preprocessing complete:", outputPath);
+          Logger.i("WallpaperCache", "Preprocess complete", JSON.stringify({
+                     "cacheKey": cacheKey,
+                     "output": outputPath,
+                     "source": sourcePath
+                   }));
+          storeSessionCache(sessionKey, outputPath, true, sourcePath, width, height, mtime);
           notifyCallbacks(cacheKey, outputPath, true);
           preprocessComplete(cacheKey, outputPath, screenName);
         }
@@ -161,10 +232,124 @@ Singleton {
   function notifyCallbacks(cacheKey, path, success) {
     const request = pendingRequests[cacheKey];
     if (request) {
+      Logger.i("WallpaperCache", "Notify callbacks", JSON.stringify({
+                 "cacheKey": cacheKey,
+                 "path": path,
+                 "success": success,
+                 "callbackCount": request.callbacks.length
+               }));
       request.callbacks.forEach(function (item) {
-        item.callback(path, success);
+        try {
+          item.callback(path, success);
+        } catch (e) {
+          Logger.e("WallpaperCache", "Callback error", JSON.stringify({
+                     "cacheKey": cacheKey,
+                     "error": e.toString()
+                   }));
+        }
       });
       delete pendingRequests[cacheKey];
+    }
+  }
+
+  function storeSessionCache(sessionKey, path, success, sourcePath, width, height, mtime) {
+    if (!sessionKey || !path)
+      return;
+
+    sessionCache[sessionKey] = {
+      path: path,
+      success: success,
+      ts: Date.now(),
+      mtime: mtime
+    };
+
+    const manifestEntry = {
+      path: path,
+      success: success,
+      source: sourcePath || "",
+      width: width || 0,
+      height: height || 0,
+      mtime: mtime || "",
+      ts: Date.now()
+    };
+
+    const existing = manifestData[sessionKey];
+    const shouldUpdate = !existing
+      || existing.path !== manifestEntry.path
+      || existing.mtime !== manifestEntry.mtime
+      || existing.success !== manifestEntry.success;
+
+    if (shouldUpdate) {
+      manifestData[sessionKey] = manifestEntry;
+      saveManifest();
+    }
+  }
+
+  function tryPersistentCacheHit(sessionKey, sourcePath, screenName, width, height, callback) {
+    // If manifest hasn't loaded yet, skip persistent cache (it's async)
+    if (!manifestLoaded) {
+      return false;
+    }
+
+    const entry = manifestData[sessionKey];
+    if (!entry || !entry.path)
+      return false;
+
+    // Trust the manifest - the cached file should exist
+    // If it doesn't, the Image component will handle the error gracefully
+    // and we'll regenerate on the next request after mtime check fails
+    Logger.i("WallpaperCache", "Persistent cache hit", JSON.stringify({
+               "source": sourcePath,
+               "screen": screenName,
+               "width": width,
+               "height": height,
+               "path": entry.path
+             }));
+    sessionCache[sessionKey] = {
+      path: entry.path,
+      success: entry.success,
+      ts: Date.now(),
+      mtime: entry.mtime
+    };
+    callback(entry.path, entry.success);
+    return true;
+  }
+
+  function loadManifest() {
+    // Use a Process to read the manifest file for reliable loading
+    queueProcess(
+      ["cat", manifestPath],
+      function(exitCode, stdout, stderr) {
+        if (exitCode === 0 && stdout) {
+          try {
+            manifestData = JSON.parse(stdout);
+            Logger.i("WallpaperCache", "Loaded manifest with " + Object.keys(manifestData).length + " entries");
+          } catch (e) {
+            manifestData = ({});
+            Logger.w("WallpaperCache", "Failed to parse manifest", e.toString());
+          }
+        } else {
+          manifestData = ({});
+          if (exitCode !== 0) {
+            Logger.d("WallpaperCache", "No manifest file found, starting fresh");
+          }
+        }
+        manifestLoaded = true;
+      },
+      "ManifestLoader"
+    );
+  }
+
+  function saveManifest() {
+    try {
+      Quickshell.execDetached(["mkdir", "-p", cacheDir]);
+      const data = JSON.stringify(manifestData);
+      const pathEsc = manifestPath.replace(/'/g, "'\\''");
+      const dataEsc = data.replace(/'/g, "'\\''");
+      const cmd = "echo '" + dataEsc + "' > '" + pathEsc + "'";
+      Quickshell.execDetached(["bash", "-c", cmd]);
+    } catch (e) {
+      Logger.w("WallpaperCache", "Failed to save manifest", e.toString());
     }
   }
 
@@ -189,6 +374,11 @@ Singleton {
   function executeProcess(item) {
     activeProcesses++;
 
+    Logger.i("WallpaperCache", "Process start", JSON.stringify({
+               "name": item.name,
+               "command": item.command
+             }));
+
     const processString = `
       import QtQuick
       import Quickshell.Io
@@ -204,6 +394,12 @@ Singleton {
 
       processObj.exited.connect(function (exitCode) {
         root.activeProcesses--;
+        Logger.i("WallpaperCache", "Process exit", JSON.stringify({
+                   "name": item.name,
+                   "exitCode": exitCode,
+                   "stdout": processObj.stdout.text,
+                   "stderr": processObj.stderr.text
+                 }));
         item.onComplete(exitCode, processObj.stdout.text, processObj.stderr.text);
         processObj.destroy();
         root.runNextProcess();
@@ -220,9 +416,8 @@ Singleton {
 
   // -------------------------------------------------
   function getMtime(filePath, callback) {
-    const pathEsc = filePath.replace(/'/g, "'\\''");
     queueProcess(
-      ["stat", "-c", "%Y", pathEsc],
+      ["stat", "-c", "%Y", filePath],
       function(exitCode, stdout, stderr) {
         callback(exitCode === 0 ? stdout.trim() : "");
       },
@@ -244,10 +439,15 @@ Singleton {
   // -------------------------------------------------
   // Get image dimensions using ImageMagick identify
   function getImageDimensions(filePath, callback) {
-    const pathEsc = filePath.replace(/'/g, "'\\''");
     queueProcess(
-      ["identify", "-format", "%w %h", pathEsc + "[0]"],
+      ["identify", "-format", "%w %h", filePath + "[0]"],
       function(exitCode, stdout, stderr) {
+        if (exitCode !== 0) {
+          Logger.w("WallpaperCache", "Identify failed", JSON.stringify({
+                     "source": filePath,
+                     "error": stderr
+                   }));
+        }
         let width = 0, height = 0;
         if (exitCode === 0) {
           const parts = stdout.trim().split(" ");

@@ -1,30 +1,31 @@
 // Shared JS library for simple file existence checks
 .pragma library
 
-// Minimal file existence helper using FolderListModel to avoid spawning processes
+// Minimal synchronous file existence helper using XMLHttpRequest GET request
+// Note: Uses GET instead of HEAD because QML's XHR handles it more reliably for file://
 function fileExists(path, parent) {
   if (!path)
     return false;
 
-  // Split path into dir and filename
-  const idx = path.lastIndexOf("/");
-  const dir = idx >= 0 ? path.substring(0, idx) : ".";
-  const name = idx >= 0 ? path.substring(idx + 1) : path;
-  if (!name)
-    return false;
-
   try {
-    const folderUrl = "file://" + dir.replace(/"/g, '\\"');
-    const filter = name.replace(/"/g, '\\"');
-    const obj = Qt.createQmlObject(
-      'import Qt.labs.folderlistmodel 2.15; FolderListModel { folder: "' + folderUrl + '"; showDirs: false; nameFilters: ["' + filter + '"]; }',
-      parent || Qt.application,
-      "FileExistsChecker"
-    );
-    const exists = obj.count > 0;
-    obj.destroy();
-    return exists;
+    var xhr = new XMLHttpRequest();
+    // Use synchronous GET request with small read to check file existence
+    // The async=false parameter makes this synchronous
+    xhr.open("GET", "file://" + path, false);
+    xhr.send(null);
+    // For file:// protocol: status 0 with non-empty response means success
+    // status 200 also indicates success
+    if (xhr.status === 200) {
+      return true;
+    }
+    if (xhr.status === 0) {
+      // For local files, status 0 can mean success or failure
+      // Check if we got any content
+      return xhr.responseText !== null && xhr.responseText.length > 0;
+    }
+    return false;
   } catch (e) {
+    // Exception means file doesn't exist or can't be read
     return false;
   }
 }

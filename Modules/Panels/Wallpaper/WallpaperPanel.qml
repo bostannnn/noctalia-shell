@@ -1344,10 +1344,14 @@ SmartPanel {
         delegate: ColumnLayout {
           id: wallpaperItem
 
-          property string wallpaperPath: modelData
-          property bool isSelected: (wallpaperPath === currentWallpaper)
-          property string filename: wallpaperPath.split('/').pop()
-          property bool isVideo: VideoWallpaperService.isVideoFile(wallpaperPath)
+          property string wallpaperPath: (typeof modelData === "string") ? modelData : ""
+          property bool isSelected: (wallpaperPath !== "" && wallpaperPath === currentWallpaper)
+          property string filename: wallpaperPath ? wallpaperPath.split('/').pop() : ""
+          property bool isVideo: wallpaperPath !== "" && VideoWallpaperService.isVideoFile(wallpaperPath)
+          property bool thumbReady: false
+          property bool thumbLoading: false
+          property bool thumbFailed: false
+          property string cachedThumbPath: ""
           property string thumbnailPath: ""
           property bool thumbnailReady: false
 
@@ -1361,13 +1365,79 @@ SmartPanel {
           width: wallpaperGridView.itemSize
           spacing: Style.marginXS
 
-          // Load metadata when item is created
-          Component.onCompleted: {
-            if (isVideo && VideoWallpaperService.isInitialized) {
-              loadThumbnail()
-            } else if (isVideo) {
-              thumbnailRetryTimer.start()
+          onWallpaperPathChanged: {
+            thumbReady = false;
+            thumbFailed = false;
+            thumbLoading = false;
+            cachedThumbPath = "";
+            if (isVideo) {
+              if (VideoWallpaperService.isInitialized) {
+                loadThumbnail();
+              } else {
+                thumbnailRetryTimer.start();
+              }
+            } else {
+              requestImageThumbnail();
             }
+          }
+
+          function requestImageThumbnail() {
+            if (!wallpaperPath || isVideo) return;
+            thumbLoading = true;
+            // Use a stable target size to prevent regenerating cache on minor layout shifts
+            const targetWidth = 512;
+            const targetHeight = 320;
+            const screenName = targetScreen ? targetScreen.name : "";
+            const requestPath = wallpaperPath;
+
+            Logger.i("WallpaperPanel", "Thumb request", JSON.stringify({
+                       "screen": screenName,
+                       "width": targetWidth,
+                       "height": targetHeight,
+                       "wallpaper": requestPath
+                     }));
+
+            WallpaperCacheService.getPreprocessed(requestPath, screenName, targetWidth, targetHeight, function(path, success) {
+              try {
+                if (!wallpaperItem || wallpaperItem.wallpaperPath !== requestPath) {
+                  Logger.i("WallpaperPanel", "Thumb callback skipped (delegate gone)", JSON.stringify({
+                             "wallpaper": requestPath,
+                             "path": path,
+                             "success": success
+                           }));
+                  return;
+                }
+
+                Logger.i("WallpaperPanel", "Thumb result", JSON.stringify({
+                           "path": path,
+                           "success": success,
+                           "screen": screenName,
+                           "width": targetWidth,
+                           "height": targetHeight,
+                           "wallpaper": requestPath
+                         }));
+
+                thumbLoading = false;
+                thumbReady = !!path;
+                thumbFailed = !path;
+                if (path) {
+                  cachedThumbPath = path.startsWith("file://") ? path : "file://" + path;
+                } else if (!success) {
+                  // Fallback to original if preprocessing failed
+                  cachedThumbPath = requestPath.startsWith("file://") ? requestPath : "file://" + requestPath;
+                } else {
+                  Logger.w("WallpaperPanel", "Thumbnail preprocessing returned no path", requestPath);
+                }
+
+                Logger.i("WallpaperPanel", "Thumb path set", JSON.stringify({
+                           "cachedThumbPath": cachedThumbPath,
+                           "ready": thumbReady,
+                           "failed": thumbFailed
+                         }));
+              } catch (e) {
+                Logger.e("WallpaperPanel", "Thumb callback error", e);
+              }
+            });
           }
 
           // Load metadata lazily on hover
@@ -1444,12 +1514,13 @@ SmartPanel {
             color: Color.mSurface
 
             // Image preview (for images)
-            NImageCached {
+            Image {
               id: img
-              imagePath: wallpaperItem.isVideo ? "" : wallpaperPath
-              cacheFolder: Settings.cacheDirImagesWallpapers
               anchors.fill: parent
               visible: !wallpaperItem.isVideo
+              fillMode: Image.PreserveAspectCrop
+              asynchronous: true
+              source: wallpaperItem.cachedThumbPath
             }
 
             // Video thumbnail
@@ -2200,5 +2271,3 @@ SmartPanel {
     }
   }
 }
-
-
