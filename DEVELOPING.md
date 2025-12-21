@@ -91,6 +91,34 @@ JsonProcess {
 - Use `Commons/Color.qml` palette (`Color.mSurface`, `Color.mOutline`, etc).
 - Prefer `Widgets/NText.qml` instead of raw `Text` for consistent font, color, and scaling.
 
+## Lists, Delegates, and Compatibility
+
+This repo runs on a variety of Quickshell/Qt versions. To avoid fragile behavior:
+
+- Prefer `Widgets/NListView.qml` over raw `ListView` when you need scrollbars.
+- Prefer explicit delegate properties:
+  - `delegate: Item { required property var modelData; required property int index; ... }`
+- Avoid relying on implicit `index`/role name injection in nested delegates (especially inside per-screen delegates).
+
+### QML JavaScript Compatibility
+
+In QML JS blocks, avoid modern JS syntax that may not be supported on all runtimes:
+
+- Avoid: arrow functions (`=>`), optional chaining (`?.`), nullish coalescing (`??`), `const`/`let`, `.includes(...)`.
+- Prefer: `function(...) {}`, `var`, explicit null checks, and `indexOf(...) !== -1`.
+
+## Taskwarrior Backend Notes
+
+`TaskService.modifyTask()` builds argv tokens for `task ... modify`.
+
+- Attribute assignment uses `key:value` tokens (e.g. `project:Work`, `due:tomorrow`).
+- Tag add/remove uses `+tag` / `-tag` (no colon). Do not emit `+:tag` / `-:tag`.
+
+If you previously ran a buggy build that emitted `+:tag` / `-:tag`, affected tasks may have those strings embedded in their descriptions. A cleanup helper is available:
+
+- `python3 Bin/fix_taskwarrior_legacy_colon_tags.py` (dry-run)
+- `python3 Bin/fix_taskwarrior_legacy_colon_tags.py --apply` (apply)
+
 ## Where To Put Things
 
 - New **panel**: `Modules/Panels/<Name>/...` + register via existing `PanelService` patterns.

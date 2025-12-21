@@ -22,8 +22,8 @@ NIconButton {
   baseSize: Style.capsuleHeight
   applyUiScale: false
   customRadius: Style.radiusL
-  colorBg: autoShuffle ? Color.mPrimaryContainer : Style.capsuleColor
-  colorFg: autoShuffle ? Color.mOnPrimaryContainer : Color.mOnSurface
+  colorBg: autoShuffle ? Qt.alpha(Color.mPrimary, 0.18) : Style.capsuleColor
+  colorFg: autoShuffle ? Color.mPrimary : Color.mOnSurface
   colorBorder: Color.transparent
   colorBorderHover: Color.transparent
 
@@ -82,5 +82,4 @@ NIconButton {
     }
   }
 }
-
 

@@ -7,24 +7,27 @@ import qs.Widgets
 
 /**
  * Task item row component for the Things 3-style todo list.
- * Shows checkbox, title, project tag, due date, and hover actions.
+ * Shows checkbox, title, tags, due date, and hover actions.
  */
 Rectangle {
   id: root
 
   required property var taskData
-  property bool isCompleted: taskData?.status === "completed"
-  property bool showProject: true
+  property bool isCompleted: !!(taskData && taskData.status === "completed")
   property bool selected: false
 
   signal clicked()
   signal checkboxClicked()
   signal deleteClicked()
 
+  HoverHandler {
+    id: hoverHandler
+  }
+
   height: contentRow.implicitHeight + Style.marginM * 2
   color: {
-    if (selected) return Color.mPrimaryContainer;
-    if (mouseArea.containsMouse) return Color.mHover;
+    if (selected) return Qt.alpha(Color.mPrimary, 0.18);
+    if (hoverHandler.hovered) return Color.mHover;
     return Color.transparent;
   }
   radius: Style.radiusS
@@ -36,10 +39,9 @@ Rectangle {
   MouseArea {
     id: mouseArea
     anchors.fill: parent
-    hoverEnabled: true
     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-    onClicked: mouse => {
+    onClicked: function(mouse) {
       if (mouse.button === Qt.LeftButton) {
         root.clicked();
       }
@@ -49,7 +51,10 @@ Rectangle {
   RowLayout {
     id: contentRow
     anchors.fill: parent
-    anchors.margins: Style.marginM
+    anchors.leftMargin: Style.marginM
+    anchors.topMargin: Style.marginM
+    anchors.bottomMargin: Style.marginM
+    anchors.rightMargin: Style.marginM + deleteButton.baseSize + Style.marginS
     spacing: Style.marginS
 
     // Checkbox
@@ -58,7 +63,7 @@ Rectangle {
       width: Math.round(20 * Style.uiScaleRatio)
       height: width
       radius: width / 2
-      color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Color.mPrimaryContainer : Color.transparent)
+      color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Qt.alpha(Color.mPrimary, 0.18) : Color.transparent)
       border.color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Color.mPrimary : Color.mOutline)
       border.width: Style.borderS
 
@@ -90,59 +95,41 @@ Rectangle {
         spacing: Style.marginS
 
         NText {
-          text: taskData?.description ?? ""
-          pointSize: Style.fontSizeS
+          text: (taskData && taskData.description !== undefined && taskData.description !== null) ? String(taskData.description) : ""
+          pointSize: Style.fontSizeL
           color: isCompleted ? Color.mOnSurfaceVariant : Color.mOnSurface
           font.strikeout: isCompleted
-          wrapMode: Text.WordWrap
+          wrapMode: Text.NoWrap
           Layout.fillWidth: true
           opacity: isCompleted ? 0.7 : 1.0
         }
       }
 
-      // Metadata row (project, tags, date)
+      // Metadata row (tags, date)
       RowLayout {
         Layout.fillWidth: true
         spacing: Style.marginXS
         visible: hasMetadata
 
-        property bool hasMetadata: (showProject && taskData?.project) || (taskData?.tags && taskData.tags.length > 0) || taskData?.due || taskData?.scheduled
-
-        // Project badge
-        Rectangle {
-          visible: showProject && taskData?.project
-          height: projectLabel.implicitHeight + 4
-          width: projectLabel.implicitWidth + Style.marginS * 2
-          radius: Style.radiusXS
-          color: Color.mSecondaryContainer
-
-          NText {
-            id: projectLabel
-            anchors.centerIn: parent
-            text: taskData?.project ?? ""
-            pointSize: Style.fontSizeXS
-            color: Color.mOnSecondaryContainer
-          }
-        }
+        property bool hasMetadata: (!!(taskData && taskData.tags && taskData.tags.length > 0)) ||
+                                   (!!(taskData && taskData.due)) ||
+                                   (!!(taskData && taskData.scheduled))
 
         // Tags
         Repeater {
-          model: {
-            var tags = taskData?.tags ?? [];
-            return tags.filter(t => t !== "someday").slice(0, 3);
-          }
+          model: _getVisibleTags()
           delegate: Rectangle {
             height: tagLabel.implicitHeight + 4
             width: tagLabel.implicitWidth + Style.marginS * 2
             radius: Style.radiusXS
-            color: Color.mTertiaryContainer
+            color: Qt.alpha(Color.mTertiary, 0.18)
 
             NText {
               id: tagLabel
               anchors.centerIn: parent
               text: modelData
               pointSize: Style.fontSizeXS
-              color: Color.mOnTertiaryContainer
+              color: Color.mOnSurface
             }
           }
         }
@@ -150,26 +137,31 @@ Rectangle {
         Item { Layout.fillWidth: true }
 
         // Due date
-        NText {
-          visible: !!taskData?.due || !!taskData?.scheduled
-          text: _formatDate(taskData?.due ?? taskData?.scheduled)
-          pointSize: Style.fontSizeXS
-          color: _isOverdue(taskData?.due) ? Color.mError : Color.mOnSurfaceVariant
-        }
-      }
-    }
+	        NText {
+	          visible: !!(taskData && (taskData.due || taskData.scheduled))
+	          text: _formatDate((taskData && taskData.due) ? taskData.due : (taskData ? taskData.scheduled : null))
+	          pointSize: Style.fontSizeXS
+	          color: _isOverdue(taskData ? taskData.due : null) ? Color.mError : Color.mOnSurfaceVariant
+	          Layout.alignment: Qt.AlignVCenter
+	        }
+	      }
+	    }
+	  }
 
-    // Delete button (shown on hover)
-    NIconButton {
-      icon: "trash"
-      baseSize: 24
-      visible: mouseArea.containsMouse && !isCompleted
-      opacity: visible ? 1.0 : 0.0
-      onClicked: root.deleteClicked()
+  // Delete button (shown on hover) - overlay so it doesn't reflow the RowLayout.
+	  NIconButton {
+	    id: deleteButton
+	    anchors.right: parent.right
+	    anchors.verticalCenter: contentRow.verticalCenter
+	    anchors.rightMargin: Style.marginM
+	    icon: "trash"
+	    baseSize: 20
+	    enabled: hoverHandler.hovered && !isCompleted
+    opacity: enabled ? 1.0 : 0.0
+    onClicked: root.deleteClicked()
 
-      Behavior on opacity {
-        NumberAnimation { duration: Style.animationFast }
-      }
+    Behavior on opacity {
+      NumberAnimation { duration: Style.animationFast }
     }
   }
 
@@ -207,6 +199,19 @@ Rectangle {
     } catch (e) {
       return dateStr;
     }
+  }
+
+  function _getVisibleTags() {
+    var tags = (taskData && taskData.tags) ? taskData.tags : [];
+    var visible = [];
+    for (var i = 0; i < tags.length; i++) {
+      var tag = tags[i];
+      if (!tag) continue;
+      if (tag === "someday") continue;
+      visible.push(tag);
+      if (visible.length >= 3) break;
+    }
+    return visible;
   }
 
   function _isOverdue(dateStr) {

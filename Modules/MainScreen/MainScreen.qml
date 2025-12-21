@@ -543,6 +543,3 @@ NLayerShellWindow {
     onActivated: PanelService.openedPanel.onCtrlPPressed()
   }
 }
-
-
-

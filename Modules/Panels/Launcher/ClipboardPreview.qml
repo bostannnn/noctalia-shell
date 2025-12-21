@@ -68,7 +68,7 @@ Item {
   Rectangle {
     anchors.fill: parent
     color: Color.mSurface || "#f5f5f5"
-    border.color: Color.mOutlineVariant || "#cccccc"
+    border.color: Color.mOutline
     border.width: 1
     radius: Style.radiusM
 
@@ -125,5 +125,4 @@ Item {
     }
   }
 }
-
 

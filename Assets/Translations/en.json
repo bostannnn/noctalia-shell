@@ -3039,16 +3039,16 @@
     },
     "empty": {
       "anytime": "Tasks without specific dates appear here",
+      "completed": "Completed tasks will appear here",
       "inbox": "Add tasks to get started",
-      "logbook": "Completed tasks will appear here",
       "someday": "Ideas for later go here",
       "today": "Nothing scheduled for today",
       "upcoming": "No upcoming tasks scheduled"
     },
     "filter": {
       "anytime": "Anytime",
+      "completed": "Completed",
       "inbox": "Inbox",
-      "logbook": "Logbook",
       "someday": "Someday",
       "today": "Today",
       "upcoming": "Upcoming"
@@ -3100,5 +3100,4 @@
     }
   }
 }
-
 

@@ -70,28 +70,28 @@ NIconButton {
       }
     ]
 
-    onTriggered: action => {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-                   if (popupMenuWindow) {
-                     popupMenuWindow.close();
-                   }
+    onTriggered: function(action) {
+      var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
+      if (popupMenuWindow) {
+        popupMenuWindow.close();
+      }
 
-                   if (action === "refresh") {
-                     TaskService.loadTasks();
-                   }
-                 }
+      if (action === "refresh") {
+        TaskService.loadTasks();
+      }
+    }
   }
 
   onClicked: {
     var panel = PanelService.getPanel("todoPanel", screen);
-    panel?.toggle(this);
+    if (panel) panel.toggle(this);
   }
 
   onRightClicked: {
     var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
     if (popupMenuWindow) {
       popupMenuWindow.showContextMenu(contextMenu);
-      const pos = BarService.getContextMenuPosition(root, contextMenu.implicitWidth, contextMenu.implicitHeight);
+      var pos = BarService.getContextMenuPosition(root, contextMenu.implicitWidth, contextMenu.implicitHeight);
       contextMenu.openAtItem(root, pos.x, pos.y);
     }
   }
