@@ -31,23 +31,54 @@ Singleton {
   signal overviewToggled(bool open)
 
   property int _targetWorkspace: -1
+  property bool _closeInProgress: false
+  property bool _disabledAnimationsThisClose: false
+
+  function _requestClose(targetWsId) {
+    if (!isOpen && !backgroundVisible) return;
+    if (targetWsId !== undefined && targetWsId !== null) {
+      _targetWorkspace = targetWsId;
+    }
+
+    if (_closeInProgress) return;
+    _closeInProgress = true;
+    _disabledAnimationsThisClose = false;
+    closeFallbackTimer.restart();
+    disableAnimations.running = true;
+  }
+
+  function _completeClose() {
+    if (!_closeInProgress) return;
+    closeFallbackTimer.stop();
+    root.isOpen = false;
+    root.overviewToggled(false);
+    workspaceTimer.start();
+    _closeInProgress = false;
+  }
 
   // Processes to control animations
   Process {
     id: disableAnimations
     command: ["hyprctl", "keyword", "animations:enabled", "0"]
-    onExited: {
-      // Close the overlay
-      root.isOpen = false;
-      root.overviewToggled(false);
-      // Wait for Hyprland's focus restoration, then switch workspace
-      workspaceTimer.start();
+    onExited: function(exitCode) {
+      root._disabledAnimationsThisClose = (exitCode === 0);
+      root._completeClose();
     }
   }
 
   Process {
     id: enableAnimations
     command: ["hyprctl", "keyword", "animations:enabled", "1"]
+  }
+
+  Timer {
+    id: closeFallbackTimer
+    interval: 400
+    repeat: false
+    onTriggered: {
+      Logger.w("OverviewService", "Close fallback timer triggered; forcing close.");
+      root._completeClose();
+    }
   }
 
   Timer {
@@ -70,7 +101,9 @@ Singleton {
     repeat: false
     onTriggered: {
       root.backgroundVisible = false;
-      enableAnimations.running = true;
+      if (root._disabledAnimationsThisClose) {
+        enableAnimations.running = true;
+      }
     }
   }
 
@@ -83,6 +116,7 @@ Singleton {
   }
 
   function open() {
+    if (_closeInProgress) return;
     if (!isOpen) {
       // Remember current workspace for cancel
       originalWorkspace = Hyprland.focusedMonitor?.activeWorkspace?.id ?? 1;
@@ -103,22 +137,16 @@ Singleton {
   // Close and stay on current workspace
   function close() {
     if (isOpen) {
-      _targetWorkspace = currentWorkspace;
-      Logger.d("OverviewService", "Overview closing, target workspace:", _targetWorkspace);
-      // Disable animations first, then close in callback
-      disableAnimations.running = true;
+      Logger.d("OverviewService", "Overview closing, target workspace:", currentWorkspace);
+      _requestClose(currentWorkspace);
     }
   }
 
   // Close and return to original workspace (for Escape)
   function cancel() {
     if (isOpen) {
-      _targetWorkspace = originalWorkspace;
-      Logger.d("OverviewService", "Overview cancelling, target workspace:", _targetWorkspace);
-      // Disable animations first, then close in callback
-      disableAnimations.running = true;
+      Logger.d("OverviewService", "Overview cancelling, target workspace:", originalWorkspace);
+      _requestClose(originalWorkspace);
     }
   }
 }
-
-

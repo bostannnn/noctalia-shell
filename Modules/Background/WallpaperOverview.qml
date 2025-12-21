@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
+import qs.Widgets
 
 Loader {
   active: CompositorService.isNiri && Settings.data.wallpaper.enabled && Settings.data.wallpaper.overviewEnabled
@@ -12,7 +13,7 @@ Loader {
   sourceComponent: Variants {
     model: Quickshell.screens
 
-    delegate: PanelWindow {
+    delegate: NLayerShellWindow {
       id: panelWindow
 
       required property ShellScreen modelData
@@ -54,9 +55,9 @@ Loader {
 
       color: Color.transparent
       screen: modelData
-      WlrLayershell.layer: WlrLayer.Background
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
-      WlrLayershell.namespace: "noctalia-overview-" + (screen?.name || "unknown")
+      layerShellLayer: WlrLayer.Background
+      layerShellExclusionMode: ExclusionMode.Ignore
+      layerNamespace: "noctalia-overview-" + (screen?.name || "unknown")
 
       anchors {
         top: true
@@ -95,5 +96,3 @@ Loader {
     }
   }
 }
-
-

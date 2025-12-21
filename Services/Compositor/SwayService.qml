@@ -57,56 +57,34 @@ Item {
   }
 
   // Sway outputs process for display scale detection
-  Process {
+  JsonProcess {
     id: swayOutputsProcess
     running: false
     command: ["swaymsg", "-t", "get_outputs", "-r"]
+    logTag: "SwayService"
 
-    property string accumulatedOutput: ""
+    onJsonReady: function(outputsData) {
+      const scales = {};
 
-    stdout: SplitParser {
-      onRead: function (line) {
-        swayOutputsProcess.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function (exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("SwayService", "Failed to query outputs, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        const outputsData = JSON.parse(accumulatedOutput);
-        const scales = {};
-
-        for (const output of outputsData) {
-          if (output.name) {
-            scales[output.name] = {
-              "name": output.name,
-              "scale": output.scale || 1.0,
-              "width": output.current_mode ? output.current_mode.width : 0,
-              "height": output.current_mode ? output.current_mode.height : 0,
-              "refresh_rate": output.current_mode ? output.current_mode.refresh : 0,
-              "x": output.rect ? output.rect.x : 0,
-              "y": output.rect ? output.rect.y : 0,
-              "active": output.active || false,
-              "focused": output.focused || false,
-              "current_workspace": output.current_workspace || ""
-            };
-          }
+      for (const output of outputsData) {
+        if (output.name) {
+          scales[output.name] = {
+            "name": output.name,
+            "scale": output.scale || 1.0,
+            "width": output.current_mode ? output.current_mode.width : 0,
+            "height": output.current_mode ? output.current_mode.height : 0,
+            "refresh_rate": output.current_mode ? output.current_mode.refresh : 0,
+            "x": output.rect ? output.rect.x : 0,
+            "y": output.rect ? output.rect.y : 0,
+            "active": output.active || false,
+            "focused": output.focused || false,
+            "current_workspace": output.current_workspace || ""
+          };
         }
+      }
 
-        // Notify CompositorService (it will emit displayScalesChanged)
-        if (CompositorService && CompositorService.onDisplayScalesUpdated) {
-          CompositorService.onDisplayScalesUpdated(scales);
-        }
-      } catch (e) {
-        Logger.e("SwayService", "Failed to parse outputs:", e);
-      } finally {
-        // Clear accumulated output for next query
-        accumulatedOutput = "";
+      if (CompositorService && CompositorService.onDisplayScalesUpdated) {
+        CompositorService.onDisplayScalesUpdated(scales);
       }
     }
   }
@@ -125,42 +103,20 @@ Item {
     swayInputsProcess.running = true;
   }
   // Sway inputs process for keyboard layout detection
-  Process {
+  JsonProcess {
     id: swayInputsProcess
     running: false
     command: ["swaymsg", "-t", "get_inputs", "-r"]
+    logTag: "SwayService"
 
-    property string accumulatedOutput: ""
-
-    stdout: SplitParser {
-      onRead: function (line) {
-        // Accumulate lines instead of parsing each one
-        swayInputsProcess.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function (exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("SwayService", "Failed to query inputs, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        const inputsData = JSON.parse(accumulatedOutput);
-        for (const input of inputsData) {
-          if (input.type == "keyboard") {
-            const layoutName = input.xkb_active_layout_name;
-            KeyboardLayoutService.setCurrentLayout(layoutName);
-            Logger.d("SwayService", "Keyboard layout switched:", layoutName);
-            break;
-          }
+    onJsonReady: function(inputsData) {
+      for (const input of inputsData) {
+        if (input.type == "keyboard") {
+          const layoutName = input.xkb_active_layout_name;
+          KeyboardLayoutService.setCurrentLayout(layoutName);
+          Logger.d("SwayService", "Keyboard layout switched:", layoutName);
+          break;
         }
-      } catch (e) {
-        Logger.e("SwayService", "Failed to parse inputs:", e);
-      } finally {
-        // Clear accumulated output for next query
-        accumulatedOutput = "";
       }
     }
   }
@@ -378,5 +334,4 @@ Item {
     }
   }
 }
-
 

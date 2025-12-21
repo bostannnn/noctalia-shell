@@ -343,7 +343,7 @@ Variants {
     }
 
     // Visual Component
-    sourceComponent: PanelWindow {
+    sourceComponent: NLayerShellWindow {
       id: panel
       screen: modelData
 
@@ -521,10 +521,10 @@ Variants {
       implicitHeight: verticalMode ? (root.currentOSDType === OSD.Type.CustomText ? customTextVHeight : (isShortMode ? lockKeyVHeight : longVHeight)) : longHHeight
       color: Color.transparent
 
-      WlrLayershell.namespace: "noctalia-osd-" + (screen?.name || "unknown")
-      WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-      WlrLayershell.layer: Settings.data.osd?.overlayLayer ? WlrLayer.Overlay : WlrLayer.Top
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
+      layerNamespace: "noctalia-osd-" + (screen?.name || "unknown")
+      layerShellKeyboardFocus: WlrKeyboardFocus.None
+      layerShellLayer: Settings.data.osd?.overlayLayer ? WlrLayer.Overlay : WlrLayer.Top
+      layerShellExclusionMode: ExclusionMode.Ignore
 
       Item {
         id: osdItem

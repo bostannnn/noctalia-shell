@@ -58,57 +58,34 @@ Item {
   }
 
   // Hyprland monitors process for display scale detection
-  Process {
+  JsonProcess {
     id: hyprlandMonitorsProcess
     running: false
     command: ["hyprctl", "monitors", "-j"]
+    logTag: "HyprlandService"
 
-    property string accumulatedOutput: ""
+    onJsonReady: function(monitorsData) {
+      const scales = {};
 
-    stdout: SplitParser {
-      onRead: function (line) {
-        // Accumulate lines instead of parsing each one
-        hyprlandMonitorsProcess.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function (exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("HyprlandService", "Failed to query monitors, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        const monitorsData = JSON.parse(accumulatedOutput);
-        const scales = {};
-
-        for (const monitor of monitorsData) {
-          if (monitor.name) {
-            scales[monitor.name] = {
-              "name": monitor.name,
-              "scale": monitor.scale || 1.0,
-              "width": monitor.width || 0,
-              "height": monitor.height || 0,
-              "refresh_rate": monitor.refreshRate || 0,
-              "x": monitor.x || 0,
-              "y": monitor.y || 0,
-              "active_workspace": monitor.activeWorkspace ? monitor.activeWorkspace.id : -1,
-              "vrr": monitor.vrr || false,
-              "focused": monitor.focused || false
-            };
-          }
+      for (const monitor of monitorsData) {
+        if (monitor.name) {
+          scales[monitor.name] = {
+            "name": monitor.name,
+            "scale": monitor.scale || 1.0,
+            "width": monitor.width || 0,
+            "height": monitor.height || 0,
+            "refresh_rate": monitor.refreshRate || 0,
+            "x": monitor.x || 0,
+            "y": monitor.y || 0,
+            "active_workspace": monitor.activeWorkspace ? monitor.activeWorkspace.id : -1,
+            "vrr": monitor.vrr || false,
+            "focused": monitor.focused || false
+          };
         }
+      }
 
-        // Notify CompositorService (it will emit displayScalesChanged)
-        if (CompositorService && CompositorService.onDisplayScalesUpdated) {
-          CompositorService.onDisplayScalesUpdated(scales);
-        }
-      } catch (e) {
-        Logger.e("HyprlandService", "Failed to parse monitors:", e);
-      } finally {
-        // Clear accumulated output for next query
-        accumulatedOutput = "";
+      if (CompositorService && CompositorService.onDisplayScalesUpdated) {
+        CompositorService.onDisplayScalesUpdated(scales);
       }
     }
   }
@@ -117,41 +94,19 @@ Item {
     hyprlandDevicesProcess.running = true;
   }
   // Hyprland devices process for keyboard layout detection
-  Process {
+  JsonProcess {
     id: hyprlandDevicesProcess
     running: false
     command: ["hyprctl", "devices", "-j"]
+    logTag: "HyprlandService"
 
-    property string accumulatedOutput: ""
-
-    stdout: SplitParser {
-      onRead: function (line) {
-        // Accumulate lines instead of parsing each one
-        hyprlandDevicesProcess.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function (exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("HyprlandService", "Failed to query devices, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        const devicesData = JSON.parse(accumulatedOutput);
-        for (const keyboard of devicesData.keyboards) {
-          if (keyboard.main) {
-            const layoutName = keyboard.active_keymap;
-            KeyboardLayoutService.setCurrentLayout(layoutName);
-            Logger.d("HyprlandService", "Keyboard layout switched:", layoutName);
-          }
+    onJsonReady: function(devicesData) {
+      for (const keyboard of devicesData.keyboards) {
+        if (keyboard.main) {
+          const layoutName = keyboard.active_keymap;
+          KeyboardLayoutService.setCurrentLayout(layoutName);
+          Logger.d("HyprlandService", "Keyboard layout switched:", layoutName);
         }
-      } catch (e) {
-        Logger.e("HyprlandService", "Failed to parse devices:", e);
-      } finally {
-        // Clear accumulated output for next query
-        accumulatedOutput = "";
       }
     }
   }
@@ -465,5 +420,4 @@ Item {
     }
   }
 }
-
 

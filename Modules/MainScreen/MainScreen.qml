@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import "Backgrounds" as Backgrounds
 
 import qs.Commons
+import qs.Widgets
 
 // All panels
 import qs.Modules.Bar
@@ -33,7 +34,7 @@ import qs.Services.UI
 /**
 * MainScreen - Single PanelWindow per screen that manages all panels and the bar
 */
-PanelWindow {
+NLayerShellWindow {
   id: root
 
   // Expose panels as readonly property aliases
@@ -81,10 +82,10 @@ PanelWindow {
   }
 
   // Wayland
-  WlrLayershell.layer: WlrLayer.Top
-  WlrLayershell.namespace: "noctalia-background-" + (screen?.name || "unknown")
-  WlrLayershell.exclusionMode: ExclusionMode.Ignore // Don't reserve space - BarExclusionZone handles that
-  WlrLayershell.keyboardFocus: {
+  layerShellLayer: WlrLayer.Top
+  layerNamespace: "noctalia-background-" + (screen?.name || "unknown")
+  layerShellExclusionMode: ExclusionMode.Ignore // Don't reserve space - BarExclusionZone handles that
+  layerShellKeyboardFocus: {
     if (!root.isPanelOpen) {
       return WlrKeyboardFocus.None;
     }
@@ -542,7 +543,6 @@ PanelWindow {
     onActivated: PanelService.openedPanel.onCtrlPPressed()
   }
 }
-
 
 
 

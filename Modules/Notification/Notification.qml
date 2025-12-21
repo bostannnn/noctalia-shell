@@ -41,13 +41,13 @@ Variants {
       }
     }
 
-    sourceComponent: PanelWindow {
+    sourceComponent: NLayerShellWindow {
       id: notifWindow
       screen: modelData
 
-      WlrLayershell.namespace: "noctalia-notifications-" + (screen?.name || "unknown")
-      WlrLayershell.layer: (Settings.data.notifications?.overlayLayer) ? WlrLayer.Overlay : WlrLayer.Top
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
+      layerNamespace: "noctalia-notifications-" + (screen?.name || "unknown")
+      layerShellLayer: (Settings.data.notifications?.overlayLayer) ? WlrLayer.Overlay : WlrLayer.Top
+      layerShellExclusionMode: ExclusionMode.Ignore
 
       color: Color.transparent
 

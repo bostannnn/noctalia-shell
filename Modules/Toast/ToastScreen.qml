@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Services.UI
+import qs.Widgets
 
 Item {
   id: root
@@ -126,7 +127,7 @@ Item {
       }
     }
 
-    sourceComponent: PanelWindow {
+    sourceComponent: NLayerShellWindow {
       id: panel
 
       property alias toastItem: toastItem
@@ -190,10 +191,10 @@ Item {
 
       color: Color.transparent
 
-      WlrLayershell.layer: (Settings.data.notifications && Settings.data.notifications.overlayLayer) ? WlrLayer.Overlay : WlrLayer.Top
-      WlrLayershell.namespace: "noctalia-toast-" + (screen?.name || "unknown")
-      WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
+      layerShellLayer: (Settings.data.notifications && Settings.data.notifications.overlayLayer) ? WlrLayer.Overlay : WlrLayer.Top
+      layerNamespace: "noctalia-toast-" + (screen?.name || "unknown")
+      layerShellKeyboardFocus: WlrKeyboardFocus.None
+      layerShellExclusionMode: ExclusionMode.Ignore
 
       //mask: Region {}
       function showToast(message, description, icon, type, duration) {

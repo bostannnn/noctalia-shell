@@ -3,12 +3,13 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Services.UI
+import qs.Widgets
 
 // Generic full-screen popup window for menus and context menus
 // This is a top-level PanelWindow (sibling to MainScreen, not nested inside it)
 // Provides click-outside-to-close functionality for any popup content
 // Loads TrayMenu by default but can show context menus via showContextMenu()
-PanelWindow {
+NLayerShellWindow {
   id: root
 
   required property ShellScreen screen
@@ -28,10 +29,10 @@ PanelWindow {
   color: Color.transparent
 
   // Use Top layer (same as MainScreen) for proper event handling
-  WlrLayershell.layer: WlrLayer.Top
-  WlrLayershell.keyboardFocus: hasDialog ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-  WlrLayershell.namespace: "noctalia-" + windowType + "-" + (screen?.name || "unknown")
-  WlrLayershell.exclusionMode: ExclusionMode.Ignore
+  layerShellLayer: WlrLayer.Top
+  layerShellKeyboardFocus: hasDialog ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+  layerNamespace: "noctalia-" + windowType + "-" + (screen?.name || "unknown")
+  layerShellExclusionMode: ExclusionMode.Ignore
 
   // Track if a dialog is currently open (needed for keyboard focus)
   property bool hasDialog: false
@@ -99,5 +100,4 @@ PanelWindow {
   // Expose the dialog container for external use
   readonly property alias dialogParent: dialogContainer
 }
-
 

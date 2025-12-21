@@ -286,7 +286,7 @@ Loader {
       Loader {
         active: (barIsReady || !hasBar) && modelData && (Settings.data.dock.monitors.length === 0 || Settings.data.dock.monitors.includes(modelData.name)) && autoHide
 
-        sourceComponent: PanelWindow {
+        sourceComponent: NLayerShellWindow {
           id: peekWindow
 
           screen: modelData
@@ -296,8 +296,8 @@ Loader {
           focusable: false
           color: Color.transparent
 
-          WlrLayershell.namespace: "noctalia-dock-peek-" + (screen?.name || "unknown")
-          WlrLayershell.exclusionMode: ExclusionMode.Ignore
+          layerNamespace: "noctalia-dock-peek-" + (screen?.name || "unknown")
+          layerShellExclusionMode: ExclusionMode.Ignore
           implicitHeight: peekHeight
 
           MouseArea {
@@ -327,7 +327,7 @@ Loader {
         id: dockWindowLoader
         active: Settings.data.dock.enabled && (barIsReady || !hasBar) && modelData && (Settings.data.dock.monitors.length === 0 || Settings.data.dock.monitors.includes(modelData.name)) && dockLoaded && ToplevelManager && (dockApps.length > 0)
 
-        sourceComponent: PanelWindow {
+        sourceComponent: NLayerShellWindow {
           id: dockWindow
 
           screen: modelData
@@ -335,8 +335,8 @@ Loader {
           focusable: false
           color: Color.transparent
 
-          WlrLayershell.namespace: "noctalia-dock-" + (screen?.name || "unknown")
-          WlrLayershell.exclusionMode: exclusive ? ExclusionMode.Auto : ExclusionMode.Ignore
+          layerNamespace: "noctalia-dock-" + (screen?.name || "unknown")
+          layerShellExclusionMode: exclusive ? ExclusionMode.Auto : ExclusionMode.Ignore
 
           // Size to fit the dock container exactly
           implicitWidth: dockContainerWrapper.width

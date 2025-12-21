@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
+import qs.Widgets
 
 /**
  * BorderExclusionZones - Creates 4 invisible windows to reserve screen border space
@@ -50,7 +51,7 @@ Item {
   }
   
   // Left edge exclusion zone
-  PanelWindow {
+  NLayerShellWindow {
     id: leftZone
     screen: root.screen
     color: "transparent"
@@ -58,9 +59,9 @@ Item {
     
     visible: root.enabled
     
-    WlrLayershell.layer: WlrLayer.Bottom
-    WlrLayershell.namespace: "noctalia-border-left"
-    WlrLayershell.exclusionMode: ExclusionMode.Auto
+    layerShellLayer: WlrLayer.Bottom
+    layerNamespace: "noctalia-border-left"
+    layerShellExclusionMode: ExclusionMode.Auto
     
     anchors {
       left: true
@@ -78,7 +79,7 @@ Item {
   }
   
   // Right edge exclusion zone
-  PanelWindow {
+  NLayerShellWindow {
     id: rightZone
     screen: root.screen
     color: "transparent"
@@ -86,9 +87,9 @@ Item {
     
     visible: root.enabled
     
-    WlrLayershell.layer: WlrLayer.Bottom
-    WlrLayershell.namespace: "noctalia-border-right"
-    WlrLayershell.exclusionMode: ExclusionMode.Auto
+    layerShellLayer: WlrLayer.Bottom
+    layerNamespace: "noctalia-border-right"
+    layerShellExclusionMode: ExclusionMode.Auto
     
     anchors {
       right: true
@@ -101,7 +102,7 @@ Item {
   }
   
   // Top edge exclusion zone
-  PanelWindow {
+  NLayerShellWindow {
     id: topZone
     screen: root.screen
     color: "transparent"
@@ -109,9 +110,9 @@ Item {
     
     visible: root.enabled
     
-    WlrLayershell.layer: WlrLayer.Bottom
-    WlrLayershell.namespace: "noctalia-border-top"
-    WlrLayershell.exclusionMode: ExclusionMode.Auto
+    layerShellLayer: WlrLayer.Bottom
+    layerNamespace: "noctalia-border-top"
+    layerShellExclusionMode: ExclusionMode.Auto
     
     anchors {
       top: true
@@ -124,7 +125,7 @@ Item {
   }
   
   // Bottom edge exclusion zone
-  PanelWindow {
+  NLayerShellWindow {
     id: bottomZone
     screen: root.screen
     color: "transparent"
@@ -132,9 +133,9 @@ Item {
     
     visible: root.enabled
     
-    WlrLayershell.layer: WlrLayer.Bottom
-    WlrLayershell.namespace: "noctalia-border-bottom"
-    WlrLayershell.exclusionMode: ExclusionMode.Auto
+    layerShellLayer: WlrLayer.Bottom
+    layerNamespace: "noctalia-border-bottom"
+    layerShellExclusionMode: ExclusionMode.Auto
     
     anchors {
       bottom: true

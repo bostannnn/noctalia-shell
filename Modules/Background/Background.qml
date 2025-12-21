@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import qs.Commons
 import qs.Services.UI
+import qs.Widgets
 import "." as Background
 
 Variants {
@@ -16,7 +17,7 @@ Variants {
 
     active: modelData && Settings.data.wallpaper.enabled
 
-    sourceComponent: PanelWindow {
+    sourceComponent: NLayerShellWindow {
       id: root
 
       // Track what we're ACTUALLY displaying
@@ -88,9 +89,9 @@ Variants {
 
       color: Color.transparent
       screen: modelData
-      WlrLayershell.layer: WlrLayer.Background
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
-      WlrLayershell.namespace: "noctalia-wallpaper-" + (screen?.name || "unknown")
+      layerShellLayer: WlrLayer.Background
+      layerShellExclusionMode: ExclusionMode.Ignore
+      layerNamespace: "noctalia-wallpaper-" + (screen?.name || "unknown")
 
       anchors {
         bottom: true
@@ -299,5 +300,4 @@ Variants {
     }
   }
 }
-
 

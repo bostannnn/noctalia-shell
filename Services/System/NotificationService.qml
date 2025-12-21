@@ -8,6 +8,7 @@ import Quickshell.Services.Notifications
 import Quickshell.Wayland
 import "../../Helpers/sha256.js" as Checksum
 import qs.Commons
+import qs.Widgets
 import qs.Services.Media
 import qs.Services.Power
 import qs.Services.UI
@@ -39,11 +40,11 @@ Singleton {
   property var lastSoundTime: 0
   readonly property int minSoundInterval: 100
 
-  PanelWindow {
+  NLayerShellWindow {
     implicitHeight: 0
     implicitWidth: 0
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.namespace: "noctalia-notification-image-renderer"
+    layerShellExclusionMode: ExclusionMode.Ignore
+    layerNamespace: "noctalia-notification-image-renderer"
     color: Color.transparent
     mask: Region {}
 

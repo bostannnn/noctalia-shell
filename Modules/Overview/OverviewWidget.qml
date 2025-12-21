@@ -164,10 +164,12 @@ Item {
               if (!hyprToplevel) continue;
               
               var rawAddr = hyprToplevel.address;
-              if (!rawAddr) continue;
+              if (rawAddr === undefined || rawAddr === null) continue;
               
               // Check if address already has 0x prefix
-              var addr = rawAddr.startsWith("0x") ? rawAddr : `0x${rawAddr}`;
+              var rawAddrStr = String(rawAddr);
+              if (!rawAddrStr.length) continue;
+              var addr = rawAddrStr.startsWith("0x") ? rawAddrStr : `0x${rawAddrStr}`;
               
               var win = windowByAddress[addr];
               if (!win) continue;
@@ -183,10 +185,10 @@ Item {
             
             // Sort results
             results.sort((a, b) => {
-              var addrA = a.HyprlandToplevel?.address ?? "";
-              addrA = addrA.startsWith("0x") ? addrA : `0x${addrA}`;
-              var addrB = b.HyprlandToplevel?.address ?? "";
-              addrB = addrB.startsWith("0x") ? addrB : `0x${addrB}`;
+              var addrA = String(a.HyprlandToplevel?.address ?? "");
+              addrA = addrA.startsWith("0x") ? addrA : (addrA.length ? `0x${addrA}` : "");
+              var addrB = String(b.HyprlandToplevel?.address ?? "");
+              addrB = addrB.startsWith("0x") ? addrB : (addrB.length ? `0x${addrB}` : "");
               var winA = windowByAddress[addrA];
               var winB = windowByAddress[addrB];
 
@@ -208,8 +210,8 @@ Item {
           required property int index
           property int monitorId: windowData?.monitor ?? 0
           property var windowMonitor: HyprlandDataService.monitors.find(m => m.id === monitorId)
-          property string rawAddress: modelData.HyprlandToplevel?.address ?? ""
-          property string address: rawAddress.startsWith("0x") ? rawAddress : `0x${rawAddress}`
+          property string rawAddress: String(modelData.HyprlandToplevel?.address ?? "")
+          property string address: rawAddress.startsWith("0x") ? rawAddress : (rawAddress.length ? `0x${rawAddress}` : "")
           windowData: windowByAddress[address] ?? null
           toplevel: modelData
           monitorData: windowMonitor
@@ -352,5 +354,4 @@ Item {
     }
   }
 }
-
 

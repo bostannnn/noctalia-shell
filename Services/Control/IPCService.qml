@@ -30,6 +30,19 @@ Item {
   }
 
   IpcHandler {
+    target: "overview"
+    function toggle() {
+      OverviewService.toggle();
+    }
+    function open() {
+      OverviewService.open();
+    }
+    function close() {
+      OverviewService.close();
+    }
+  }
+
+  IpcHandler {
     target: "screenRecorder"
     function toggle() {
       if (ScreenRecorderService.isAvailable) {
@@ -478,5 +491,4 @@ Item {
     }
   }
 }
-
 

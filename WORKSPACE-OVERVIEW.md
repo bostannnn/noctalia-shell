@@ -21,12 +21,12 @@ This integration adds a workspace overview feature from [quickshell-overview](ht
 
 Toggle the overview via IPC:
 ```bash
-quickshell ipc overview toggle
+quickshell ipc call overview toggle
 ```
 
 Or bind it to a key in your Hyprland config:
 ```conf
-bind = $mainMod, Tab, exec, quickshell ipc overview toggle
+bind = $mainMod, Tab, exec, quickshell ipc call overview toggle
 ```
 
 ## Configuration
@@ -64,5 +64,3 @@ These can be moved to `Settings.qml` for user configuration if desired.
 ## Credits
 
 Based on [quickshell-overview](https://github.com/Shanu-Kumawat/quickshell-overview) by Shanu Kumawat, adapted for noctalia-shell's architecture and theming system.
-
-

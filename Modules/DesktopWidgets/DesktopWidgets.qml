@@ -49,14 +49,14 @@ Variants {
     // Only create PanelWindow if enabled AND screen has widgets
     active: modelData && Settings.data.desktopWidgets.enabled && screenWidgets.length > 0
 
-    sourceComponent: PanelWindow {
+    sourceComponent: NLayerShellWindow {
       id: window
       color: Color.transparent
       screen: screenLoader.modelData
 
-      WlrLayershell.layer: WlrLayer.Bottom
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
-      WlrLayershell.namespace: "noctalia-desktop-widgets-" + (screen?.name || "unknown")
+      layerShellLayer: WlrLayer.Bottom
+      layerShellExclusionMode: ExclusionMode.Ignore
+      layerNamespace: "noctalia-desktop-widgets-" + (screen?.name || "unknown")
 
       anchors {
         top: true

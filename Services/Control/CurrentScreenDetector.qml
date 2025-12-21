@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
+import qs.Widgets
 
 /**
 * Detects which screen the cursor is currently on by creating a temporary
@@ -91,12 +92,12 @@ Item {
           id: screenDetectorLoader
           active: false
 
-          sourceComponent: PanelWindow {
+          sourceComponent: NLayerShellWindow {
             implicitWidth: 0
             implicitHeight: 0
             color: Color.transparent
-            WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.namespace: "noctalia-screen-detector"
+            layerShellExclusionMode: ExclusionMode.Ignore
+            layerNamespace: "noctalia-screen-detector"
             mask: Region {}
 
             onScreenChanged: root.screenDetected(screen)

@@ -7,11 +7,12 @@ import Quickshell.Hyprland
 import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
+import qs.Widgets
 
-/**
+ /**
  * Workspace Overview for Hyprland.
  * Shows a grid of workspaces with live window previews.
- * Toggle with: quickshell ipc overview toggle
+ * Toggle with: quickshell ipc call overview toggle
  */
 Scope {
   id: overviewScope
@@ -24,16 +25,19 @@ Scope {
     id: backgroundVariants
     model: isActive ? Quickshell.screens : []
 
-    PanelWindow {
+    NLayerShellWindow {
       id: bgWindow
       required property var modelData
       screen: modelData
       visible: OverviewService.backgroundVisible
 
-      WlrLayershell.namespace: "noctalia-overview-bg"
-      WlrLayershell.layer: WlrLayer.Overlay
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
-      color: Color.mSurface  // Fully opaque to mask transition
+      layerNamespace: "noctalia-overview-bg"
+      // Keep the background below the actual overview UI (which is Overlay),
+      // otherwise it can occlude the grid and look like a "grey screen".
+      layerShellLayer: WlrLayer.Top
+      layerShellExclusionMode: ExclusionMode.Ignore
+      // Dim the screen while keeping the overview UI readable.
+      color: Qt.rgba(0, 0, 0, 0.55)
 
       // Use screen dimensions directly to cover full screen
       implicitWidth: screen?.width ?? 1920
@@ -41,7 +45,9 @@ Scope {
 
       anchors {
         top: true
+        bottom: true
         left: true
+        right: true
       }
 
       // Click anywhere on background to cancel
@@ -57,7 +63,7 @@ Scope {
     id: overviewVariants
     model: isActive ? Quickshell.screens : []
 
-    PanelWindow {
+    NLayerShellWindow {
       id: root
       required property var modelData
       readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
@@ -65,10 +71,10 @@ Scope {
       screen: modelData
       visible: OverviewService.isOpen
 
-      WlrLayershell.namespace: "noctalia-overview"
-      WlrLayershell.layer: WlrLayer.Overlay
-      WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-      WlrLayershell.exclusionMode: ExclusionMode.Ignore
+      layerNamespace: "noctalia-overview"
+      layerShellLayer: WlrLayer.Overlay
+      layerShellKeyboardFocus: WlrKeyboardFocus.Exclusive
+      layerShellExclusionMode: ExclusionMode.Ignore
       color: "transparent"
 
       anchors {
@@ -153,11 +159,9 @@ Scope {
       ColumnLayout {
         id: columnLayout
         visible: OverviewService.isOpen
-        anchors {
-          horizontalCenter: parent.horizontalCenter
-          top: parent.top
-          topMargin: 100
-        }
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Math.round(parent.height * 0.10)
 
         Loader {
           id: overviewLoader
@@ -171,20 +175,5 @@ Scope {
     }
   }
 
-  // IPC Handler for overview commands
-  IpcHandler {
-    target: "overview"
-
-    function toggle() {
-      OverviewService.toggle();
-    }
-    function close() {
-      OverviewService.close();
-    }
-    function open() {
-      OverviewService.open();
-    }
-  }
+  // IPC wiring lives in `Services/Control/IPCService.qml` to keep all IPC targets centralized.
 }
-
-

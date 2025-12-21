@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Modules.Bar
 import qs.Services.UI
+import qs.Widgets
 
 /**
 * BarContentWindow - Separate transparent PanelWindow for bar content
@@ -19,7 +20,7 @@ import qs.Services.UI
 *
 * This component should be instantiated once per screen by AllScreens.qml
 */
-PanelWindow {
+NLayerShellWindow {
   id: barWindow
 
   // Note: screen property is inherited from PanelWindow and should be set by parent
@@ -30,9 +31,9 @@ PanelWindow {
   }
 
   // Wayland layer configuration
-  WlrLayershell.namespace: "noctalia-bar-content-" + (barWindow.screen?.name || "unknown")
-  WlrLayershell.layer: WlrLayer.Top
-  WlrLayershell.exclusionMode: ExclusionMode.Ignore // Don't reserve space - BarExclusionZone in MainScreen handles that
+  layerNamespace: "noctalia-bar-content-" + (barWindow.screen?.name || "unknown")
+  layerShellLayer: WlrLayer.Top
+  layerShellExclusionMode: ExclusionMode.Ignore // Don't reserve space - BarExclusionZone in MainScreen handles that
 
   // Position and size to match bar location
   readonly property string barPosition: Settings.data.bar.position || "top"

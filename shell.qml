@@ -110,7 +110,7 @@ ShellRoot {
         checkSetupWizard();
       }
 
-      Overview {}
+      WallpaperOverview {}
       Background {}
       WorkspaceOverview {}
       DesktopWidgets {}
@@ -221,4 +221,3 @@ ShellRoot {
     }
   }
 }
-

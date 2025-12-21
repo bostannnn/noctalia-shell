@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
+import qs.Widgets
 
 /**
 * BarExclusionZone - Invisible PanelWindow that reserves exclusive space for the bar
@@ -14,7 +15,7 @@ import qs.Commons
 *   - "floating": Exclusive zone includes margin
 *   - "framed": No exclusive zone (BorderExclusionZones handles spacing via Wayland)
 */
-PanelWindow {
+NLayerShellWindow {
   id: root
 
   // Bar mode: "classic", "floating", or "framed"
@@ -37,9 +38,9 @@ PanelWindow {
   mask: Region {}
 
   // Wayland layer shell configuration
-  WlrLayershell.layer: WlrLayer.Top
-  WlrLayershell.namespace: "noctalia-bar-exclusion-" + (screen?.name || "unknown")
-  WlrLayershell.exclusionMode: exclusive ? ExclusionMode.Auto : ExclusionMode.Ignore
+  layerShellLayer: WlrLayer.Top
+  layerNamespace: "noctalia-bar-exclusion-" + (screen?.name || "unknown")
+  layerShellExclusionMode: exclusive ? ExclusionMode.Auto : ExclusionMode.Ignore
 
   // Anchor based on bar position
   anchors {

@@ -77,163 +77,67 @@ Singleton {
     }
   }
 
-  Process {
+  JsonProcess {
     id: getClients
     command: ["hyprctl", "clients", "-j"]
-    property string accumulatedOutput: ""
+    logTag: "HyprlandDataService"
 
-    stdout: SplitParser {
-      onRead: function(line) {
-        getClients.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function(exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("HyprlandDataService", "Failed to query clients, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        root.windowList = JSON.parse(accumulatedOutput);
-        let tempWinByAddress = {};
-        for (var i = 0; i < root.windowList.length; ++i) {
-          var win = root.windowList[i];
-          if (win?.address) {
-            tempWinByAddress[win.address] = win;
-          }
+    onJsonReady: function(clients) {
+      root.windowList = clients;
+      let tempWinByAddress = {};
+      for (var i = 0; i < root.windowList.length; ++i) {
+        var win = root.windowList[i];
+        if (win?.address) {
+          tempWinByAddress[win.address] = win;
         }
-        root.windowByAddress = tempWinByAddress;
-        root.addresses = root.windowList.filter(win => win?.address).map(win => win.address);
-      } catch (e) {
-        Logger.e("HyprlandDataService", "Failed to parse clients:", e);
-      } finally {
-        accumulatedOutput = "";
       }
+      root.windowByAddress = tempWinByAddress;
+      root.addresses = root.windowList.filter(win => win?.address).map(win => win.address);
     }
   }
 
-  Process {
+  JsonProcess {
     id: getMonitors
     command: ["hyprctl", "monitors", "-j"]
-    property string accumulatedOutput: ""
-
-    stdout: SplitParser {
-      onRead: function(line) {
-        getMonitors.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function(exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("HyprlandDataService", "Failed to query monitors, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        root.monitors = JSON.parse(accumulatedOutput);
-      } catch (e) {
-        Logger.e("HyprlandDataService", "Failed to parse monitors:", e);
-      } finally {
-        accumulatedOutput = "";
-      }
+    logTag: "HyprlandDataService"
+    onJsonReady: function(monitors) {
+      root.monitors = monitors;
     }
   }
 
-  Process {
+  JsonProcess {
     id: getLayers
     command: ["hyprctl", "layers", "-j"]
-    property string accumulatedOutput: ""
-
-    stdout: SplitParser {
-      onRead: function(line) {
-        getLayers.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function(exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("HyprlandDataService", "Failed to query layers, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        root.layers = JSON.parse(accumulatedOutput);
-      } catch (e) {
-        Logger.e("HyprlandDataService", "Failed to parse layers:", e);
-      } finally {
-        accumulatedOutput = "";
-      }
+    logTag: "HyprlandDataService"
+    onJsonReady: function(layers) {
+      root.layers = layers;
     }
   }
 
-  Process {
+  JsonProcess {
     id: getWorkspaces
     command: ["hyprctl", "workspaces", "-j"]
-    property string accumulatedOutput: ""
-
-    stdout: SplitParser {
-      onRead: function(line) {
-        getWorkspaces.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function(exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("HyprlandDataService", "Failed to query workspaces, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        root.workspaces = JSON.parse(accumulatedOutput);
-        let tempWorkspaceById = {};
-        for (var i = 0; i < root.workspaces.length; ++i) {
-          var ws = root.workspaces[i];
-          if (ws?.id !== undefined) {
-            tempWorkspaceById[ws.id] = ws;
-          }
+    logTag: "HyprlandDataService"
+    onJsonReady: function(workspaces) {
+      root.workspaces = workspaces;
+      let tempWorkspaceById = {};
+      for (var i = 0; i < root.workspaces.length; ++i) {
+        var ws = root.workspaces[i];
+        if (ws?.id !== undefined) {
+          tempWorkspaceById[ws.id] = ws;
         }
-        root.workspaceById = tempWorkspaceById;
-        root.workspaceIds = root.workspaces.filter(ws => ws?.id !== undefined).map(ws => ws.id);
-      } catch (e) {
-        Logger.e("HyprlandDataService", "Failed to parse workspaces:", e);
-      } finally {
-        accumulatedOutput = "";
       }
+      root.workspaceById = tempWorkspaceById;
+      root.workspaceIds = root.workspaces.filter(ws => ws?.id !== undefined).map(ws => ws.id);
     }
   }
 
-  Process {
+  JsonProcess {
     id: getActiveWorkspace
     command: ["hyprctl", "activeworkspace", "-j"]
-    property string accumulatedOutput: ""
-
-    stdout: SplitParser {
-      onRead: function(line) {
-        getActiveWorkspace.accumulatedOutput += line;
-      }
-    }
-
-    onExited: function(exitCode) {
-      if (exitCode !== 0 || !accumulatedOutput) {
-        Logger.e("HyprlandDataService", "Failed to query active workspace, exit code:", exitCode);
-        accumulatedOutput = "";
-        return;
-      }
-
-      try {
-        root.activeWorkspace = JSON.parse(accumulatedOutput);
-      } catch (e) {
-        Logger.e("HyprlandDataService", "Failed to parse active workspace:", e);
-      } finally {
-        accumulatedOutput = "";
-      }
+    logTag: "HyprlandDataService"
+    onJsonReady: function(activeWorkspace) {
+      root.activeWorkspace = activeWorkspace;
     }
   }
 }
-
-
