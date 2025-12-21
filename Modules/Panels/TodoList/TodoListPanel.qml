@@ -21,6 +21,7 @@ SmartPanel {
     // Selected task for detail view
     property var selectedTask: null
     property int selectedIndex: -1
+    property string selectedTaskId: ""
 
     panelContent: Item {
         id: contentRoot
@@ -33,11 +34,19 @@ SmartPanel {
             target: root
             function onOpened() {
                 addInput.forceActiveFocus();
-                TaskService.loadTasks();
+                TaskService.loadTasks(true);
             }
             function onClosed() {
                 root.selectedTask = null;
                 root.selectedIndex = -1;
+                root.selectedTaskId = "";
+            }
+        }
+
+        Connections {
+            target: TaskService
+            function onTasksUpdated() {
+                root._restoreSelection();
             }
         }
 
@@ -47,6 +56,7 @@ SmartPanel {
                 if (root.selectedTask) {
                     root.selectedTask = null;
                     root.selectedIndex = -1;
+                    root.selectedTaskId = "";
                     event.accepted = true;
                 } else {
                     root.close();
@@ -64,12 +74,14 @@ SmartPanel {
                 if (root.selectedIndex < tasks.length - 1) {
                     root.selectedIndex++;
                     root.selectedTask = tasks[root.selectedIndex];
+                    root.selectedTaskId = root.selectedTask ? root.selectedTask.id : "";
                 }
                 event.accepted = true;
             } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
                 if (root.selectedIndex > 0) {
                     root.selectedIndex--;
                     root.selectedTask = tasks[root.selectedIndex];
+                    root.selectedTaskId = root.selectedTask ? root.selectedTask.id : "";
                 }
                 event.accepted = true;
             } else if (event.key === Qt.Key_Return && root.selectedTask) {
@@ -91,6 +103,7 @@ SmartPanel {
                     TaskService.setFilter(filters[num]);
                     root.selectedTask = null;
                     root.selectedIndex = -1;
+                    root.selectedTaskId = "";
                     event.accepted = true;
                 }
             }
@@ -302,7 +315,7 @@ SmartPanel {
                         NIconButton {
                             icon: "refresh"
                             baseSize: 28
-                            onClicked: TaskService.loadTasks()
+                            onClicked: TaskService.loadTasks(true)
                             tooltipText: I18n.tr("todolist.panel.refresh")
                         }
                     }
@@ -420,6 +433,7 @@ SmartPanel {
                                         var task = modelData;
                                         root.selectedTask = task;
                                         root.selectedIndex = index;
+                                        root.selectedTaskId = task ? task.id : "";
                                     }
 
                                     onCheckboxClicked: {
@@ -441,6 +455,7 @@ SmartPanel {
                                         if (root.selectedTask && root.selectedTask.id === task.id) {
                                             root.selectedTask = null;
                                             root.selectedIndex = -1;
+                                            root.selectedTaskId = "";
                                         }
                                     }
                                 }
@@ -500,6 +515,7 @@ SmartPanel {
                             onCloseRequested: {
                                 root.selectedTask = null;
                                 root.selectedIndex = -1;
+                                root.selectedTaskId = "";
                             }
 
                             Behavior on Layout.preferredWidth {
@@ -588,5 +604,24 @@ SmartPanel {
         } else {
             TaskService.addTask(description);
         }
+    }
+
+    function _restoreSelection() {
+        if (!root.selectedTaskId)
+            return;
+
+        var tasks = TaskService.currentTasks || [];
+        for (var i = 0; i < tasks.length; i++) {
+            var t = tasks[i];
+            if (t && String(t.id) === String(root.selectedTaskId)) {
+                root.selectedTask = t;
+                root.selectedIndex = i;
+                return;
+            }
+        }
+
+        root.selectedTask = null;
+        root.selectedIndex = -1;
+        root.selectedTaskId = "";
     }
 }

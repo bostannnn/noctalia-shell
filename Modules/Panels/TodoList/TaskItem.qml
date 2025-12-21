@@ -153,21 +153,11 @@ Rectangle {
     }
 
     // Delete button (shown on hover) - overlay so it doesn't reflow the RowLayout.
-    NIconButton {
+    NDestructiveIconButton {
         id: deleteButton
         anchors.right: parent.right
         anchors.verticalCenter: contentRow.verticalCenter
         anchors.rightMargin: Style.marginM
-        icon: "trash"
-        baseSize: 24
-        density: "compact"
-        customRadius: Style.radiusS
-        colorBg: Qt.alpha(Color.mError, 0.12)
-        colorFg: Color.mError
-        colorBgHover: Color.mError
-        colorFgHover: Color.mOnError
-        colorBorder: Qt.alpha(Color.mError, 0.2)
-        colorBorderHover: Qt.alpha(Color.mError, 0.2)
         enabled: hoverHandler.hovered && !isCompleted
         opacity: enabled ? 1.0 : 0.0
         onClicked: root.deleteClicked()
@@ -179,54 +169,17 @@ Rectangle {
         }
     }
 
-    function _parseTaskDate(dateStr) {
-        if (!dateStr)
-            return null;
-
-        try {
-            var s = String(dateStr);
-
-            // Taskwarrior timestamps: YYYYMMDDTHHMMSSZ (or without Z)
-            if (s.length >= 15 && s.indexOf("T") !== -1) {
-                var year = s.substring(0, 4);
-                var month = s.substring(4, 6);
-                var day = s.substring(6, 8);
-                var hour = s.substring(9, 11);
-                var minute = s.substring(11, 13);
-                var second = s.substring(13, 15);
-                var hasZ = s.endsWith("Z");
-                var iso = year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + second + (hasZ ? "Z" : "");
-                var dt = new Date(iso);
-                if (!isNaN(dt.getTime()))
-                    return dt;
-            }
-
-            // Date-only: YYYYMMDD
-            if (s.length >= 8) {
-                var y = parseInt(s.substring(0, 4));
-                var m = parseInt(s.substring(4, 6)) - 1;
-                var d = parseInt(s.substring(6, 8));
-                var dLocal = new Date(y, m, d);
-                if (!isNaN(dLocal.getTime()))
-                    return dLocal;
-            }
-        } catch (e) {}
-
-        return null;
-    }
-
     // Helper to format date from TaskWarrior format (YYYYMMDDTHHMMSSZ)
     function _formatDate(dateStr) {
         if (!dateStr)
             return "";
 
         try {
-            var taskDate = _parseTaskDate(dateStr);
+            var taskDate = TaskwarriorDate.parse(dateStr);
             if (!taskDate)
                 return "";
 
-            var taskDay = new Date(taskDate);
-            taskDay.setHours(0, 0, 0, 0);
+            var taskDay = TaskwarriorDate.startOfLocalDay(taskDate);
 
             var today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -280,11 +233,10 @@ Rectangle {
         if (!dateStr)
             return false;
         try {
-            var taskDate = _parseTaskDate(dateStr);
+            var taskDate = TaskwarriorDate.parse(dateStr);
             if (!taskDate)
                 return false;
-            var taskDay = new Date(taskDate);
-            taskDay.setHours(0, 0, 0, 0);
+            var taskDay = TaskwarriorDate.startOfLocalDay(taskDate);
             var today = new Date();
             today.setHours(0, 0, 0, 0);
             return taskDay < today;

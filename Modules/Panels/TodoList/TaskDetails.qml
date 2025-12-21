@@ -121,36 +121,66 @@ Rectangle {
                     font.weight: Font.Medium
                 }
 
+                // Existing notes (Taskwarrior annotations)
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.marginXS
+                    visible: !!(taskData && taskData.annotations && taskData.annotations.length > 0)
+
+                    Repeater {
+                        model: (taskData && taskData.annotations) ? taskData.annotations : []
+                        delegate: Rectangle {
+                            property var modelData
+
+                            Layout.fillWidth: true
+                            color: Color.mSurfaceVariant
+                            radius: Style.radiusS
+
+                            NText {
+                                anchors.fill: parent
+                                anchors.margins: Style.marginM
+                                text: (modelData && modelData.description !== undefined && modelData.description !== null) ? String(modelData.description) : ""
+                                pointSize: Style.fontSizeS
+                                color: Color.mOnSurface
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                    }
+                }
+
+                // New note input (adds an annotation)
                 Rectangle {
                     Layout.fillWidth: true
-                    height: Math.max(notesInput.implicitHeight + Style.marginM * 2, Math.round(220 * Style.uiScaleRatio))
+                    height: Math.max(newNoteInput.implicitHeight + Style.marginM * 2, Math.round(120 * Style.uiScaleRatio))
                     color: Color.mSurfaceVariant
                     radius: Style.radiusS
-                    border.color: notesInput.activeFocus ? Color.mPrimary : Color.transparent
+                    border.color: newNoteInput.activeFocus ? Color.mPrimary : Color.transparent
 
                     TextArea {
-                        id: notesInput
+                        id: newNoteInput
                         anchors.fill: parent
                         anchors.margins: Style.marginM
-                        text: _getAnnotations()
+                        text: ""
                         color: Color.mOnSurface
                         font.family: Settings.data.ui.fontDefault
                         font.pixelSize: Style.fontSizeM * Style.uiScaleRatio
                         wrapMode: Text.WordWrap
                         placeholderText: I18n.tr("todolist.details.notes-placeholder")
                         placeholderTextColor: Color.mOnSurfaceVariant
-
                         background: Item {}
                     }
                 }
 
-                // Add note button
                 NButton {
                     text: I18n.tr("todolist.details.add-note")
                     icon: "plus"
-                    visible: notesInput.text.trim() && notesInput.text !== _getAnnotations()
+                    enabled: !!(taskData && newNoteInput.text.trim())
                     onClicked: {
-                        TaskService.addAnnotation(taskData.id.toString(), notesInput.text.trim());
+                        var note = newNoteInput.text.trim();
+                        if (!note)
+                            return;
+                        TaskService.addAnnotation(taskData.id.toString(), note);
+                        newNoteInput.text = "";
                     }
                 }
             }
@@ -396,18 +426,8 @@ Rectangle {
                     Layout.fillWidth: true
                 }
 
-                NIconButton {
-                    icon: "trash"
+                NDestructiveIconButton {
                     tooltipText: I18n.tr("todolist.details.delete")
-                    baseSize: 24
-                    density: "compact"
-                    customRadius: Style.radiusS
-                    colorBg: Color.mError
-                    colorFg: Color.mOnError
-                    colorBgHover: Qt.alpha(Color.mError, 0.85)
-                    colorFgHover: Color.mOnError
-                    colorBorder: Qt.alpha(Color.mError, 0.2)
-                    colorBorderHover: Qt.alpha(Color.mError, 0.2)
                     onClicked: {
                         TaskService.deleteTask(taskData.id.toString());
                         closeRequested();
@@ -418,62 +438,11 @@ Rectangle {
     }
 
     // Helper functions
-    function _getAnnotations() {
-        if (!taskData || !taskData.annotations)
-            return "";
-        var out = [];
-        for (var i = 0; i < taskData.annotations.length; i++) {
-            var ann = taskData.annotations[i];
-            if (!ann)
-                continue;
-            if (ann.description === undefined || ann.description === null)
-                continue;
-            out.push(String(ann.description));
-        }
-        return out.join("\n");
-    }
-
-    function _parseTaskDate(dateStr) {
-        if (!dateStr)
-            return null;
-
-        try {
-            var s = String(dateStr);
-
-            // Taskwarrior timestamps: YYYYMMDDTHHMMSSZ (or without Z)
-            if (s.length >= 15 && s.indexOf("T") !== -1) {
-                var year = s.substring(0, 4);
-                var month = s.substring(4, 6);
-                var day = s.substring(6, 8);
-                var hour = s.substring(9, 11);
-                var minute = s.substring(11, 13);
-                var second = s.substring(13, 15);
-                var hasZ = s.endsWith("Z");
-                var iso = year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + second + (hasZ ? "Z" : "");
-                var dt = new Date(iso);
-                if (!isNaN(dt.getTime()))
-                    return dt;
-            }
-
-            // Date-only: YYYYMMDD
-            if (s.length >= 8) {
-                var y = parseInt(s.substring(0, 4));
-                var m = parseInt(s.substring(4, 6)) - 1;
-                var d = parseInt(s.substring(6, 8));
-                var dLocal = new Date(y, m, d);
-                if (!isNaN(dLocal.getTime()))
-                    return dLocal;
-            }
-        } catch (e) {}
-
-        return null;
-    }
-
     function _formatDateForEdit(dateStr) {
         if (!dateStr)
             return "";
         try {
-            var taskDate = _parseTaskDate(dateStr);
+            var taskDate = TaskwarriorDate.parse(dateStr);
             if (!taskDate)
                 return "";
             var d = new Date(taskDate);
@@ -498,11 +467,10 @@ Rectangle {
         var today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        var taskDate = _parseTaskDate(scheduled);
+        var taskDate = TaskwarriorDate.parse(scheduled);
         if (!taskDate)
             return false;
-        var taskDay = new Date(taskDate);
-        taskDay.setHours(0, 0, 0, 0);
+        var taskDay = TaskwarriorDate.startOfLocalDay(taskDate);
 
         if (value === "today")
             return taskDay.toDateString() === today.toDateString();
