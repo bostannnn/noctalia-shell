@@ -179,16 +179,55 @@ Rectangle {
         }
     }
 
+    function _parseTaskDate(dateStr) {
+        if (!dateStr)
+            return null;
+
+        try {
+            var s = String(dateStr);
+
+            // Taskwarrior timestamps: YYYYMMDDTHHMMSSZ (or without Z)
+            if (s.length >= 15 && s.indexOf("T") !== -1) {
+                var year = s.substring(0, 4);
+                var month = s.substring(4, 6);
+                var day = s.substring(6, 8);
+                var hour = s.substring(9, 11);
+                var minute = s.substring(11, 13);
+                var second = s.substring(13, 15);
+                var hasZ = s.endsWith("Z");
+                var iso = year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + second + (hasZ ? "Z" : "");
+                var dt = new Date(iso);
+                if (!isNaN(dt.getTime()))
+                    return dt;
+            }
+
+            // Date-only: YYYYMMDD
+            if (s.length >= 8) {
+                var y = parseInt(s.substring(0, 4));
+                var m = parseInt(s.substring(4, 6)) - 1;
+                var d = parseInt(s.substring(6, 8));
+                var dLocal = new Date(y, m, d);
+                if (!isNaN(dLocal.getTime()))
+                    return dLocal;
+            }
+        } catch (e) {}
+
+        return null;
+    }
+
     // Helper to format date from TaskWarrior format (YYYYMMDDTHHMMSSZ)
     function _formatDate(dateStr) {
         if (!dateStr)
             return "";
 
         try {
-            var year = parseInt(dateStr.substring(0, 4));
-            var month = parseInt(dateStr.substring(4, 6)) - 1;
-            var day = parseInt(dateStr.substring(6, 8));
-            var taskDate = new Date(year, month, day);
+            var taskDate = _parseTaskDate(dateStr);
+            if (!taskDate)
+                return "";
+
+            var taskDay = new Date(taskDate);
+            taskDay.setHours(0, 0, 0, 0);
+
             var today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -198,20 +237,20 @@ Rectangle {
             var nextWeek = new Date(today);
             nextWeek.setDate(nextWeek.getDate() + 7);
 
-            if (taskDate.toDateString() === today.toDateString()) {
+            if (taskDay.toDateString() === today.toDateString()) {
                 return I18n.tr("todolist.date.today");
-            } else if (taskDate.toDateString() === tomorrow.toDateString()) {
+            } else if (taskDay.toDateString() === tomorrow.toDateString()) {
                 return I18n.tr("todolist.date.tomorrow");
-            } else if (taskDate < today) {
-                var daysAgo = Math.floor((today - taskDate) / (1000 * 60 * 60 * 24));
+            } else if (taskDay < today) {
+                var daysAgo = Math.floor((today - taskDay) / (1000 * 60 * 60 * 24));
                 return I18n.tr("todolist.date.overdue", {
                     "days": daysAgo
                 });
-            } else if (taskDate < nextWeek) {
+            } else if (taskDay < nextWeek) {
                 var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                return dayNames[taskDate.getDay()];
+                return dayNames[taskDay.getDay()];
             } else {
-                return taskDate.toLocaleDateString(undefined, {
+                return taskDay.toLocaleDateString(undefined, {
                     month: "short",
                     day: "numeric"
                 });
@@ -241,13 +280,14 @@ Rectangle {
         if (!dateStr)
             return false;
         try {
-            var year = parseInt(dateStr.substring(0, 4));
-            var month = parseInt(dateStr.substring(4, 6)) - 1;
-            var day = parseInt(dateStr.substring(6, 8));
-            var taskDate = new Date(year, month, day);
+            var taskDate = _parseTaskDate(dateStr);
+            if (!taskDate)
+                return false;
+            var taskDay = new Date(taskDate);
+            taskDay.setHours(0, 0, 0, 0);
             var today = new Date();
             today.setHours(0, 0, 0, 0);
-            return taskDate < today;
+            return taskDay < today;
         } catch (e) {
             return false;
         }
