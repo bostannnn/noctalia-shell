@@ -74,12 +74,12 @@ Rectangle {
 
         ColumnLayout {
             width: parent.width
-            spacing: Style.marginL
+            spacing: Style.marginXL
 
             // Task title (editable)
             Rectangle {
                 Layout.fillWidth: true
-                height: titleInput.implicitHeight + Style.marginL * 2
+                height: Math.max(titleInput.implicitHeight + Style.marginXL * 2, Math.round(72 * Style.uiScaleRatio))
                 color: Color.mSurfaceVariant
                 radius: Style.radiusS
                 border.color: titleInput.activeFocus ? Color.mPrimary : Color.transparent
@@ -87,7 +87,7 @@ Rectangle {
                 TextInput {
                     id: titleInput
                     anchors.fill: parent
-                    anchors.margins: Style.marginL
+                    anchors.margins: Style.marginXL
                     text: (taskData && taskData.description !== undefined && taskData.description !== null) ? String(taskData.description) : ""
                     color: Color.mOnSurface
                     font.family: Settings.data.ui.fontDefault
@@ -123,7 +123,7 @@ Rectangle {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: Math.max(notesInput.implicitHeight + Style.marginM * 2, 140)
+                    height: Math.max(notesInput.implicitHeight + Style.marginM * 2, Math.round(220 * Style.uiScaleRatio))
                     color: Color.mSurfaceVariant
                     radius: Style.radiusS
                     border.color: notesInput.activeFocus ? Color.mPrimary : Color.transparent
@@ -376,7 +376,7 @@ Rectangle {
                 NIconButton {
                     icon: "check"
                     tooltipText: I18n.tr("todolist.details.complete")
-                    baseSize: 28
+                    baseSize: 24
                     density: "compact"
                     customRadius: Style.radiusS
                     colorBg: Color.mPrimary
@@ -399,7 +399,7 @@ Rectangle {
                 NIconButton {
                     icon: "trash"
                     tooltipText: I18n.tr("todolist.details.delete")
-                    baseSize: 28
+                    baseSize: 24
                     density: "compact"
                     customRadius: Style.radiusS
                     colorBg: Color.mError
