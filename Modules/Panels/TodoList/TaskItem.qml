@@ -66,6 +66,7 @@ Rectangle {
             id: checkbox
             width: Math.round(20 * Style.uiScaleRatio)
             height: width
+            Layout.alignment: Qt.AlignTop
             radius: width / 2
             color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Qt.alpha(Color.mPrimary, 0.18) : Color.transparent)
             border.color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Color.mPrimary : Color.mOutline)
@@ -99,12 +100,14 @@ Rectangle {
                 spacing: Style.marginS
 
                 NText {
+                    id: titleLabel
                     text: (taskData && taskData.description !== undefined && taskData.description !== null) ? String(taskData.description) : ""
                     pointSize: Style.fontSizeL
                     color: isCompleted ? Color.mOnSurfaceVariant : Color.mOnSurface
                     font.strikeout: isCompleted
                     wrapMode: Text.NoWrap
                     Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
                     opacity: isCompleted ? 0.7 : 1.0
                 }
             }
@@ -156,7 +159,7 @@ Rectangle {
     NDestructiveIconButton {
         id: deleteButton
         anchors.right: parent.right
-        anchors.verticalCenter: contentRow.verticalCenter
+        anchors.verticalCenter: titleLabel.verticalCenter
         anchors.rightMargin: Style.marginM
         enabled: hoverHandler.hovered && !isCompleted
         opacity: enabled ? 1.0 : 0.0

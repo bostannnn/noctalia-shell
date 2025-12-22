@@ -207,7 +207,7 @@ Singleton {
                                             "sattyAvailable": ["which", "satty"],
                                             "swappyAvailable": ["which", "swappy"],
                                             "realesrganAvailable": ["which", "realesrgan-ncnn-vulkan"],
-                                            "taskwarriorAvailable": ["which", "task"]
+                                            "taskwarriorAvailable": ["sh", "-c", "command -v task >/dev/null 2>&1 || test -x /run/current-system/sw/bin/task || test -x /usr/bin/task || test -x /bin/task"]
                                           })
 
   // Internal tracking
@@ -309,5 +309,4 @@ Singleton {
     checkAllPrograms();
   }
 }
-
 

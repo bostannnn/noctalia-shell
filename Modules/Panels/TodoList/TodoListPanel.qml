@@ -188,6 +188,7 @@ SmartPanel {
                                     icon: modelData.icon
                                     pointSize: Style.fontSizeM
                                     color: TaskService.currentFilter === modelData.id ? Color.mPrimary : Color.mOnSurfaceVariant
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
 
                                 NText {
@@ -195,6 +196,7 @@ SmartPanel {
                                     pointSize: Style.fontSizeS
                                     color: Color.mOnSurface
                                     Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
 
                                 NText {
@@ -202,6 +204,7 @@ SmartPanel {
                                     text: modelData.count
                                     pointSize: Style.fontSizeXS
                                     color: Color.mOnSurfaceVariant
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
                             }
 
@@ -310,11 +313,13 @@ SmartPanel {
                             font.weight: Style.fontWeightBold
                             color: Color.mOnSurface
                             Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
                         NIconButton {
                             icon: "refresh"
                             baseSize: 28
+                            Layout.alignment: Qt.AlignVCenter
                             onClicked: TaskService.loadTasks(true)
                             tooltipText: I18n.tr("todolist.panel.refresh")
                         }
@@ -338,12 +343,14 @@ SmartPanel {
                                 icon: "plus"
                                 pointSize: Style.fontSizeM
                                 color: Color.mOnSurfaceVariant
+                                Layout.alignment: Qt.AlignVCenter
                             }
 
                             TextInput {
                                 id: addInput
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                Layout.alignment: Qt.AlignVCenter
                                 verticalAlignment: Text.AlignVCenter
                                 color: Color.mOnSurface
                                 font.family: Settings.data.ui.fontDefault
@@ -381,6 +388,7 @@ SmartPanel {
                                 baseSize: 28
                                 enabled: addInput.text.trim().length > 0
                                 opacity: enabled ? 1.0 : 0.5
+                                Layout.alignment: Qt.AlignVCenter
                                 onClicked: {
                                     if (addInput.text.trim()) {
                                         _addTaskWithContext(addInput.text.trim());
@@ -480,6 +488,19 @@ SmartPanel {
                                     pointSize: Style.fontSizeS
                                     color: Color.mOnSurfaceVariant
                                     horizontalAlignment: Text.AlignHCenter
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+
+                                NText {
+                                    visible: TaskService.lastError && TaskService.lastError.length > 0
+                                    width: Math.round(root.width * 0.85)
+                                    text: TaskService.lastError
+                                    pointSize: Style.fontSizeXS
+                                    color: Color.mError
+                                    opacity: 0.9
+                                    horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.Wrap
+                                    elide: Text.ElideNone
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 

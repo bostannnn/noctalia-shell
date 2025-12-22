@@ -17,6 +17,9 @@ Singleton {
     property string lastError: ""
     property bool _reloadQueued: false
     property var _modifyQueue: []
+    property string taskBinary: ""
+    property bool taskBinaryChecked: false
+    property bool _loadRequestedWhileUnavailable: false
 
     // Smart list filtered tasks
     property var inboxTasks: []      // No tags, no scheduled, no due
@@ -71,7 +74,7 @@ Singleton {
     }
 
     // Check if taskwarrior is available
-    property bool isAvailable: ProgramCheckerService.taskwarriorAvailable
+    property bool isAvailable: taskBinary.length > 0
 
     // Track if taskwarrior has been initialized (has config)
     property bool isInitialized: false
@@ -83,6 +86,26 @@ Singleton {
     signal taskDeleted(string taskId)
     signal taskModified(string taskId)
     signal tagsLoaded
+
+    function _makeTaskCommand(args) {
+        if (root.taskBinary && root.taskBinary.length > 0) {
+            return [root.taskBinary].concat(args);
+        }
+
+        var script = ""
+            + "taskbin=$(command -v task 2>/dev/null || true); "
+            + "if [ -z \"$taskbin\" ] && [ -x /run/current-system/sw/bin/task ]; then taskbin=/run/current-system/sw/bin/task; fi; "
+            + "if [ -z \"$taskbin\" ] && [ -x /usr/bin/task ]; then taskbin=/usr/bin/task; fi; "
+            + "if [ -z \"$taskbin\" ] && [ -x /bin/task ]; then taskbin=/bin/task; fi; "
+            + "if [ -z \"$taskbin\" ]; then echo 'task: not found' >&2; exit 127; fi; "
+            + "exec \"$taskbin\" \"$@\"";
+
+        var cmd = ["sh", "-c", script, "--"];
+        for (var i = 0; i < args.length; i++) {
+            cmd.push(String(args[i]));
+        }
+        return cmd;
+    }
 
     // Check if taskwarrior config exists
     function checkInitialized() {
@@ -107,7 +130,15 @@ Singleton {
     }
 
     function _startLoadTasks() {
+        if (!taskBinaryChecked) {
+            _ensureTaskBinary();
+        }
+
         if (!isAvailable) {
+            if (!taskBinaryChecked) {
+                _loadRequestedWhileUnavailable = true;
+                return;
+            }
             lastError = "Taskwarrior is not installed";
             return;
         }
@@ -131,7 +162,15 @@ Singleton {
 
     // Load all pending tasks from Taskwarrior (debounced unless immediate=true).
     function loadTasks(immediate) {
+        if (!taskBinaryChecked) {
+            _ensureTaskBinary();
+        }
+
         if (!isAvailable) {
+            if (!taskBinaryChecked) {
+                _loadRequestedWhileUnavailable = true;
+                return;
+            }
             lastError = "Taskwarrior is not installed";
             return;
         }
@@ -153,6 +192,10 @@ Singleton {
 
     // Add a new task
     function addTask(description, callback) {
+        if (!taskBinaryChecked) {
+            _ensureTaskBinary();
+        }
+
         if (!isAvailable || !description.trim()) {
             if (callback)
                 callback(false);
@@ -168,10 +211,7 @@ Singleton {
             if (rawTokens[i] && rawTokens[i].length > 0)
                 tokens.push(rawTokens[i]);
         }
-        var cmd = ["task", "add"];
-        for (var j = 0; j < tokens.length; j++) {
-            cmd.push(tokens[j]);
-        }
+        var cmd = root._makeTaskCommand(["add"].concat(tokens));
 
         taskAdder.callback = callback;
         taskAdder.command = cmd;
@@ -180,6 +220,10 @@ Singleton {
 
     // Complete a task by ID
     function completeTask(taskId, callback) {
+        if (!taskBinaryChecked) {
+            _ensureTaskBinary();
+        }
+
         if (!isAvailable || !taskId) {
             if (callback)
                 callback(false);
@@ -188,12 +232,16 @@ Singleton {
 
         taskCompleter.taskId = taskId;
         taskCompleter.callback = callback;
-        taskCompleter.command = ["task", taskId, "done"];
+        taskCompleter.command = root._makeTaskCommand([taskId, "done"]);
         taskCompleter.running = true;
     }
 
     // Delete a task by ID
     function deleteTask(taskId, callback) {
+        if (!taskBinaryChecked) {
+            _ensureTaskBinary();
+        }
+
         if (!isAvailable || !taskId) {
             if (callback)
                 callback(false);
@@ -203,19 +251,23 @@ Singleton {
         taskDeleter.taskId = taskId;
         taskDeleter.callback = callback;
         // Use rc.confirmation:off to avoid shell injection risks
-        taskDeleter.command = ["task", "rc.confirmation:off", taskId, "delete"];
+        taskDeleter.command = root._makeTaskCommand(["rc.confirmation:off", taskId, "delete"]);
         taskDeleter.running = true;
     }
 
     // Modify a task (update properties)
     function modifyTask(taskId, modifications, callback) {
+        if (!taskBinaryChecked) {
+            _ensureTaskBinary();
+        }
+
         if (!isAvailable || !taskId || !modifications) {
             if (callback)
                 callback(false);
             return;
         }
 
-        var args = ["task", "rc.confirmation:off", taskId, "modify"];
+        var args = ["rc.confirmation:off", taskId, "modify"];
         // modifications is an object like { project: "Work", due: "tomorrow" }
         for (var key in modifications) {
             var value = modifications[key];
@@ -237,7 +289,7 @@ Singleton {
         _modifyQueue.push({
             taskId: taskId,
             callback: callback,
-            command: args
+            command: root._makeTaskCommand(args)
         });
 
         _dequeueModify();
@@ -258,6 +310,10 @@ Singleton {
 
     // Add annotation (note) to a task
     function addAnnotation(taskId, annotation, callback) {
+        if (!taskBinaryChecked) {
+            _ensureTaskBinary();
+        }
+
         if (!isAvailable || !taskId || !annotation.trim()) {
             if (callback)
                 callback(false);
@@ -266,7 +322,7 @@ Singleton {
 
         annotationAdder.taskId = taskId;
         annotationAdder.callback = callback;
-        annotationAdder.command = ["task", taskId, "annotate", annotation.trim()];
+        annotationAdder.command = root._makeTaskCommand([taskId, "annotate", annotation.trim()]);
         annotationAdder.running = true;
     }
 
@@ -393,7 +449,7 @@ Singleton {
     JsonProcess {
         id: taskLoader
         logTag: "TaskService"
-        command: ["task", "status:pending", "export"]
+        command: root._makeTaskCommand(["status:pending", "export"])
         running: false
 
         onJsonReady: function (data) {
@@ -576,7 +632,7 @@ Singleton {
     JsonProcess {
         id: completedLoader
         logTag: "TaskService"
-        command: ["task", "status:completed", "limit:50", "export"]
+        command: root._makeTaskCommand(["status:completed", "limit:50", "export"])
         running: false
 
         onJsonReady: function (data) {
@@ -593,7 +649,7 @@ Singleton {
     // Process to load tags
     Process {
         id: tagsLoader
-        command: ["task", "_tags"]
+        command: root._makeTaskCommand(["_tags"])
         running: false
 
         onExited: function (exitCode) {
@@ -619,10 +675,11 @@ Singleton {
         stderr: StdioCollector {}
     }
 
-    // Process to check if taskwarrior is initialized (has ~/.taskrc)
+    // Process to check if taskwarrior is initialized (has a config file)
     Process {
         id: initChecker
-        command: ["sh", "-c", "test -f ~/.taskrc && echo 'yes' || echo 'no'"]
+        // Taskwarrior may store config in either legacy `~/.taskrc` or XDG `${XDG_CONFIG_HOME:-~/.config}/task/taskrc`.
+        command: ["sh", "-c", "if [ -f \"$HOME/.taskrc\" ] || [ -f \"${XDG_CONFIG_HOME:-$HOME/.config}/task/taskrc\" ]; then echo 'yes'; else echo 'no'; fi"]
         running: false
 
         onExited: function (exitCode) {
@@ -644,7 +701,7 @@ Singleton {
     Process {
         id: taskInitializer
         // Use 'yes' to auto-confirm config creation, then run a simple command
-        command: ["sh", "-c", "yes | task rc.confirmation:off _version > /dev/null 2>&1"]
+        command: ["sh", "-c", "taskbin=$(command -v task 2>/dev/null || true); if [ -z \"$taskbin\" ] && [ -x /run/current-system/sw/bin/task ]; then taskbin=/run/current-system/sw/bin/task; fi; if [ -z \"$taskbin\" ] && [ -x /usr/bin/task ]; then taskbin=/usr/bin/task; fi; if [ -z \"$taskbin\" ] && [ -x /bin/task ]; then taskbin=/bin/task; fi; if [ -z \"$taskbin\" ]; then exit 127; fi; yes | \"$taskbin\" rc.confirmation:off _version > /dev/null 2>&1"]
         running: false
 
         onExited: function (exitCode) {
@@ -676,9 +733,7 @@ Singleton {
 
     // Initialize when service loads
     Component.onCompleted: {
-        if (isAvailable) {
-            Qt.callLater(checkInitialized);
-        }
+        _ensureTaskBinary();
     }
 
     // Watch for availability changes
@@ -689,5 +744,48 @@ Singleton {
                 root.checkInitialized();
             }
         }
+    }
+
+    function _ensureTaskBinary() {
+        if (taskBinaryChecked || taskBinaryChecker.running)
+            return;
+        taskBinaryChecker.running = true;
+    }
+
+    Process {
+        id: taskBinaryChecker
+        running: false
+        command: [
+            "sh",
+            "-c",
+            "taskbin=$(command -v task 2>/dev/null || true); "
+                + "if [ -z \"$taskbin\" ] && [ -x /run/current-system/sw/bin/task ]; then taskbin=/run/current-system/sw/bin/task; fi; "
+                + "if [ -z \"$taskbin\" ] && [ -x /usr/bin/task ]; then taskbin=/usr/bin/task; fi; "
+                + "if [ -z \"$taskbin\" ] && [ -x /bin/task ]; then taskbin=/bin/task; fi; "
+                + "if [ -n \"$taskbin\" ]; then echo \"$taskbin\"; exit 0; fi; exit 1"
+        ]
+
+        onExited: function(exitCode) {
+            root.taskBinaryChecked = true;
+            if (exitCode === 0) {
+                root.taskBinary = stdout.text.trim();
+                if (!root.initChecked) {
+                    root.checkInitialized();
+                }
+                if (root._loadRequestedWhileUnavailable) {
+                    root._loadRequestedWhileUnavailable = false;
+                    root.loadTasks(true);
+                }
+            } else {
+                root.taskBinary = "";
+                if (root._loadRequestedWhileUnavailable) {
+                    root._loadRequestedWhileUnavailable = false;
+                    root.lastError = "Taskwarrior is not installed";
+                }
+            }
+        }
+
+        stdout: StdioCollector {}
+        stderr: StdioCollector {}
     }
 }
