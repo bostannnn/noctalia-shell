@@ -302,6 +302,46 @@ SmartPanel {
                     anchors.margins: Style.marginL
                     spacing: Style.marginM
 
+                    Rectangle {
+                        Layout.fillWidth: true
+                        visible: TaskService.lastError && TaskService.lastError.length > 0
+                        color: Qt.alpha(Color.mError, 0.12)
+                        radius: Style.radiusS
+                        border.color: Qt.alpha(Color.mError, 0.3)
+                        border.width: Style.borderS
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: Style.marginM
+                            spacing: Style.marginS
+
+                            NIcon {
+                                icon: "alert-triangle"
+                                pointSize: Style.fontSizeM
+                                color: Color.mError
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            NText {
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                                text: TaskService.lastError
+                                pointSize: Style.fontSizeS
+                                color: Color.mError
+                                wrapMode: Text.Wrap
+                                elide: Text.ElideNone
+                            }
+
+                            NIconButton {
+                                icon: "x"
+                                baseSize: 26
+                                Layout.alignment: Qt.AlignVCenter
+                                tooltipText: I18n.tr("common.close")
+                                onClicked: TaskService.lastError = ""
+                            }
+                        }
+                    }
+
                     // Header
                     RowLayout {
                         Layout.fillWidth: true

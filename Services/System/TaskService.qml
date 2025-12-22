@@ -87,24 +87,18 @@ Singleton {
     signal taskModified(string taskId)
     signal tagsLoaded
 
-    function _makeTaskCommand(args) {
-        if (root.taskBinary && root.taskBinary.length > 0) {
-            return [root.taskBinary].concat(args);
-        }
-
-        var script = ""
-            + "taskbin=$(command -v task 2>/dev/null || true); "
+    function _resolveTaskBinaryScript() {
+        return "taskbin=$(command -v task 2>/dev/null || true); "
             + "if [ -z \"$taskbin\" ] && [ -x /run/current-system/sw/bin/task ]; then taskbin=/run/current-system/sw/bin/task; fi; "
             + "if [ -z \"$taskbin\" ] && [ -x /usr/bin/task ]; then taskbin=/usr/bin/task; fi; "
-            + "if [ -z \"$taskbin\" ] && [ -x /bin/task ]; then taskbin=/bin/task; fi; "
-            + "if [ -z \"$taskbin\" ]; then echo 'task: not found' >&2; exit 127; fi; "
-            + "exec \"$taskbin\" \"$@\"";
+            + "if [ -z \"$taskbin\" ] && [ -x /bin/task ]; then taskbin=/bin/task; fi; ";
+    }
 
-        var cmd = ["sh", "-c", script, "--"];
-        for (var i = 0; i < args.length; i++) {
-            cmd.push(String(args[i]));
+    function _makeTaskCommand(args) {
+        if (!root.taskBinary || root.taskBinary.length === 0) {
+            return ["sh", "-c", "echo 'task: not found' >&2; exit 127"];
         }
-        return cmd;
+        return [root.taskBinary].concat(args);
     }
 
     // Check if taskwarrior config exists
@@ -701,7 +695,7 @@ Singleton {
     Process {
         id: taskInitializer
         // Use 'yes' to auto-confirm config creation, then run a simple command
-        command: ["sh", "-c", "taskbin=$(command -v task 2>/dev/null || true); if [ -z \"$taskbin\" ] && [ -x /run/current-system/sw/bin/task ]; then taskbin=/run/current-system/sw/bin/task; fi; if [ -z \"$taskbin\" ] && [ -x /usr/bin/task ]; then taskbin=/usr/bin/task; fi; if [ -z \"$taskbin\" ] && [ -x /bin/task ]; then taskbin=/bin/task; fi; if [ -z \"$taskbin\" ]; then exit 127; fi; yes | \"$taskbin\" rc.confirmation:off _version > /dev/null 2>&1"]
+        command: ["sh", "-c", root._resolveTaskBinaryScript() + "if [ -z \"$taskbin\" ]; then exit 127; fi; yes | \"$taskbin\" rc.confirmation:off _version > /dev/null 2>&1"]
         running: false
 
         onExited: function (exitCode) {
@@ -736,16 +730,6 @@ Singleton {
         _ensureTaskBinary();
     }
 
-    // Watch for availability changes
-    Connections {
-        target: ProgramCheckerService
-        function onChecksCompleted() {
-            if (ProgramCheckerService.taskwarriorAvailable && !root.initChecked) {
-                root.checkInitialized();
-            }
-        }
-    }
-
     function _ensureTaskBinary() {
         if (taskBinaryChecked || taskBinaryChecker.running)
             return;
@@ -758,11 +742,7 @@ Singleton {
         command: [
             "sh",
             "-c",
-            "taskbin=$(command -v task 2>/dev/null || true); "
-                + "if [ -z \"$taskbin\" ] && [ -x /run/current-system/sw/bin/task ]; then taskbin=/run/current-system/sw/bin/task; fi; "
-                + "if [ -z \"$taskbin\" ] && [ -x /usr/bin/task ]; then taskbin=/usr/bin/task; fi; "
-                + "if [ -z \"$taskbin\" ] && [ -x /bin/task ]; then taskbin=/bin/task; fi; "
-                + "if [ -n \"$taskbin\" ]; then echo \"$taskbin\"; exit 0; fi; exit 1"
+            root._resolveTaskBinaryScript() + "if [ -n \"$taskbin\" ]; then echo \"$taskbin\"; exit 0; fi; exit 1"
         ]
 
         onExited: function(exitCode) {

@@ -15,6 +15,7 @@ Rectangle {
     required property var taskData
     property bool isCompleted: !!(taskData && taskData.status === "completed")
     property bool selected: false
+    readonly property int _checkboxSize: Math.round(20 * Style.uiScaleRatio)
 
     signal clicked
     signal checkboxClicked
@@ -52,6 +53,36 @@ Rectangle {
         }
     }
 
+    // Checkbox (overlay) - align with the title line, not the full row height.
+    Rectangle {
+        id: checkbox
+        width: root._checkboxSize
+        height: width
+        anchors.left: parent.left
+        anchors.leftMargin: Style.marginM
+        anchors.verticalCenter: titleLabel.verticalCenter
+        radius: width / 2
+        color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Qt.alpha(Color.mPrimary, 0.18) : Color.transparent)
+        border.color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Color.mPrimary : Color.mOutline)
+        border.width: Style.borderS
+
+        NIcon {
+            anchors.centerIn: parent
+            icon: "check"
+            pointSize: Style.fontSizeXS
+            color: isCompleted ? Color.mOnPrimary : Color.mPrimary
+            visible: isCompleted || checkboxArea.containsMouse
+        }
+
+        MouseArea {
+            id: checkboxArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.checkboxClicked()
+        }
+    }
+
     RowLayout {
         id: contentRow
         anchors.fill: parent
@@ -61,32 +92,9 @@ Rectangle {
         anchors.rightMargin: Style.marginM + deleteButton.baseSize + Style.marginS
         spacing: Style.marginS
 
-        // Checkbox
-        Rectangle {
-            id: checkbox
-            width: Math.round(20 * Style.uiScaleRatio)
-            height: width
-            Layout.alignment: Qt.AlignTop
-            radius: width / 2
-            color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Qt.alpha(Color.mPrimary, 0.18) : Color.transparent)
-            border.color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Color.mPrimary : Color.mOutline)
-            border.width: Style.borderS
-
-            NIcon {
-                anchors.centerIn: parent
-                icon: "check"
-                pointSize: Style.fontSizeXS
-                color: isCompleted ? Color.mOnPrimary : Color.mPrimary
-                visible: isCompleted || checkboxArea.containsMouse
-            }
-
-            MouseArea {
-                id: checkboxArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.checkboxClicked()
-            }
+        Item {
+            Layout.preferredWidth: root._checkboxSize
+            Layout.preferredHeight: 1
         }
 
         // Task content
