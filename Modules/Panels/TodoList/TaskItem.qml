@@ -60,7 +60,7 @@ Rectangle {
         height: width
         anchors.left: parent.left
         anchors.leftMargin: Style.marginM
-        anchors.verticalCenter: titleLabel.verticalCenter
+        anchors.verticalCenter: parent.verticalCenter
         radius: width / 2
         color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Qt.alpha(Color.mPrimary, 0.18) : Color.transparent)
         border.color: isCompleted ? Color.mPrimary : (checkboxArea.containsMouse ? Color.mPrimary : Color.mOutline)
@@ -113,15 +113,25 @@ Rectangle {
                     Layout.alignment: Qt.AlignVCenter
                     opacity: isCompleted ? 0.7 : 1.0
                 }
+
+                // Due / scheduled date (kept on the same line as the title)
+                NText {
+                    visible: !!(taskData && (taskData.due || taskData.scheduled))
+                    text: _formatDate((taskData && taskData.due) ? taskData.due : (taskData ? taskData.scheduled : null))
+                    pointSize: Style.fontSizeXS
+                    color: _isOverdue(taskData ? taskData.due : null) ? Color.mError : Color.mOnSurfaceVariant
+                    wrapMode: Text.NoWrap
+                    Layout.alignment: Qt.AlignVCenter
+                }
             }
 
-            // Metadata row (tags, date)
+            // Metadata row (tags)
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Style.marginXS
                 visible: hasMetadata
 
-                property bool hasMetadata: (!!(taskData && taskData.tags && taskData.tags.length > 0)) || (!!(taskData && taskData.due)) || (!!(taskData && taskData.scheduled))
+                property bool hasMetadata: !!(taskData && taskData.tags && taskData.tags.length > 0)
 
                 // Tags
                 Repeater {
@@ -141,19 +151,6 @@ Rectangle {
                         }
                     }
                 }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                // Due date
-                NText {
-                    visible: !!(taskData && (taskData.due || taskData.scheduled))
-                    text: _formatDate((taskData && taskData.due) ? taskData.due : (taskData ? taskData.scheduled : null))
-                    pointSize: Style.fontSizeXS
-                    color: _isOverdue(taskData ? taskData.due : null) ? Color.mError : Color.mOnSurfaceVariant
-                    Layout.alignment: Qt.AlignVCenter
-                }
             }
         }
     }
@@ -162,7 +159,7 @@ Rectangle {
     NDestructiveIconButton {
         id: deleteButton
         anchors.right: parent.right
-        anchors.verticalCenter: titleLabel.verticalCenter
+        anchors.verticalCenter: parent.verticalCenter
         anchors.rightMargin: Style.marginM
         enabled: hoverHandler.hovered && !isCompleted
         opacity: enabled ? 1.0 : 0.0

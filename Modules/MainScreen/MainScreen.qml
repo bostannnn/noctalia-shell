@@ -29,6 +29,7 @@ import qs.Modules.Panels.TodoList
 import qs.Modules.Panels.Wallpaper
 import qs.Modules.Panels.WiFi
 import qs.Services.Compositor
+import qs.Services.Media
 import qs.Services.UI
 
 /**
@@ -447,6 +448,30 @@ NLayerShellWindow {
   // These shortcuts delegate to the opened panel's handler functions
   // Panels can implement: onEscapePressed, onTabPressed, onBackTabPressed,
   // onUpPressed, onDownPressed, onReturnPressed, etc...
+  Shortcut {
+    sequence: "Print"
+    enabled: true
+    onActivated: ScreenshotService.takeScreenshot(ScreenshotService.modeScreen)
+  }
+
+  Shortcut {
+    sequence: "Shift+Print"
+    enabled: true
+    onActivated: ScreenshotService.takeScreenshot(ScreenshotService.modeRegion)
+  }
+
+  Shortcut {
+    sequence: "Ctrl+Print"
+    enabled: true
+    onActivated: ScreenshotService.takeScreenshot(ScreenshotService.modeWindow)
+  }
+
+  Shortcut {
+    sequence: "Alt+Print"
+    enabled: ScreenshotService.lastScreenshot !== ""
+    onActivated: ScreenshotService.annotateLastScreenshot()
+  }
+
   Shortcut {
     sequence: "Escape"
     enabled: root.isPanelOpen && (PanelService.openedPanel.onEscapePressed !== undefined)
