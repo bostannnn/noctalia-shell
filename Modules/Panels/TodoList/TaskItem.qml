@@ -86,16 +86,11 @@ Rectangle {
     RowLayout {
         id: contentRow
         anchors.fill: parent
-        anchors.leftMargin: Style.marginM
+        anchors.leftMargin: Style.marginM + root._checkboxSize + Style.marginS
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
         anchors.rightMargin: Style.marginM + deleteButton.baseSize + Style.marginS
         spacing: Style.marginS
-
-        Item {
-            Layout.preferredWidth: root._checkboxSize
-            Layout.preferredHeight: 1
-        }
 
         // Task content
         ColumnLayout {
