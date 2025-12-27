@@ -12,6 +12,8 @@
 @define-color headerbar_fg_color {{colors.on_surface.default.hex}};
 @define-color popover_bg_color {{colors.surface_variant.default.hex}};
 @define-color popover_fg_color {{colors.on_surface_variant.default.hex}};
+@define-color dialog_bg_color {{colors.surface_variant.default.hex}};
+@define-color dialog_fg_color {{colors.on_surface_variant.default.hex}};
 @define-color view_bg_color {{colors.surface.default.hex}};
 @define-color view_fg_color {{colors.on_surface.default.hex}};
 @define-color card_bg_color {{colors.surface.default.hex}};
@@ -21,5 +23,27 @@
 @define-color sidebar_fg_color {{colors.on_surface.default.hex}};
 @define-color sidebar_border_color @window_bg_color;
 @define-color sidebar_backdrop_color @window_bg_color;
+
+/* AdwDialog / AdwAlertDialog styling (libadwaita 1.4+) */
+window.dialog,
+window.messagedialog,
+dialog,
+messagedialog,
+.dialog-vbox,
+.message-area {
+  background-color: {{colors.surface_variant.default.hex}};
+  color: {{colors.on_surface_variant.default.hex}};
+}
+
+.alert-dialog,
+.message-dialog {
+  background-color: {{colors.surface_variant.default.hex}};
+  color: {{colors.on_surface_variant.default.hex}};
+}
+
+.dialog-vbox > box,
+.dialog-action-area {
+  background-color: transparent;
+}
 
 
