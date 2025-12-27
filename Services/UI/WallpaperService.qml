@@ -33,8 +33,22 @@ Singleton {
   // Cache for current wallpapers - can be updated directly since we use signals for notifications
   property var currentWallpapers: ({})
 
+  // Smart Rotation: shuffle queues per screen (wallpapers to show before reshuffling)
+  property var shuffleQueues: ({})
+  // Smart Rotation: history of shown wallpapers for "previous" navigation
+  property var wallpaperHistory: []
+  // Smart Rotation: current position in history (for prev/next navigation)
+  property int historyPosition: -1
+  // Smart Rotation: flag to prevent adding to history when navigating
+  property bool _navigatingHistory: false
+  // Auto-outpaint queue for sequential processing
+  property var _autoOutpaintQueue: []
+  property bool _autoOutpaintRunning: false
+  property var _autoOutpaintPending: ({})
+
   property bool isInitialized: false
   property string wallpaperCacheFile: ""
+  property string rotationCacheFile: ""
 
   readonly property bool scanning: (scanningCount > 0)
   readonly property string noctaliaDefaultWallpaper: Quickshell.shellDir + "/Assets/Wallpaper/noctalia.png"
@@ -105,11 +119,13 @@ Singleton {
 
     translateModels();
 
-    // Initialize cache file path
+    // Initialize cache file paths
     Qt.callLater(() => {
                    if (typeof Settings !== 'undefined' && Settings.cacheDir) {
                      wallpaperCacheFile = Settings.cacheDir + "wallpapers.json";
                      wallpaperCacheView.path = wallpaperCacheFile;
+                     rotationCacheFile = Settings.cacheDir + "wallpaper-rotation.json";
+                     rotationCacheView.path = rotationCacheFile;
                    }
                  });
 
@@ -323,6 +339,90 @@ Singleton {
   }
 
   // -------------------------------------------------------------------
+  function _getScreenByName(screenName) {
+    for (var i = 0; i < Quickshell.screens.length; i++) {
+      if (Quickshell.screens[i].name === screenName) {
+        return Quickshell.screens[i];
+      }
+    }
+    return null;
+  }
+
+  // -------------------------------------------------------------------
+  function _isImageFile(path) {
+    if (!path) {
+      return false;
+    }
+    if (typeof VideoWallpaperService !== 'undefined' && VideoWallpaperService.isVideoFile(path)) {
+      return false;
+    }
+    var ext = path.split('.').pop().toLowerCase();
+    var imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "pnm"];
+    return imageExtensions.indexOf(ext) !== -1;
+  }
+
+  // -------------------------------------------------------------------
+  function _isOutpaintedPath(path) {
+    if (!path) {
+      return false;
+    }
+    if (typeof OutpaintService !== "undefined" && OutpaintService.cacheDir && path.indexOf(OutpaintService.cacheDir) === 0) {
+      return true;
+    }
+    return path.indexOf("_outpainted_") !== -1;
+  }
+
+  // -------------------------------------------------------------------
+  function _queueAutoOutpaint(path, screenName) {
+    var key = screenName + "::" + path;
+    if (_autoOutpaintPending[key]) {
+      return;
+    }
+    _autoOutpaintPending[key] = true;
+    _autoOutpaintQueue.push({
+                              path: path,
+                              screenName: screenName
+                            });
+    if (!_autoOutpaintRunning) {
+      _processAutoOutpaintQueue();
+    }
+  }
+
+  // -------------------------------------------------------------------
+  function _processAutoOutpaintQueue() {
+    if (_autoOutpaintQueue.length === 0) {
+      _autoOutpaintRunning = false;
+      return;
+    }
+
+    _autoOutpaintRunning = true;
+    var item = _autoOutpaintQueue.shift();
+    delete _autoOutpaintPending[item.screenName + "::" + item.path];
+
+    if (OutpaintService.isProcessing) {
+      _autoOutpaintQueue.unshift(item);
+      _autoOutpaintRunning = false;
+      if (!autoOutpaintRetryTimer.running) {
+        autoOutpaintRetryTimer.start();
+      }
+      return;
+    }
+
+    var screen = _getScreenByName(item.screenName);
+    if (!screen) {
+      _processAutoOutpaintQueue();
+      return;
+    }
+
+    OutpaintService.outpaint(item.path, screen.width, screen.height, function(resultPath) {
+      if (resultPath && resultPath !== item.path) {
+        _setWallpaper(item.screenName, resultPath, { "skipAutoOutpaint": true });
+      }
+      _processAutoOutpaintQueue();
+    });
+  }
+
+  // -------------------------------------------------------------------
   function changeWallpaper(path, screenName) {
     if (screenName !== undefined) {
       _setWallpaper(screenName, path);
@@ -345,6 +445,7 @@ Singleton {
 
   // -------------------------------------------------------------------
   function _setWallpaper(screenName, path) {
+    var options = arguments.length > 2 ? arguments[2] : {};
     if (path === "" || path === undefined) {
       return;
     }
@@ -363,6 +464,15 @@ Singleton {
     if (!wallpaperChanged) {
       // No change needed
       return;
+    }
+
+    if (!options.skipAutoOutpaint
+        && typeof OutpaintService !== "undefined"
+        && OutpaintService.autoOutpaint
+        && _isImageFile(path)
+        && !_isOutpaintedPath(path)
+        && (!WallpaperCacheService || WallpaperCacheService.imageMagickAvailable)) {
+      _queueAutoOutpaint(path, screenName);
     }
 
     // Update cache directly
@@ -389,31 +499,187 @@ Singleton {
   }
 
   // -------------------------------------------------------------------
+  // Fisher-Yates shuffle algorithm for unbiased randomization
+  function _shuffleArray(array) {
+    var shuffled = array.slice(); // Clone the array
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = temp;
+    }
+    return shuffled;
+  }
+
+  // -------------------------------------------------------------------
+  // Get or create shuffle queue for a screen
+  function _getShuffleQueue(screenName) {
+    if (!shuffleQueues[screenName] || shuffleQueues[screenName].length === 0) {
+      var wallpaperList = getWallpapersList(screenName);
+      if (wallpaperList.length === 0) {
+        return [];
+      }
+
+      // Create new shuffled queue
+      var newQueue = _shuffleArray(wallpaperList);
+
+      // Avoid showing the same wallpaper at the start of the new cycle
+      var currentWallpaper = currentWallpapers[screenName];
+      if (currentWallpaper && newQueue.length > 1 && newQueue[0] === currentWallpaper) {
+        // Move current wallpaper to end of queue
+        newQueue.push(newQueue.shift());
+      }
+
+      shuffleQueues[screenName] = newQueue;
+      Logger.i("Wallpaper", "Created new shuffle queue for", screenName, "with", newQueue.length, "wallpapers");
+
+      // Save rotation state
+      _saveRotationState();
+    }
+    return shuffleQueues[screenName];
+  }
+
+  // -------------------------------------------------------------------
+  // Add wallpaper to history
+  function _addToHistory(wallpaperPath, screenName) {
+    if (_navigatingHistory) return;
+
+    var historyEntry = {
+      "path": wallpaperPath,
+      "screen": screenName,
+      "timestamp": Date.now()
+    };
+
+    // If we're not at the end of history, truncate forward history
+    if (historyPosition >= 0 && historyPosition < wallpaperHistory.length - 1) {
+      wallpaperHistory = wallpaperHistory.slice(0, historyPosition + 1);
+    }
+
+    wallpaperHistory.push(historyEntry);
+
+    // Trim history to configured size
+    var maxHistory = Settings.data.wallpaper.historySize || 50;
+    if (wallpaperHistory.length > maxHistory) {
+      wallpaperHistory = wallpaperHistory.slice(-maxHistory);
+    }
+
+    historyPosition = wallpaperHistory.length - 1;
+    _saveRotationState();
+  }
+
+  // -------------------------------------------------------------------
   function setRandomWallpaper() {
-    Logger.d("Wallpaper", "setRandomWallpaper");
+    Logger.d("Wallpaper", "setRandomWallpaper (smart rotation:", Settings.data.wallpaper.smartRotation, ")");
 
     if (Settings.data.wallpaper.enableMultiMonitorDirectories) {
-      // Pick a random wallpaper per screen
+      // Pick a wallpaper per screen
       for (var i = 0; i < Quickshell.screens.length; i++) {
         var screenName = Quickshell.screens[i].name;
-        var wallpaperList = getWallpapersList(screenName);
-
-        if (wallpaperList.length > 0) {
-          var randomIndex = Math.floor(Math.random() * wallpaperList.length);
-          var randomPath = wallpaperList[randomIndex];
-          changeWallpaper(randomPath, screenName);
-        }
+        _setRandomWallpaperForScreen(screenName);
       }
     } else {
-      // Pick a random wallpaper common to all screens
-      // We can use any screenName here, so we just pick the primary one.
-      var wallpaperList = getWallpapersList(Screen.name);
-      if (wallpaperList.length > 0) {
-        var randomIndex = Math.floor(Math.random() * wallpaperList.length);
-        var randomPath = wallpaperList[randomIndex];
-        changeWallpaper(randomPath, undefined);
-      }
+      // Pick a wallpaper common to all screens
+      _setRandomWallpaperForScreen(Screen.name, true);
     }
+  }
+
+  // -------------------------------------------------------------------
+  function _setRandomWallpaperForScreen(screenName, applyToAll) {
+    var wallpaperList = getWallpapersList(screenName);
+    if (wallpaperList.length === 0) return;
+
+    var selectedPath;
+
+    if (Settings.data.wallpaper.smartRotation) {
+      // Smart rotation: use shuffle queue
+      var queue = _getShuffleQueue(screenName);
+      if (queue.length === 0) return;
+
+      selectedPath = queue.shift();
+      shuffleQueues[screenName] = queue;
+
+      Logger.d("Wallpaper", "Smart rotation: selected", selectedPath, "- remaining in queue:", queue.length);
+      _saveRotationState();
+    } else {
+      // Pure random: original behavior
+      var randomIndex = Math.floor(Math.random() * wallpaperList.length);
+      selectedPath = wallpaperList[randomIndex];
+    }
+
+    if (applyToAll) {
+      changeWallpaper(selectedPath, undefined);
+      _addToHistory(selectedPath, "all");
+    } else {
+      changeWallpaper(selectedPath, screenName);
+      _addToHistory(selectedPath, screenName);
+    }
+  }
+
+  // -------------------------------------------------------------------
+  // Go to previous wallpaper in history
+  function previousWallpaper() {
+    if (wallpaperHistory.length === 0 || historyPosition <= 0) {
+      Logger.d("Wallpaper", "No previous wallpaper in history");
+      ToastService.showNotice(
+        I18n.tr("wallpaper.history.no-previous") || "No Previous",
+        I18n.tr("wallpaper.history.no-previous-desc") || "No previous wallpaper in history"
+      );
+      return false;
+    }
+
+    historyPosition--;
+    var entry = wallpaperHistory[historyPosition];
+
+    _navigatingHistory = true;
+    if (entry.screen === "all") {
+      changeWallpaper(entry.path, undefined);
+    } else {
+      changeWallpaper(entry.path, entry.screen);
+    }
+    _navigatingHistory = false;
+
+    Logger.i("Wallpaper", "Previous wallpaper:", entry.path, "(position", historyPosition, "of", wallpaperHistory.length, ")");
+    _saveRotationState();
+    return true;
+  }
+
+  // -------------------------------------------------------------------
+  // Go to next wallpaper in history (if we went back)
+  function nextWallpaper() {
+    if (historyPosition >= wallpaperHistory.length - 1) {
+      // At end of history, get a new random wallpaper
+      setRandomWallpaper();
+      return true;
+    }
+
+    historyPosition++;
+    var entry = wallpaperHistory[historyPosition];
+
+    _navigatingHistory = true;
+    if (entry.screen === "all") {
+      changeWallpaper(entry.path, undefined);
+    } else {
+      changeWallpaper(entry.path, entry.screen);
+    }
+    _navigatingHistory = false;
+
+    Logger.i("Wallpaper", "Next wallpaper:", entry.path, "(position", historyPosition, "of", wallpaperHistory.length, ")");
+    _saveRotationState();
+    return true;
+  }
+
+  // -------------------------------------------------------------------
+  // Clear shuffle queues (e.g., when wallpaper list changes)
+  function resetShuffleQueues() {
+    shuffleQueues = {};
+    Logger.d("Wallpaper", "Shuffle queues reset");
+    _saveRotationState();
+  }
+
+  // -------------------------------------------------------------------
+  // Save rotation state to cache file
+  function _saveRotationState() {
+    rotationSaveTimer.restart();
   }
 
   // -------------------------------------------------------------------
@@ -1180,6 +1446,66 @@ Singleton {
       Logger.d("Wallpaper", "Saved wallpapers to cache file");
     }
   }
+
+  // -------------------------------------------------------------------
+  // Smart Rotation cache persistence
+  // -------------------------------------------------------------------
+  FileView {
+    id: rotationCacheView
+    printErrors: false
+    watchChanges: false
+
+    adapter: JsonAdapter {
+      id: rotationCacheAdapter
+      property var shuffleQueues: ({})
+      property var wallpaperHistory: []
+      property int historyPosition: -1
+    }
+
+    onLoaded: {
+      root.shuffleQueues = rotationCacheAdapter.shuffleQueues || {};
+      root.wallpaperHistory = rotationCacheAdapter.wallpaperHistory || [];
+      root.historyPosition = rotationCacheAdapter.historyPosition >= 0 ? rotationCacheAdapter.historyPosition : (root.wallpaperHistory.length - 1);
+      Logger.d("Wallpaper", "Loaded rotation state: queues for", Object.keys(root.shuffleQueues).length, "screens, history:", root.wallpaperHistory.length, "entries");
+    }
+
+    onLoadFailed: error => {
+      root.shuffleQueues = {};
+      root.wallpaperHistory = [];
+      root.historyPosition = -1;
+      Logger.d("Wallpaper", "Rotation cache doesn't exist, starting fresh");
+    }
+  }
+
+  Timer {
+    id: rotationSaveTimer
+    interval: 1000
+    repeat: false
+    onTriggered: {
+      rotationCacheAdapter.shuffleQueues = root.shuffleQueues;
+      rotationCacheAdapter.wallpaperHistory = root.wallpaperHistory;
+      rotationCacheAdapter.historyPosition = root.historyPosition;
+      rotationCacheView.writeAdapter();
+      Logger.d("Wallpaper", "Saved rotation state");
+    }
+  }
+
+  Timer {
+    id: autoOutpaintRetryTimer
+    interval: 1000
+    repeat: false
+    onTriggered: _processAutoOutpaintQueue()
+  }
+
+  // Reset shuffle queues when wallpaper list changes
+  Connections {
+    target: root
+    function onWallpaperListChanged(screenName, count) {
+      // Invalidate shuffle queue for this screen when its list changes
+      if (root.shuffleQueues[screenName]) {
+        delete root.shuffleQueues[screenName];
+        Logger.d("Wallpaper", "Shuffle queue invalidated for", screenName, "due to list change");
+      }
+    }
+  }
 }
-
-

@@ -105,7 +105,13 @@
     "tooltipsEnabled": true,
     "panelBackgroundOpacity": 0.85,
     "panelsAttachedToBar": true,
-    "settingsPanelMode": "attached"
+    "settingsPanelMode": "attached",
+    "themeMode": "standard",
+    "glassBlurRadius": 32,
+    "glassOpacity": 0.65,
+    "reflectionIntensity": 0.3,
+    "borderGlowIntensity": 0.4,
+    "glassAnimationsEnabled": true
   },
   "location": {
     "name": "Tokyo",
@@ -162,6 +168,8 @@
     "fillColor": "#000000",
     "randomEnabled": false,
     "randomIntervalSec": 300,
+    "smartRotation": true,
+    "historySize": 50,
     "transitionDuration": 1500,
     "transitionType": "random",
     "transitionEdgeSmoothness": 0.05,
@@ -175,7 +183,21 @@
     "wallhavenPurity": "100",
     "wallhavenResolutionMode": "atleast",
     "wallhavenResolutionWidth": "",
-    "wallhavenResolutionHeight": ""
+    "wallhavenResolutionHeight": "",
+    "liveWallpaperEnabled": false,
+    "liveWallpaperPreset": "none",
+    "liveWallpaperSpeed": 1.0,
+    "liveWallpaperColor1": "#6366f1",
+    "liveWallpaperColor2": "#8b5cf6",
+    "liveWallpaperIntensity": 0.5,
+    "liveWallpaperFps": 30,
+    "outpaintProvider": "edge_extend",
+    "outpaintDirection": "auto",
+    "outpaintAuto": false,
+    "outpaintComfyuiUrl": "http://127.0.0.1:8188",
+    "outpaintComfyuiCheckpoint": "",
+    "outpaintComfyuiSteps": 20,
+    "outpaintComfyuiDenoise": 0.75
   },
   "appLauncher": {
     "enableClipboardHistory": false,

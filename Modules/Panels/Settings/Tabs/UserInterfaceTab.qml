@@ -190,6 +190,9 @@ ColumnLayout {
       Layout.bottomMargin: Style.marginL
     }
 
+    // Liquid Glass Theme - Hidden for now (WIP)
+    // TODO: Re-enable when liquid glass effects are polished
+
     // User Interface Scaling
     ColumnLayout {
       spacing: Style.marginXXS

@@ -1,12 +1,15 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import "../../../Helpers/FuzzySort.js" as FuzzySort
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Modules.Panels.Settings
+import qs.Services.Compositor
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
@@ -38,8 +41,45 @@ SmartPanel {
   panelAnchorBottom: panelPosition.startsWith("bottom_")
   panelAnchorTop: panelPosition.startsWith("top_")
 
+  // Restore windows and preview state when panel closes
+  onClosed: onPanelClosed()
+
   // Store direct reference to content for instant access
   property var contentItem: null
+  property var previewModalView: null
+
+  function openPreviewModal(path, view) {
+    if (!path || !view) {
+      return;
+    }
+    if (view.isPreviewing) {
+      view.cancelPreview();
+    }
+    if (view.gridView && view.gridView.model) {
+      var previewIndex = view.gridView.model.indexOf(path);
+      if (previewIndex >= 0) {
+        view.gridView.currentIndex = previewIndex;
+      }
+    }
+    previewModalView = view;
+    previewModal.open(path, view.targetScreen);
+  }
+
+  function previewModalNavigate(offset) {
+    if (!previewModalView || !previewModalView.gridView) {
+      return;
+    }
+    var model = previewModalView.gridView.model;
+    if (!model || model.length === undefined) {
+      return;
+    }
+    var nextIndex = previewModalView.gridView.currentIndex + offset;
+    if (nextIndex < 0 || nextIndex >= model.length) {
+      return;
+    }
+    previewModalView.gridView.currentIndex = nextIndex;
+    previewModal.open(model[nextIndex], previewModalView.targetScreen);
+  }
 
   // Override keyboard handlers to enable grid navigation
   function onDownPressed() {
@@ -93,12 +133,27 @@ SmartPanel {
       let gridView = view.gridView;
       if (gridView.currentIndex >= 0 && gridView.currentIndex < gridView.model.length) {
         let path = gridView.model[gridView.currentIndex];
-        if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
-          WallpaperService.changeWallpaper(path, undefined);
+        // If previewing, apply. Otherwise start preview.
+        if (view.isPreviewing) {
+          view.applyWallpaper(path);
         } else {
-          WallpaperService.changeWallpaper(path, view.targetScreen.name);
+          view.startPreview(path);
         }
       }
+    }
+  }
+
+  // Cancel preview when panel closes
+  function onPanelClosed() {
+    if (!contentItem) return;
+    for (let i = 0; i < contentItem.screenRepeater.count; i++) {
+      let view = contentItem.screenRepeater.itemAt(i);
+      if (view?.isPreviewing) {
+        view.cancelPreview();
+      }
+    }
+    if (previewModal.visible) {
+      previewModal.close();
     }
   }
 
@@ -118,6 +173,7 @@ SmartPanel {
     property var currentScreen: Quickshell.screens[currentScreenIndex]
     property string filterText: ""
     property string mediaFilter: "all"  // "all", "images", "videos"
+    property string sourceMode: Settings.data.wallpaper.useWallhaven ? "wallhaven" : "local"  // "local", "wallhaven"
     property alias screenRepeater: screenRepeater
 
     Component.onCompleted: {
@@ -441,42 +497,40 @@ SmartPanel {
               spacing: 0
 
               NButton {
-                text: I18n.tr("wallpaper.panel.source.local")
+                text: I18n.tr("wallpaper.panel.source.local") || "Local"
                 icon: "folder"
-                backgroundColor: !Settings.data.wallpaper.useWallhaven ? Color.mPrimary : Color.mSurfaceVariant
-                textColor: !Settings.data.wallpaper.useWallhaven ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                backgroundColor: wallpaperPanel.sourceMode === "local" ? Color.mPrimary : Color.mSurfaceVariant
+                textColor: wallpaperPanel.sourceMode === "local" ? Color.mOnPrimary : Color.mOnSurfaceVariant
                 onClicked: {
-                  if (Settings.data.wallpaper.useWallhaven) {
-                    Settings.data.wallpaper.useWallhaven = false;
-                    searchInput.text = wallpaperPanel.filterText || "";
-                  }
+                  wallpaperPanel.sourceMode = "local";
+                  Settings.data.wallpaper.useWallhaven = false;
+                  searchInput.text = wallpaperPanel.filterText || "";
                 }
               }
 
               NButton {
-                text: I18n.tr("wallpaper.panel.source.wallhaven")
+                text: I18n.tr("wallpaper.panel.source.wallhaven") || "Wallhaven"
                 icon: "world"
-                backgroundColor: Settings.data.wallpaper.useWallhaven ? Color.mPrimary : Color.mSurfaceVariant
-                textColor: Settings.data.wallpaper.useWallhaven ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                backgroundColor: wallpaperPanel.sourceMode === "wallhaven" ? Color.mPrimary : Color.mSurfaceVariant
+                textColor: wallpaperPanel.sourceMode === "wallhaven" ? Color.mOnPrimary : Color.mOnSurfaceVariant
                 onClicked: {
-                  if (!Settings.data.wallpaper.useWallhaven) {
-                    Settings.data.wallpaper.useWallhaven = true;
-                    searchInput.text = Settings.data.wallpaper.wallhavenQuery || "";
-                    if (typeof WallhavenService !== "undefined") {
-                      WallhavenService.categories = Settings.data.wallpaper.wallhavenCategories;
-                      WallhavenService.purity = Settings.data.wallpaper.wallhavenPurity;
-                      WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
-                      wallpaperPanel.updateWallhavenResolution();
-                      // Always trigger a discover when switching to Wallhaven mode
-                      if (wallhavenView && !WallhavenService.fetching) {
-                        wallhavenView.initialized = true;
-                        wallhavenView.loading = true;
-                        WallhavenService.discover();
-                      }
+                  wallpaperPanel.sourceMode = "wallhaven";
+                  Settings.data.wallpaper.useWallhaven = true;
+                  searchInput.text = Settings.data.wallpaper.wallhavenQuery || "";
+                  if (typeof WallhavenService !== "undefined") {
+                    WallhavenService.categories = Settings.data.wallpaper.wallhavenCategories;
+                    WallhavenService.purity = Settings.data.wallpaper.wallhavenPurity;
+                    WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
+                    wallpaperPanel.updateWallhavenResolution();
+                    if (wallhavenView && !WallhavenService.fetching) {
+                      wallhavenView.initialized = true;
+                      wallhavenView.loading = true;
+                      WallhavenService.discover();
                     }
                   }
                 }
               }
+
             }
           }
 
@@ -657,7 +711,7 @@ SmartPanel {
         }
       }
 
-      // Content stack: Wallhaven or Local
+      // Content stack: Local, Wallhaven, or Live
       NBox {
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -668,7 +722,7 @@ SmartPanel {
           anchors.fill: parent
           anchors.margins: Style.marginL
 
-          currentIndex: Settings.data.wallpaper.useWallhaven ? 1 : 0
+          currentIndex: wallpaperPanel.sourceMode === "local" ? 0 : (wallpaperPanel.sourceMode === "wallhaven" ? 1 : 2)
 
           // Local wallpapers
           StackLayout {
@@ -716,12 +770,146 @@ SmartPanel {
 
   // Component for each screen's wallpaper view
   component WallpaperScreenView: Item {
+    id: screenView
     property var targetScreen
     property alias gridView: wallpaperGridView
 
     // Local reactive state for this screen
     property list<string> wallpapersList: []
     property string currentWallpaper: ""
+
+    // Live preview state
+    property bool isPreviewing: false
+    property string previewingPath: ""
+    property string originalWallpaper: ""
+    property bool windowsHidden: false
+    property int savedWorkspaceId: -1
+    property var hiddenWindowAddresses: []
+
+    // Hide windows by moving them to special workspace
+    function hideWindowsForPreview() {
+      if (windowsHidden) return;
+      if (!CompositorService.isHyprland) {
+        Logger.d("WallpaperPanel", "hideWindowsForPreview: Not Hyprland, skipping");
+        return;
+      }
+
+      // Get current active workspace
+      var focusedMonitor = Hyprland.focusedMonitor;
+      if (!focusedMonitor || !focusedMonitor.activeWorkspace) {
+        Logger.w("WallpaperPanel", "hideWindowsForPreview: No focused monitor or workspace");
+        return;
+      }
+
+      savedWorkspaceId = focusedMonitor.activeWorkspace.id;
+      hiddenWindowAddresses = [];
+
+      Logger.d("WallpaperPanel", "hideWindowsForPreview: Workspace ID =", savedWorkspaceId);
+
+      // Get all windows on current workspace and move them
+      if (!Hyprland.toplevels || !Hyprland.toplevels.values) {
+        Logger.w("WallpaperPanel", "hideWindowsForPreview: No toplevels available");
+        return;
+      }
+
+      var toplevels = Hyprland.toplevels.values;
+      Logger.d("WallpaperPanel", "hideWindowsForPreview: Found", toplevels.length, "toplevels");
+
+      for (var i = 0; i < toplevels.length; i++) {
+        var toplevel = toplevels[i];
+        if (toplevel && toplevel.workspace && toplevel.workspace.id === savedWorkspaceId) {
+          var addr = toplevel.address;
+          if (addr) {
+            hiddenWindowAddresses.push(addr);
+            // Format: movetoworkspacesilent WORKSPACE, address:0xADDRESS
+            // toplevel.address is raw hex without 0x prefix, so we add it
+            var cmd = "movetoworkspacesilent special:wallpaper_preview, address:0x" + addr;
+            Logger.d("WallpaperPanel", "hideWindowsForPreview: Dispatching:", cmd);
+            Hyprland.dispatch(cmd);
+          }
+        }
+      }
+
+      Logger.d("WallpaperPanel", "hideWindowsForPreview: Hid", hiddenWindowAddresses.length, "windows");
+      windowsHidden = true;
+    }
+
+    // Restore windows from special workspace
+    function restoreWindowsFromPreview() {
+      if (!windowsHidden) return;
+      if (!CompositorService.isHyprland) return;
+
+      Logger.d("WallpaperPanel", "restoreWindowsFromPreview: Restoring", hiddenWindowAddresses.length, "windows to workspace", savedWorkspaceId);
+
+      // Move all hidden windows back to their original workspace
+      for (var i = 0; i < hiddenWindowAddresses.length; i++) {
+        var addr = hiddenWindowAddresses[i];
+        var cmd = "movetoworkspacesilent " + savedWorkspaceId + ", address:0x" + addr;
+        Logger.d("WallpaperPanel", "restoreWindowsFromPreview: Dispatching:", cmd);
+        Hyprland.dispatch(cmd);
+      }
+
+      hiddenWindowAddresses = [];
+      windowsHidden = false;
+    }
+
+    // Start live preview - temporarily shows wallpaper on actual desktop
+    function startPreview(path) {
+      if (!isPreviewing) {
+        // Save original wallpaper to restore on cancel
+        originalWallpaper = WallpaperService.getWallpaper(targetScreen.name) || "";
+        isPreviewing = true;
+
+        // Hide all windows for clean desktop view
+        hideWindowsForPreview();
+      }
+      previewingPath = path;
+
+      // Apply to actual desktop
+      if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
+        WallpaperService.changeWallpaper(path, undefined);
+      } else {
+        WallpaperService.changeWallpaper(path, targetScreen.name);
+      }
+    }
+
+    // Cancel preview and restore original wallpaper
+    function cancelPreview() {
+      if (isPreviewing && originalWallpaper) {
+        if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
+          WallpaperService.changeWallpaper(originalWallpaper, undefined);
+        } else {
+          WallpaperService.changeWallpaper(originalWallpaper, targetScreen.name);
+        }
+      }
+
+      // Restore windows
+      restoreWindowsFromPreview();
+
+      isPreviewing = false;
+      previewingPath = "";
+      originalWallpaper = "";
+    }
+
+    // Apply the previewed wallpaper permanently
+    function applyWallpaper(path) {
+      // If we're previewing a different wallpaper, apply the new one
+      if (path && path !== previewingPath) {
+        if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
+          WallpaperService.changeWallpaper(path, undefined);
+        } else {
+          WallpaperService.changeWallpaper(path, targetScreen.name);
+        }
+      }
+
+      // Restore windows
+      restoreWindowsFromPreview();
+
+      // Confirm the preview (no need to revert)
+      isPreviewing = false;
+      previewingPath = "";
+      originalWallpaper = "";
+    }
     property list<string> filteredWallpapers: []
     property var wallpapersWithNames: [] // Cached basenames
 
@@ -1056,6 +1244,45 @@ SmartPanel {
         }
       }
 
+      // Preview item
+      MenuItem {
+        id: previewItem
+        text: I18n.tr("wallpaper.panel.context.preview") || "Preview"
+
+        background: Rectangle {
+          color: previewArea.containsMouse ? Color.mHover : Color.transparent
+          radius: Style.radiusXS
+        }
+
+        contentItem: RowLayout {
+          spacing: Style.marginS
+          NIcon {
+            icon: "eye"
+            pointSize: Style.fontSizeM
+            color: previewArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+          }
+          NText {
+            text: previewItem.text
+            pointSize: Style.fontSizeS
+            color: previewArea.containsMouse ? Color.mOnHover : Color.mOnSurface
+            Layout.fillWidth: true
+          }
+        }
+
+        MouseArea {
+          id: previewArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: Qt.PointingHandCursor
+          onClicked: {
+            if (wallpaperContextMenu.wallpaperToDelete) {
+              root.openPreviewModal(wallpaperContextMenu.wallpaperToDelete, screenView);
+            }
+            wallpaperContextMenu.close();
+          }
+        }
+      }
+
       // Upscale item (for images)
       MenuItem {
         id: upscaleItem
@@ -1196,6 +1423,73 @@ SmartPanel {
           }
         }
       }
+
+      // Outpaint item (for images only)
+      MenuItem {
+        id: outpaintItem
+        property bool isImage: {
+          var path = wallpaperContextMenu.wallpaperToDelete;
+          if (!path) return false;
+          var ext = path.split('.').pop().toLowerCase();
+          var imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "pnm"];
+          return imageExtensions.indexOf(ext) !== -1;
+        }
+        property bool shouldShow: isImage && WallpaperCacheService.imageMagickAvailable
+        visible: shouldShow
+        height: shouldShow ? implicitHeight : 0
+        text: OutpaintService.isProcessing
+          ? (I18n.tr("wallpaper.panel.context.outpainting") || "Outpainting...")
+          : (I18n.tr("wallpaper.panel.context.outpaint") || "Outpaint to Fit Screen")
+        enabled: !OutpaintService.isProcessing && isImage
+
+        background: Rectangle {
+          color: outpaintArea.containsMouse && outpaintItem.enabled ? Color.mHover : Color.transparent
+          radius: Style.radiusXS
+        }
+
+        contentItem: RowLayout {
+          spacing: Style.marginS
+          opacity: outpaintItem.enabled ? 1.0 : 0.5
+          NIcon {
+            icon: "expand"
+            pointSize: Style.fontSizeM
+            color: outpaintArea.containsMouse && outpaintItem.enabled ? Color.mOnHover : Color.mOnSurface
+          }
+          NText {
+            text: outpaintItem.text
+            pointSize: Style.fontSizeS
+            color: outpaintArea.containsMouse && outpaintItem.enabled ? Color.mOnHover : Color.mOnSurface
+            Layout.fillWidth: true
+          }
+        }
+
+        MouseArea {
+          id: outpaintArea
+          anchors.fill: parent
+          hoverEnabled: true
+          cursorShape: outpaintItem.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+          onClicked: {
+            if (outpaintItem.enabled && wallpaperContextMenu.wallpaperToDelete && targetScreen) {
+              OutpaintService.outpaint(
+                wallpaperContextMenu.wallpaperToDelete,
+                targetScreen.width,
+                targetScreen.height,
+                function(resultPath) {
+                  if (resultPath) {
+                    // Apply the outpainted wallpaper
+                    if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
+                      WallpaperService.changeWallpaper(resultPath, undefined);
+                    } else {
+                      WallpaperService.changeWallpaper(resultPath, targetScreen.name);
+                    }
+                  }
+                }
+              );
+            }
+            wallpaperContextMenu.close();
+          }
+        }
+      }
     }
 
     ColumnLayout {
@@ -1283,12 +1577,16 @@ SmartPanel {
                           if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
                             if (currentIndex >= 0 && currentIndex < filteredWallpapers.length) {
                               let path = filteredWallpapers[currentIndex];
-                              if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
-                                WallpaperService.changeWallpaper(path, undefined);
+                              // If previewing, apply. Otherwise start preview.
+                              if (isPreviewing) {
+                                applyWallpaper(path);
                               } else {
-                                WallpaperService.changeWallpaper(path, targetScreen.name);
+                                startPreview(path);
                               }
                             }
+                            event.accepted = true;
+                          } else if (event.key === Qt.Key_Escape && isPreviewing) {
+                            cancelPreview();
                             event.accepted = true;
                           }
                         }
@@ -1390,32 +1688,11 @@ SmartPanel {
             const screenName = targetScreen ? targetScreen.name : "";
             const requestPath = wallpaperPath;
 
-            Logger.i("WallpaperPanel", "Thumb request", JSON.stringify({
-                       "screen": screenName,
-                       "width": targetWidth,
-                       "height": targetHeight,
-                       "wallpaper": requestPath
-                     }));
-
             WallpaperCacheService.getPreprocessed(requestPath, screenName, targetWidth, targetHeight, function(path, success) {
               try {
                 if (!wallpaperItem || wallpaperItem.wallpaperPath !== requestPath) {
-                  Logger.i("WallpaperPanel", "Thumb callback skipped (delegate gone)", JSON.stringify({
-                             "wallpaper": requestPath,
-                             "path": path,
-                             "success": success
-                           }));
                   return;
                 }
-
-                Logger.i("WallpaperPanel", "Thumb result", JSON.stringify({
-                           "path": path,
-                           "success": success,
-                           "screen": screenName,
-                           "width": targetWidth,
-                           "height": targetHeight,
-                           "wallpaper": requestPath
-                         }));
 
                 thumbLoading = false;
                 thumbReady = !!path;
@@ -1425,15 +1702,7 @@ SmartPanel {
                 } else if (!success) {
                   // Fallback to original if preprocessing failed
                   cachedThumbPath = requestPath.startsWith("file://") ? requestPath : "file://" + requestPath;
-                } else {
-                  Logger.w("WallpaperPanel", "Thumbnail preprocessing returned no path", requestPath);
                 }
-
-                Logger.i("WallpaperPanel", "Thumb path set", JSON.stringify({
-                           "cachedThumbPath": cachedThumbPath,
-                           "ready": thumbReady,
-                           "failed": thumbFailed
-                         }));
               } catch (e) {
                 Logger.e("WallpaperPanel", "Thumb callback error", e);
               }
@@ -1742,14 +2011,17 @@ SmartPanel {
 
             TapHandler {
               acceptedButtons: Qt.LeftButton
-              onTapped: {
+              onSingleTapped: {
                 wallpaperGridView.forceActiveFocus();
                 wallpaperGridView.currentIndex = index;
-                if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
-                  WallpaperService.changeWallpaper(wallpaperPath, undefined);
-                } else {
-                  WallpaperService.changeWallpaper(wallpaperPath, targetScreen.name);
-                }
+                // Start live preview on desktop
+                startPreview(wallpaperPath);
+              }
+              onDoubleTapped: {
+                // Apply immediately on double-click
+                wallpaperGridView.forceActiveFocus();
+                wallpaperGridView.currentIndex = index;
+                applyWallpaper(wallpaperPath);
               }
             }
 
@@ -1826,6 +2098,76 @@ SmartPanel {
         }
       }
     }
+
+    // Preview controls overlay - shows when previewing
+    Rectangle {
+      id: previewControls
+      visible: isPreviewing
+      anchors.bottom: parent.bottom
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.bottomMargin: Style.marginL
+      width: previewControlsRow.implicitWidth + Style.marginL * 2
+      height: previewControlsRow.implicitHeight + Style.marginM * 2
+      radius: Style.radiusM
+      color: Qt.alpha(Color.mSurface, 0.95)
+      border.color: Color.mOutline
+      border.width: Style.borderS
+      z: 50
+
+      RowLayout {
+        id: previewControlsRow
+        anchors.centerIn: parent
+        spacing: Style.marginM
+
+        NIcon {
+          icon: "eye"
+          pointSize: Style.fontSizeM
+          color: Color.mPrimary
+        }
+
+        NText {
+          text: I18n.tr("wallpaper.preview.live") || "Previewing on Desktop"
+          color: Color.mOnSurface
+          font.weight: Style.fontWeightBold
+        }
+
+        NText {
+          text: "(" + previewingPath.split('/').pop() + ")"
+          color: Color.mOnSurfaceVariant
+          elide: Text.ElideMiddle
+          Layout.maximumWidth: 200
+        }
+
+        Rectangle {
+          width: 1
+          height: parent.height * 0.6
+          color: Color.mOutline
+        }
+
+        NButton {
+          text: I18n.tr("wallpaper.preview.apply") || "Apply"
+          icon: "check"
+          backgroundColor: Color.mPrimary
+          textColor: Color.mOnPrimary
+          onClicked: applyWallpaper(previewingPath)
+        }
+
+        NButton {
+          text: I18n.tr("wallpaper.preview.cancel") || "Cancel"
+          icon: "close"
+          onClicked: cancelPreview()
+        }
+      }
+    }
+  }
+
+  WallpaperPreviewModal {
+    id: previewModal
+    parent: Overlay.overlay
+    anchors.fill: parent
+    onClosed: root.previewModalView = null
+    onPreviousRequested: root.previewModalNavigate(-1)
+    onNextRequested: root.previewModalNavigate(1)
   }
 
   // Component for Wallhaven wallpapers view

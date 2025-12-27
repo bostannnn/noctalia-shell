@@ -86,7 +86,8 @@ Singleton {
         {
           "path": "~/.local/share/color-schemes/noctalia.colors"
         }
-      ]
+      ],
+      "postProcess": () => `bash ${colorsApplyScript} kcolorscheme`
     },
     {
       "id": "fuzzel",
@@ -410,5 +411,4 @@ Singleton {
     }
   }
 }
-
 

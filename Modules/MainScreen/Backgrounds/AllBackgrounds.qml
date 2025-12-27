@@ -1,7 +1,9 @@
 import QtQuick
 import QtQuick.Shapes
+import QtQuick.Effects
 import qs.Commons
 import qs.Widgets
+import qs.Widgets.LiquidGlass
 
 /**
 * AllBackgrounds - Unified Shape container for all bar and panel backgrounds
@@ -12,6 +14,7 @@ import qs.Widgets
 * Benefits:
 * - Single GPU-accelerated rendering pass for all backgrounds
 * - Unified shadow system (one MultiEffect for everything)
+* - Liquid Glass theme support with frosted effects
 */
 Item {
   id: root
@@ -22,7 +25,11 @@ Item {
   required property var windowRoot
 
   // Apply panelBackgroundOpacity directly to background color for reliable transparency
-  readonly property color panelBackgroundColor: Qt.alpha(Color.mSurface, Settings.data.ui.panelBackgroundOpacity)
+  // In liquidGlass mode, use Theme.glassOpacity for more transparent look
+  readonly property real effectiveOpacity: Theme.isLiquidGlass
+    ? Theme.glassOpacity
+    : Settings.data.ui.panelBackgroundOpacity
+  readonly property color panelBackgroundColor: Qt.alpha(Color.mSurface, effectiveOpacity)
   readonly property bool isFramedMode: (Settings.data.bar.mode ?? "classic") === "framed"
 
   anchors.fill: parent
@@ -50,6 +57,7 @@ Item {
 
         // Bar background - transparent in framed mode (BorderFrameMasked provides it)
         BarBackground {
+          id: barBackground
           bar: root.bar
           shapeContainer: backgroundsShape
           windowRoot: root.windowRoot
@@ -184,6 +192,116 @@ Item {
           panel: root.windowRoot.pluginPanel2Placeholder
           shapeContainer: backgroundsShape
           backgroundColor: panelBackgroundColor
+        }
+      }
+
+      // ===========================================
+      // LIQUID GLASS OVERLAYS (when theme active)
+      // ===========================================
+      Loader {
+        anchors.fill: parent
+        active: Theme.isLiquidGlass
+
+        sourceComponent: Item {
+          anchors.fill: parent
+
+          // Bar glass overlay (skip if transparent or framed mode)
+          GlassOverlay {
+            visible: !Settings.data.bar.transparent && !root.isFramedMode
+            isBar: true
+            bar: root.bar
+          }
+
+          // Audio panel
+          GlassOverlay {
+            panel: root.windowRoot.audioPanelPlaceholder
+          }
+
+          // Battery panel
+          GlassOverlay {
+            panel: root.windowRoot.batteryPanelPlaceholder
+          }
+
+          // Bluetooth panel
+          GlassOverlay {
+            panel: root.windowRoot.bluetoothPanelPlaceholder
+          }
+
+          // Brightness panel
+          GlassOverlay {
+            panel: root.windowRoot.brightnessPanelPlaceholder
+          }
+
+          // Clock panel
+          GlassOverlay {
+            panel: root.windowRoot.clockPanelPlaceholder
+          }
+
+          // Control Center panel
+          GlassOverlay {
+            panel: root.windowRoot.controlCenterPanelPlaceholder
+          }
+
+          // Changelog panel
+          GlassOverlay {
+            panel: root.windowRoot.changelogPanelPlaceholder
+          }
+
+          // Launcher panel
+          GlassOverlay {
+            panel: root.windowRoot.launcherPanelPlaceholder
+          }
+
+          // Notification History panel
+          GlassOverlay {
+            panel: root.windowRoot.notificationHistoryPanelPlaceholder
+          }
+
+          // Session Menu panel (skip if large buttons style)
+          GlassOverlay {
+            visible: !Settings.data.sessionMenu.largeButtonsStyle
+            panel: root.windowRoot.sessionMenuPanelPlaceholder
+          }
+
+          // Settings panel
+          GlassOverlay {
+            panel: root.windowRoot.settingsPanelPlaceholder
+          }
+
+          // Setup Wizard panel
+          GlassOverlay {
+            panel: root.windowRoot.setupWizardPanelPlaceholder
+          }
+
+          // TodoList panel
+          GlassOverlay {
+            panel: root.windowRoot.todoPanelPlaceholder
+          }
+
+          // TrayDrawer panel
+          GlassOverlay {
+            panel: root.windowRoot.trayDrawerPanelPlaceholder
+          }
+
+          // Wallpaper panel
+          GlassOverlay {
+            panel: root.windowRoot.wallpaperPanelPlaceholder
+          }
+
+          // WiFi panel
+          GlassOverlay {
+            panel: root.windowRoot.wifiPanelPlaceholder
+          }
+
+          // Plugin Panel 1
+          GlassOverlay {
+            panel: root.windowRoot.pluginPanel1Placeholder
+          }
+
+          // Plugin Panel 2
+          GlassOverlay {
+            panel: root.windowRoot.pluginPanel2Placeholder
+          }
         }
       }
     }

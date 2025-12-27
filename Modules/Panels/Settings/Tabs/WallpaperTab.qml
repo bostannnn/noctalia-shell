@@ -296,6 +296,46 @@ ColumnLayout {
       onToggled: checked => Settings.data.wallpaper.randomEnabled = checked
     }
 
+    // Smart Rotation
+    NToggle {
+      visible: Settings.data.wallpaper.randomEnabled
+      label: I18n.tr("settings.wallpaper.automation.smart-rotation.label") || "Smart Rotation"
+      description: I18n.tr("settings.wallpaper.automation.smart-rotation.description") || "Show each wallpaper once before repeating any. Enables history navigation."
+      checked: Settings.data.wallpaper.smartRotation ?? true
+      onToggled: checked => Settings.data.wallpaper.smartRotation = checked
+    }
+
+    // History navigation buttons
+    RowLayout {
+      visible: Settings.data.wallpaper.randomEnabled && (Settings.data.wallpaper.smartRotation ?? true)
+      spacing: Style.marginM
+
+      NLabel {
+        label: I18n.tr("settings.wallpaper.automation.history.label") || "Wallpaper History"
+        description: I18n.tr("settings.wallpaper.automation.history.description") || "Navigate through previously shown wallpapers"
+        Layout.fillWidth: true
+      }
+
+      NIconButton {
+        icon: "arrow-left"
+        tooltipText: I18n.tr("settings.wallpaper.automation.history.previous") || "Previous wallpaper"
+        enabled: WallpaperService.historyPosition > 0
+        onClicked: WallpaperService.previousWallpaper()
+      }
+
+      NText {
+        text: (WallpaperService.historyPosition + 1) + "/" + WallpaperService.wallpaperHistory.length
+        color: Color.mOnSurfaceVariant
+        pointSize: Style.fontSizeS
+      }
+
+      NIconButton {
+        icon: "arrow-right"
+        tooltipText: I18n.tr("settings.wallpaper.automation.history.next") || "Next wallpaper"
+        onClicked: WallpaperService.nextWallpaper()
+      }
+    }
+
     // Interval
     ColumnLayout {
       visible: Settings.data.wallpaper.randomEnabled
@@ -538,6 +578,227 @@ ColumnLayout {
     Layout.bottomMargin: Style.marginL
   }
 
+  // Outpainting Settings
+  ColumnLayout {
+    visible: Settings.data.wallpaper.enabled
+    spacing: Style.marginL
+    Layout.fillWidth: true
+
+    NHeader {
+      label: I18n.tr("settings.wallpaper.outpaint.section.label") || "Outpainting"
+      description: I18n.tr("settings.wallpaper.outpaint.section.description") || "Extend wallpapers to fit your screen aspect ratio"
+    }
+
+    NComboBox {
+      label: I18n.tr("settings.wallpaper.outpaint.provider.label") || "Method"
+      description: I18n.tr("settings.wallpaper.outpaint.provider.description") || "How to extend wallpaper edges"
+      Layout.fillWidth: true
+      model: [
+        { "key": "edge_extend", "name": I18n.tr("settings.wallpaper.outpaint.provider.edge") || "Edge Extension (Fast)" },
+        { "key": "comfyui", "name": I18n.tr("settings.wallpaper.outpaint.provider.comfyui") || "ComfyUI AI (Slow)" }
+      ]
+      currentKey: OutpaintService.provider
+      onSelected: key => OutpaintService.setProvider(key)
+    }
+
+    NComboBox {
+      label: I18n.tr("settings.wallpaper.outpaint.direction.label") || "Extend Direction"
+      description: I18n.tr("settings.wallpaper.outpaint.direction.description") || "Which sides to extend"
+      Layout.fillWidth: true
+      model: [
+        { "key": "auto", "name": I18n.tr("settings.wallpaper.outpaint.direction.auto") || "Auto (Best fit)" },
+        { "key": "horizontal", "name": I18n.tr("settings.wallpaper.outpaint.direction.horizontal") || "Horizontal (Left/Right)" },
+        { "key": "vertical", "name": I18n.tr("settings.wallpaper.outpaint.direction.vertical") || "Vertical (Top/Bottom)" }
+      ]
+      currentKey: OutpaintService.extendDirection
+      onSelected: key => OutpaintService.setExtendDirection(key)
+    }
+
+    // ComfyUI Settings
+    ColumnLayout {
+      visible: OutpaintService.provider === "comfyui"
+      Layout.fillWidth: true
+      spacing: Style.marginM
+
+      RowLayout {
+        Layout.fillWidth: true
+        spacing: Style.marginM
+
+        NTextInput {
+          id: comfyuiUrlInput
+          label: I18n.tr("settings.wallpaper.outpaint.comfyui-url.label") || "ComfyUI API URL"
+          description: I18n.tr("settings.wallpaper.outpaint.comfyui-url.description") || "ComfyUI server address"
+          text: OutpaintService.comfyuiUrl
+          onEditingFinished: OutpaintService.setComfyuiUrl(text)
+          Layout.fillWidth: true
+        }
+
+        NButton {
+          text: comfyuiTestResult === "testing" ? "..." : (comfyuiTestResult === "success" ? "✓" : (comfyuiTestResult === "failed" ? "✗" : I18n.tr("settings.wallpaper.outpaint.test") || "Test"))
+          backgroundColor: comfyuiTestResult === "success" ? Color.mSuccess : (comfyuiTestResult === "failed" ? Color.mError : Color.mPrimary)
+          textColor: Color.mOnPrimary
+          Layout.alignment: Qt.AlignBottom
+          Layout.bottomMargin: Style.marginS
+          onClicked: {
+            comfyuiTestResult = "testing";
+            OutpaintService.testConnection(function(success) {
+              comfyuiTestResult = success ? "success" : "failed";
+              comfyuiTestResetTimer.restart();
+            });
+          }
+
+          property string comfyuiTestResult: ""
+
+          Timer {
+            id: comfyuiTestResetTimer
+            interval: 3000
+            onTriggered: parent.comfyuiTestResult = ""
+          }
+        }
+      }
+
+      NTextInput {
+        label: I18n.tr("settings.wallpaper.outpaint.comfyui-checkpoint.label") || "Checkpoint"
+        description: I18n.tr("settings.wallpaper.outpaint.comfyui-checkpoint.description") || "Model checkpoint name (leave empty for default)"
+        text: OutpaintService.comfyuiCheckpoint
+        onEditingFinished: OutpaintService.setComfyuiCheckpoint(text)
+        Layout.fillWidth: true
+      }
+
+      ColumnLayout {
+        Layout.fillWidth: true
+
+        NLabel {
+          label: I18n.tr("settings.wallpaper.outpaint.comfyui-steps.label") || "Steps"
+          description: I18n.tr("settings.wallpaper.outpaint.comfyui-steps.description") || "More steps = better quality, slower"
+        }
+
+        NValueSlider {
+          Layout.fillWidth: true
+          from: 10
+          to: 50
+          stepSize: 5
+          value: OutpaintService.comfyuiSteps
+          onMoved: value => OutpaintService.setComfyuiSteps(Math.round(value))
+          text: OutpaintService.comfyuiSteps.toString()
+        }
+      }
+
+      ColumnLayout {
+        Layout.fillWidth: true
+
+        NLabel {
+          label: I18n.tr("settings.wallpaper.outpaint.comfyui-denoise.label") || "Denoise Strength"
+          description: I18n.tr("settings.wallpaper.outpaint.comfyui-denoise.description") || "How much to modify the extended area"
+        }
+
+        NValueSlider {
+          Layout.fillWidth: true
+          from: 0.5
+          to: 1.0
+          stepSize: 0.05
+          value: OutpaintService.comfyuiDenoise
+          onMoved: value => OutpaintService.setComfyuiDenoise(value)
+          text: OutpaintService.comfyuiDenoise.toFixed(2)
+        }
+      }
+
+      // Setup Guide
+      NCollapsible {
+        label: "Setup Guide"
+        description: "How to configure ComfyUI for outpainting"
+        Layout.fillWidth: true
+        contentSpacing: Style.marginS
+
+        ColumnLayout {
+          Layout.fillWidth: true
+          spacing: Style.marginS
+
+          NText {
+            text: "1. Install ComfyUI"
+            color: Color.mPrimary
+            font.weight: Style.fontWeightBold
+            pointSize: Style.fontSizeM
+          }
+          NText {
+            text: "Download from: github.com/comfyanonymous/ComfyUI"
+            color: Color.mOnSurfaceVariant
+            pointSize: Style.fontSizeS
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+          }
+
+          NText {
+            text: "2. Download an Inpainting Model"
+            color: Color.mPrimary
+            font.weight: Style.fontWeightBold
+            pointSize: Style.fontSizeM
+            Layout.topMargin: Style.marginS
+          }
+          NText {
+            text: "Recommended: Juggernaut XL Inpainting\nAlternative: RealVisXL Inpainting\n\nPlace the model in: ComfyUI/models/checkpoints/"
+            color: Color.mOnSurfaceVariant
+            pointSize: Style.fontSizeS
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+          }
+
+          NText {
+            text: "3. Start ComfyUI"
+            color: Color.mPrimary
+            font.weight: Style.fontWeightBold
+            pointSize: Style.fontSizeM
+            Layout.topMargin: Style.marginS
+          }
+          NText {
+            text: "Run: python main.py --listen\n\nDefault URL: http://127.0.0.1:8188"
+            color: Color.mOnSurfaceVariant
+            pointSize: Style.fontSizeS
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+          }
+
+          NText {
+            text: "4. Configure Above"
+            color: Color.mPrimary
+            font.weight: Style.fontWeightBold
+            pointSize: Style.fontSizeM
+            Layout.topMargin: Style.marginS
+          }
+          NText {
+            text: "Enter the checkpoint filename in the Checkpoint field above (e.g., juggernautXL_inpainting.safetensors)"
+            color: Color.mOnSurfaceVariant
+            pointSize: Style.fontSizeS
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+          }
+        }
+      }
+    }
+
+    NToggle {
+      label: I18n.tr("settings.wallpaper.outpaint.auto.label") || "Auto Outpaint"
+      description: I18n.tr("settings.wallpaper.outpaint.auto.description") || "Automatically outpaint when applying mismatched wallpapers"
+      checked: OutpaintService.autoOutpaint
+      onToggled: checked => OutpaintService.setAutoOutpaint(checked)
+    }
+
+    NText {
+      text: I18n.tr("settings.wallpaper.outpaint.info") || "Right-click a wallpaper and select 'Outpaint' to extend it manually."
+      color: Color.mOnSurfaceVariant
+      pointSize: Style.fontSizeS
+      wrapMode: Text.WordWrap
+      Layout.fillWidth: true
+    }
+  }
+
+  NDivider {
+    visible: Settings.data.wallpaper.enabled
+    Layout.fillWidth: true
+    Layout.topMargin: Style.marginL
+    Layout.bottomMargin: Style.marginL
+  }
+
   // Cache Management
   ColumnLayout {
     visible: Settings.data.wallpaper.enabled
@@ -561,7 +822,10 @@ ColumnLayout {
       NButton {
         text: "Clear"
         icon: "trash"
-        onClicked: WallpaperService.clearAllCache()
+        onClicked: {
+          WallpaperService.clearAllCache();
+          OutpaintService.clearCache();
+        }
       }
     }
   }

@@ -4,7 +4,7 @@
 if [ "$#" -ne 1 ]; then
     # Print usage information to standard error.
     echo "Error: No application specified." >&2
-    echo "Usage: $0 {kitty|ghostty|foot|alacritty|wezterm|fuzzel|walker|pywalfox|cava|niri}" >&2
+    echo "Usage: $0 {kitty|ghostty|foot|alacritty|wezterm|fuzzel|walker|pywalfox|cava|niri|kcolorscheme}" >&2
     exit 1
 fi
 
@@ -258,6 +258,47 @@ cava)
     fi
     ;;
 
+kcolorscheme)
+    echo "🎨 Applying KDE color scheme..."
+    KDEGLOBALS="$HOME/.config/kdeglobals"
+    SCHEME_NAME="noctalia"
+
+    if [ -f "$KDEGLOBALS" ]; then
+        if grep -q '^\[General\]' "$KDEGLOBALS"; then
+            if grep -q '^ColorScheme=' "$KDEGLOBALS"; then
+                sed -i '/^\[General\]/,/^\[/{s/^ColorScheme=.*/ColorScheme='"$SCHEME_NAME"'/}' "$KDEGLOBALS"
+            else
+                sed -i '/^\[General\]/a ColorScheme='"$SCHEME_NAME" "$KDEGLOBALS"
+            fi
+        else
+            printf "\n[General]\nColorScheme=%s\n" "$SCHEME_NAME" >>"$KDEGLOBALS"
+        fi
+    else
+        mkdir -p "$(dirname "$KDEGLOBALS")"
+        printf "[General]\nColorScheme=%s\n" "$SCHEME_NAME" >"$KDEGLOBALS"
+    fi
+
+    if command -v plasma-apply-colorscheme >/dev/null 2>&1; then
+        plasma-apply-colorscheme "$SCHEME_NAME" >/dev/null 2>&1 || true
+    else
+        DBUS_BIN="$(command -v qdbus6 || command -v qdbus || true)"
+        if [ -n "$DBUS_BIN" ]; then
+            "$DBUS_BIN" org.kde.KGlobalSettings /KGlobalSettings org.kde.KGlobalSettings.notifyChange 0 0 >/dev/null 2>&1 || true
+        elif command -v dbus-send >/dev/null 2>&1; then
+            dbus-send --session --type=method_call \
+                --dest=org.kde.KGlobalSettings \
+                /KGlobalSettings \
+                org.kde.KGlobalSettings.notifyChange \
+                int32:0 int32:0 >/dev/null 2>&1 || true
+        elif command -v busctl >/dev/null 2>&1; then
+            busctl --user call org.kde.KGlobalSettings /KGlobalSettings \
+                org.kde.KGlobalSettings notifyChange ii 0 0 >/dev/null 2>&1 || true
+        else
+            echo "Warning: no D-Bus helper found; restart KDE apps to reload." >&2
+        fi
+    fi
+    ;;
+
 niri)
     echo "🎨 Applying 'noctalia' theme to niri..."
     CONFIG_FILE="$HOME/.config/niri/config.kdl"
@@ -289,5 +330,3 @@ niri)
 esac
 
 echo "✅ Command sent for $APP_NAME."
-
-

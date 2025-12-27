@@ -52,13 +52,6 @@ Singleton {
     const sessionKey = sourcePath + "@" + width + "x" + height;
     const cachedEntry = sessionCache[sessionKey];
     if (cachedEntry && (Date.now() - cachedEntry.ts) < sessionCacheTtlMs) {
-      Logger.i("WallpaperCache", "Session cache hit", JSON.stringify({
-                 "source": sourcePath,
-                 "screen": screenName,
-                 "width": width,
-                 "height": height,
-                 "path": cachedEntry.path
-               }));
       callback(cachedEntry.path, cachedEntry.success);
       return;
     }
@@ -67,23 +60,9 @@ Singleton {
       return;
     }
 
-    Logger.i("WallpaperCache", "Request", JSON.stringify({
-                "source": sourcePath,
-                "screen": screenName,
-                "width": width,
-                "height": height
-              }));
-
     if (!imageMagickAvailable) {
       // Fallback: return original path
-      Logger.d("WallpaperCache", "ImageMagick not available, using original:", sourcePath);
       storeSessionCache(sessionKey, sourcePath, false, sourcePath, width, height, "");
-      Logger.i("WallpaperCache", "Callback (no magick)", JSON.stringify({
-                 "source": sourcePath,
-                 "screen": screenName,
-                 "width": width,
-                 "height": height
-               }));
       callback(sourcePath, false);
       return;
     }
@@ -92,14 +71,7 @@ Singleton {
     getImageDimensions(sourcePath, function (imgWidth, imgHeight) {
       if (imgWidth > 0 && imgHeight > 0 && imgWidth <= width && imgHeight <= height) {
         // Image is smaller than or equal to screen - no preprocessing needed
-        Logger.d("WallpaperCache", `Image ${imgWidth}x${imgHeight} <= screen ${width}x${height}, using original`);
         storeSessionCache(sessionKey, sourcePath, false, sourcePath, width, height, "");
-        Logger.i("WallpaperCache", "Callback (small image)", JSON.stringify({
-                   "source": sourcePath,
-                   "screen": screenName,
-                   "width": width,
-                   "height": height
-                 }));
         callback(sourcePath, false);
         return;
       }
@@ -129,39 +101,21 @@ Singleton {
       // Check cache first
       checkFileExists(cachedPath, function (exists) {
         if (exists) {
-          Logger.i("WallpaperCache", "Cache hit", JSON.stringify({
-                     "cachedPath": cachedPath,
-                     "source": sourcePath,
-                     "screen": screenName,
-                     "width": width,
-                     "height": height
-                   }));
           storeSessionCache(sessionKey, cachedPath, true, sourcePath, width, height, mtime);
-          // Callback immediately with cached path
           callback(cachedPath, true);
           return;
         }
 
         // Re-check pendingRequests in case another request started processing
-        // while we were checking file existence (race condition fix)
         if (pendingRequests[cacheKey]) {
           pendingRequests[cacheKey].callbacks.push({
                                                      callback: callback,
                                                      screenName: screenName
                                                    });
-          Logger.d("WallpaperCache", "Coalescing request (late):", cacheKey);
           return;
         }
 
         // Start new processing
-        Logger.i("WallpaperCache", "Preprocess start", JSON.stringify({
-                   "source": sourcePath,
-                   "cachedPath": cachedPath,
-                   "screen": screenName,
-                   "width": width,
-                   "height": height,
-                   "mtime": mtime
-                 }));
         pendingRequests[cacheKey] = {
           callbacks: [
             {
@@ -214,11 +168,6 @@ Singleton {
           notifyCallbacks(cacheKey, srcPath, false);
           preprocessFailed(cacheKey, stderrText, screenName);
         } else {
-          Logger.i("WallpaperCache", "Preprocess complete", JSON.stringify({
-                     "cacheKey": cacheKey,
-                     "output": outputPath,
-                     "source": sourcePath
-                   }));
           storeSessionCache(sessionKey, outputPath, true, sourcePath, width, height, mtime);
           notifyCallbacks(cacheKey, outputPath, true);
           preprocessComplete(cacheKey, outputPath, screenName);
@@ -232,12 +181,6 @@ Singleton {
   function notifyCallbacks(cacheKey, path, success) {
     const request = pendingRequests[cacheKey];
     if (request) {
-      Logger.i("WallpaperCache", "Notify callbacks", JSON.stringify({
-                 "cacheKey": cacheKey,
-                 "path": path,
-                 "success": success,
-                 "callbackCount": request.callbacks.length
-               }));
       request.callbacks.forEach(function (item) {
         try {
           item.callback(path, success);
@@ -296,15 +239,6 @@ Singleton {
       return false;
 
     // Trust the manifest - the cached file should exist
-    // If it doesn't, the Image component will handle the error gracefully
-    // and we'll regenerate on the next request after mtime check fails
-    Logger.i("WallpaperCache", "Persistent cache hit", JSON.stringify({
-               "source": sourcePath,
-               "screen": screenName,
-               "width": width,
-               "height": height,
-               "path": entry.path
-             }));
     sessionCache[sessionKey] = {
       path: entry.path,
       success: entry.success,
@@ -374,11 +308,6 @@ Singleton {
   function executeProcess(item) {
     activeProcesses++;
 
-    Logger.i("WallpaperCache", "Process start", JSON.stringify({
-               "name": item.name,
-               "command": item.command
-             }));
-
     const processString = `
       import QtQuick
       import Quickshell.Io
@@ -394,12 +323,6 @@ Singleton {
 
       processObj.exited.connect(function (exitCode) {
         root.activeProcesses--;
-        Logger.i("WallpaperCache", "Process exit", JSON.stringify({
-                   "name": item.name,
-                   "exitCode": exitCode,
-                   "stdout": processObj.stdout.text,
-                   "stderr": processObj.stderr.text
-                 }));
         item.onComplete(exitCode, processObj.stdout.text, processObj.stderr.text);
         processObj.destroy();
         root.runNextProcess();

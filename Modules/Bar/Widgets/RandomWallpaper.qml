@@ -32,24 +32,49 @@ NIconButton {
     WallpaperService.setRandomWallpaper()
   }
 
+  // Smart rotation state
+  property bool smartRotation: Settings.data.wallpaper.smartRotation ?? true
+  property bool hasPrevious: WallpaperService.historyPosition > 0
+  property bool hasNext: WallpaperService.historyPosition < WallpaperService.wallpaperHistory.length - 1
+
   // Right-click for context menu
   NPopupContextMenu {
     id: contextMenu
 
-    model: [
-      {
-        "label": I18n.tr("context-menu.random-wallpaper"),
-        "action": "shuffle",
-        "icon": "dice"
-      },
-      {
-        "label": autoShuffle 
+    model: {
+      var items = [
+        {
+          "label": I18n.tr("context-menu.random-wallpaper") || "Random Wallpaper",
+          "action": "shuffle",
+          "icon": "dice"
+        }
+      ];
+
+      // Add prev/next options if smart rotation is enabled
+      if (root.smartRotation) {
+        items.push({
+          "label": I18n.tr("context-menu.previous-wallpaper") || "Previous Wallpaper",
+          "action": "previous",
+          "icon": "arrow-left",
+          "enabled": root.hasPrevious
+        });
+        items.push({
+          "label": I18n.tr("context-menu.next-wallpaper") || "Next Wallpaper",
+          "action": "next",
+          "icon": "arrow-right"
+        });
+      }
+
+      items.push({
+        "label": root.autoShuffle
           ? I18n.tr("context-menu.disable-auto-shuffle")
           : I18n.tr("context-menu.enable-auto-shuffle"),
         "action": "toggle-auto",
-        "icon": autoShuffle ? "clock-off" : "clock"
-      }
-    ]
+        "icon": root.autoShuffle ? "clock-off" : "clock"
+      });
+
+      return items;
+    }
 
     onTriggered: action => {
       var popupMenuWindow = PanelService.getPopupMenuWindow(screen)
@@ -59,6 +84,10 @@ NIconButton {
 
       if (action === "shuffle") {
         WallpaperService.setRandomWallpaper()
+      } else if (action === "previous") {
+        WallpaperService.previousWallpaper()
+      } else if (action === "next") {
+        WallpaperService.nextWallpaper()
       } else if (action === "toggle-auto") {
         Settings.data.wallpaper.randomEnabled = !Settings.data.wallpaper.randomEnabled
       }

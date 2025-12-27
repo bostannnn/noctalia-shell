@@ -93,6 +93,7 @@ ShellRoot {
         Logger.i("Shell", "---------------------------");
         WallpaperService.init();
         VideoWallpaperService.init();
+        OutpaintService.init();
         WallpaperCacheService.init();
         AppThemeService.init();
         ColorSchemeService.init();

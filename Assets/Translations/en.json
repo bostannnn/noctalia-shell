@@ -540,9 +540,11 @@
     "pause": "Pause",
     "play": "Play",
     "previous": "Previous",
+    "previous-wallpaper": "Previous wallpaper",
     "random-wallpaper": "Random wallpaper",
     "enable-auto-shuffle": "Enable auto shuffle",
     "disable-auto-shuffle": "Disable auto shuffle",
+    "next-wallpaper": "Next wallpaper",
     "screenshot-region": "Capture region",
     "screenshot-screen": "Capture screen",
     "screenshot-window": "Capture window",
@@ -645,6 +647,10 @@
       "primary": "Primary",
       "secondary": "Secondary",
       "tertiary": "Tertiary"
+    },
+    "theme-mode": {
+      "standard": "Standard",
+      "liquidGlass": "Liquid Glass"
     },
     "control-center": {
       "position": {
@@ -2412,6 +2418,30 @@
       "tooltips": {
         "description": "Enable or disable tooltips throughout the interface.",
         "label": "Show tooltips"
+      },
+      "liquid-glass": {
+        "label": "Liquid Glass",
+        "description": "Modern glass-like visual effects inspired by iOS 26 and macOS Tahoe design language.",
+        "mode": {
+          "label": "Theme mode",
+          "description": "Switch between standard flat styling and liquid glass effects."
+        },
+        "opacity": {
+          "label": "Glass opacity",
+          "description": "Controls the transparency level of glass surfaces."
+        },
+        "glow": {
+          "label": "Border glow",
+          "description": "Intensity of the glowing border effect around panels."
+        },
+        "reflection": {
+          "label": "Light reflection",
+          "description": "Intensity of animated light reflections sweeping across surfaces."
+        },
+        "animations": {
+          "label": "Glass animations",
+          "description": "Enable animated light reflections on glass surfaces."
+        }
       }
     },
     "wallpaper": {
@@ -2537,6 +2567,47 @@
           "description": "Choose where the wallpaper selector panel appears.",
           "label": "Position"
         }
+      },
+      "outpaint": {
+        "section": {
+          "label": "Outpainting",
+          "description": "Extend wallpapers to fit your screen aspect ratio"
+        },
+        "provider": {
+          "label": "Method",
+          "description": "How to extend wallpaper edges",
+          "edge": "Edge Extension (Fast)",
+          "comfyui": "ComfyUI AI (Slow)"
+        },
+        "direction": {
+          "label": "Extend Direction",
+          "description": "Which sides to extend",
+          "auto": "Auto (Best fit)",
+          "horizontal": "Horizontal (Left/Right)",
+          "vertical": "Vertical (Top/Bottom)"
+        },
+        "comfyui-url": {
+          "label": "ComfyUI API URL",
+          "description": "ComfyUI server address"
+        },
+        "comfyui-checkpoint": {
+          "label": "Checkpoint",
+          "description": "Model checkpoint name (leave empty for default)"
+        },
+        "comfyui-steps": {
+          "label": "Steps",
+          "description": "More steps = better quality, slower"
+        },
+        "comfyui-denoise": {
+          "label": "Denoise Strength",
+          "description": "How much to modify the extended area"
+        },
+        "auto": {
+          "label": "Auto Outpaint",
+          "description": "Automatically outpaint when applying mismatched wallpapers"
+        },
+        "test": "Test",
+        "info": "Right-click a wallpaper and select 'Outpaint' to extend it manually."
       },
       "title": "Wallpaper"
     }
@@ -2798,6 +2869,9 @@
       "context": {
         "delete": "Move to trash",
         "open-folder": "Open folder",
+        "preview": "Preview",
+        "outpaint": "Outpaint to Fit Screen",
+        "outpainting": "Outpainting...",
         "upscale": "Upscale (AI)",
         "upscale-video": "Upscale Video (AI)",
         "upscaling": "Upscaling...",
@@ -2851,6 +2925,7 @@
       },
       "source": {
         "label": "Source",
+        "live": "Live",
         "local": "Local",
         "wallhaven": "Wallhaven"
       },
@@ -2917,6 +2992,39 @@
       "loading": "Loading wallpapers...",
       "no-results": "No wallpapers found. Try a different search query.",
       "page": "{current} of {total}"
+    },
+    "live": {
+      "status": "Live Wallpaper",
+      "disabled": "Disabled",
+      "enable": "Enable",
+      "disable": "Disable",
+      "presets": "Shader Presets",
+      "settings": "Settings",
+      "speed": "Speed",
+      "intensity": "Intensity",
+      "fps": "FPS",
+      "color1": "Primary Color",
+      "color2": "Secondary Color"
+    },
+    "preview": {
+      "live": "Previewing on Desktop",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "fill-mode": "Fill:",
+      "zoom-out": "Zoom Out",
+      "zoom-in": "Zoom In",
+      "zoom-fit": "Fit to Screen",
+      "close": "Close (Esc)",
+      "visible-area": "Visible Area",
+      "previous": "Previous",
+      "next": "Next",
+      "apply-to-all": "Apply to all monitors",
+      "hint": {
+        "close": "Close",
+        "apply": "Apply",
+        "navigate": "Navigate",
+        "zoom": "Zoom"
+      }
     }
   },
   "weather": {
@@ -3100,4 +3208,3 @@
     }
   }
 }
-

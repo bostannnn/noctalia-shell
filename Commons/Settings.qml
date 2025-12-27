@@ -289,6 +289,14 @@ Singleton {
       property real panelBackgroundOpacity: 0.85
       property bool panelsAttachedToBar: true
       property string settingsPanelMode: "attached" // "centered", "attached", "window"
+
+      // Liquid Glass theme settings
+      property string themeMode: "standard" // "standard" or "liquidGlass"
+      property real glassBlurRadius: 32     // 8-64 range
+      property real glassOpacity: 0.65      // 0.4-0.9 range
+      property real reflectionIntensity: 0.3 // 0.0-0.6 range
+      property real borderGlowIntensity: 0.4 // 0.0-0.8 range
+      property bool glassAnimationsEnabled: true
     }
 
     // location
