@@ -29,6 +29,18 @@ SmartPanel {
   property bool processViewerAvailable: false
   property var topCpuProcesses: []
   property var topMemProcesses: []
+  property int processMaxRows: 8
+  property int processRefreshIntervalMs: 2000
+
+  property int historyMaxPoints: 40
+  property int historyIntervalMs: 1000
+  property var cpuUsageHistory: []
+  property var cpuTempHistory: []
+  property var gpuUsageHistory: []
+  property var gpuTempHistory: []
+  property var gpuVramHistory: []
+  property var memHistory: []
+  property var diskHistory: []
 
   readonly property string diskPath: {
     if (sourceWidget && sourceWidget.diskPath) {
@@ -139,8 +151,8 @@ SmartPanel {
     }
     const cpuSorted = items.slice().sort((a, b) => b.cpu - a.cpu);
     const memSorted = items.slice().sort((a, b) => b.mem - a.mem);
-    topCpuProcesses = cpuSorted.slice(0, 5);
-    topMemProcesses = memSorted.slice(0, 5);
+    topCpuProcesses = cpuSorted.slice(0, processMaxRows);
+    topMemProcesses = memSorted.slice(0, processMaxRows);
   }
 
   function refreshProcessList() {
@@ -153,15 +165,48 @@ SmartPanel {
     psProcess.running = true;
   }
 
+  function appendHistory(list, value) {
+    const next = list.slice();
+    if (next.length >= historyMaxPoints) {
+      next.shift();
+    }
+    next.push(value);
+    return next;
+  }
+
   Component.onCompleted: psCheck.running = true
 
   Timer {
     id: processRefreshTimer
-    interval: 2000
+    interval: processRefreshIntervalMs
     repeat: true
-    running: processViewerAvailable
+    running: root.isPanelOpen && processViewerAvailable
     triggeredOnStart: true
     onTriggered: refreshProcessList()
+  }
+
+  Timer {
+    id: historyTimer
+    interval: historyIntervalMs
+    repeat: true
+    running: root.isPanelOpen
+    triggeredOnStart: true
+    onTriggered: {
+      cpuUsageHistory = appendHistory(cpuUsageHistory, clampRatio(SystemStatService.cpuUsage / 100.0));
+      cpuTempHistory = appendHistory(cpuTempHistory, clampRatio(SystemStatService.cpuTemp / Math.max(1, Settings.data.systemMonitor.tempCriticalThreshold)));
+      memHistory = appendHistory(memHistory, clampRatio(SystemStatService.memPercent / 100.0));
+      diskHistory = appendHistory(diskHistory, clampRatio(diskPercent / 100.0));
+
+      if (SystemStatService.gpuUsageAvailable) {
+        gpuUsageHistory = appendHistory(gpuUsageHistory, clampRatio(SystemStatService.gpuUsage / 100.0));
+      }
+      if (SystemStatService.gpuAvailable) {
+        gpuTempHistory = appendHistory(gpuTempHistory, clampRatio(SystemStatService.gpuTemp / Math.max(1, Settings.data.systemMonitor.gpuCriticalThreshold)));
+      }
+      if (SystemStatService.gpuVramAvailable) {
+        gpuVramHistory = appendHistory(gpuVramHistory, clampRatio(SystemStatService.gpuVramPercent / 100.0));
+      }
+    }
   }
 
   Process {
@@ -197,6 +242,8 @@ SmartPanel {
     property real ratio: 0
     property color accent: Color.mPrimary
     property bool showBar: true
+    property var sparkValues: []
+    property color sparkColor: accent
 
     Layout.fillWidth: true
     implicitHeight: contentColumn.implicitHeight
@@ -219,6 +266,15 @@ SmartPanel {
 
         Item {
           Layout.fillWidth: true
+        }
+
+        Sparkline {
+          visible: metricRow.sparkValues && metricRow.sparkValues.length > 1
+          values: metricRow.sparkValues
+          lineColor: metricRow.sparkColor
+          Layout.preferredWidth: Math.round(84 * Style.uiScaleRatio)
+          Layout.preferredHeight: Math.round(18 * Style.uiScaleRatio)
+          Layout.alignment: Qt.AlignVCenter
         }
 
         NText {
@@ -245,6 +301,50 @@ SmartPanel {
           radius: barTrack.radius
           color: metricRow.accent
         }
+      }
+    }
+  }
+
+  component Sparkline: Canvas {
+    id: sparkline
+    property var values: []
+    property color lineColor: Color.mPrimary
+    property color fillColor: Qt.alpha(lineColor, 0.18)
+    property bool fill: false
+
+    onValuesChanged: requestPaint()
+    onWidthChanged: requestPaint()
+    onHeightChanged: requestPaint()
+
+    onPaint: {
+      const ctx = getContext("2d");
+      ctx.reset();
+      if (!values || values.length < 2) {
+        return;
+      }
+      const w = width;
+      const h = height;
+      const step = w / (values.length - 1);
+      ctx.beginPath();
+      for (var i = 0; i < values.length; i++) {
+        const x = i * step;
+        const y = h - (values[i] * h);
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.lineWidth = Math.max(1, Math.round(Style.uiScaleRatio));
+      ctx.strokeStyle = lineColor;
+      ctx.stroke();
+
+      if (fill) {
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fillStyle = fillColor;
+        ctx.fill();
       }
     }
   }
@@ -359,6 +459,7 @@ SmartPanel {
                 value: root.formatPercent(SystemStatService.cpuUsage)
                 ratio: root.clampRatio(SystemStatService.cpuUsage / 100.0)
                 accent: root.getUsageColor(SystemStatService.cpuUsage, Settings.data.systemMonitor.cpuWarningThreshold, Settings.data.systemMonitor.cpuCriticalThreshold)
+                sparkValues: root.cpuUsageHistory
               }
 
               MetricRow {
@@ -366,6 +467,8 @@ SmartPanel {
                 value: root.formatTemp(SystemStatService.cpuTemp)
                 ratio: root.clampRatio(SystemStatService.cpuTemp / Math.max(1, Settings.data.systemMonitor.tempCriticalThreshold))
                 accent: root.getUsageColor(SystemStatService.cpuTemp, Settings.data.systemMonitor.tempWarningThreshold, Settings.data.systemMonitor.tempCriticalThreshold)
+                sparkValues: root.cpuTempHistory
+                sparkColor: root.warningColor
               }
             }
           }
@@ -421,6 +524,7 @@ SmartPanel {
                 value: root.formatPercent(SystemStatService.gpuUsage)
                 ratio: root.clampRatio(SystemStatService.gpuUsage / 100.0)
                 accent: root.gpuColor
+                sparkValues: root.gpuUsageHistory
               }
 
               MetricRow {
@@ -429,6 +533,8 @@ SmartPanel {
                 value: root.formatTemp(SystemStatService.gpuTemp)
                 ratio: root.clampRatio(SystemStatService.gpuTemp / Math.max(1, Settings.data.systemMonitor.gpuCriticalThreshold))
                 accent: root.getUsageColor(SystemStatService.gpuTemp, Settings.data.systemMonitor.gpuWarningThreshold, Settings.data.systemMonitor.gpuCriticalThreshold)
+                sparkValues: root.gpuTempHistory
+                sparkColor: root.warningColor
               }
 
               MetricRow {
@@ -437,6 +543,7 @@ SmartPanel {
                 value: root.formatVramLabel()
                 ratio: root.clampRatio(SystemStatService.gpuVramPercent / 100.0)
                 accent: root.gpuColor
+                sparkValues: root.gpuVramHistory
               }
             }
           }
@@ -482,6 +589,8 @@ SmartPanel {
                 value: root.formatMemoryUsed(SystemStatService.memGb, SystemStatService.memPercent)
                 ratio: root.clampRatio(SystemStatService.memPercent / 100.0)
                 accent: root.getUsageColor(SystemStatService.memPercent, Settings.data.systemMonitor.memWarningThreshold, Settings.data.systemMonitor.memCriticalThreshold)
+                sparkValues: root.memHistory
+                sparkColor: root.memoryColor
               }
             }
           }
@@ -535,6 +644,8 @@ SmartPanel {
                 value: root.diskPercent > 0 ? `${root.diskPercent}%` : "n/a"
                 ratio: root.clampRatio(root.diskPercent / 100.0)
                 accent: root.getUsageColor(root.diskPercent, Settings.data.systemMonitor.diskWarningThreshold, Settings.data.systemMonitor.diskCriticalThreshold)
+                sparkValues: root.diskHistory
+                sparkColor: root.storageColor
               }
             }
           }
