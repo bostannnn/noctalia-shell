@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.System
@@ -18,6 +19,16 @@ SmartPanel {
 
   readonly property color warningColor: Settings.data.systemMonitor.useCustomColors ? (Settings.data.systemMonitor.warningColor || Color.mTertiary) : Color.mTertiary
   readonly property color criticalColor: Settings.data.systemMonitor.useCustomColors ? (Settings.data.systemMonitor.criticalColor || Color.mError) : Color.mError
+  readonly property color cpuColor: Color.mPrimary
+  readonly property color gpuColor: Color.mTertiary
+  readonly property color memoryColor: Color.mSecondary
+  readonly property color storageColor: warningColor
+  readonly property color networkColor: Color.mPrimary
+
+  property string psPath: ""
+  property bool processViewerAvailable: false
+  property var topCpuProcesses: []
+  property var topMemProcesses: []
 
   readonly property string diskPath: {
     if (sourceWidget && sourceWidget.diskPath) {
@@ -99,6 +110,86 @@ SmartPanel {
     return Color.mPrimary;
   }
 
+  function parseProcessOutput(output) {
+    const trimmed = output.trim();
+    if (!trimmed) {
+      topCpuProcesses = [];
+      topMemProcesses = [];
+      return;
+    }
+    const lines = trimmed.split("\n");
+    const items = [];
+    for (var i = 0; i < lines.length; i++) {
+      const parts = lines[i].trim().split(/\s+/);
+      if (parts.length < 4) {
+        continue;
+      }
+      const pid = parts[0];
+      const name = parts[1];
+      const cpu = parseFloat(parts[2]);
+      const mem = parseFloat(parts[3]);
+      if (!isNaN(cpu) && !isNaN(mem)) {
+        items.push({
+                     "pid": pid,
+                     "name": name,
+                     "cpu": cpu,
+                     "mem": mem
+                   });
+      }
+    }
+    const cpuSorted = items.slice().sort((a, b) => b.cpu - a.cpu);
+    const memSorted = items.slice().sort((a, b) => b.mem - a.mem);
+    topCpuProcesses = cpuSorted.slice(0, 5);
+    topMemProcesses = memSorted.slice(0, 5);
+  }
+
+  function refreshProcessList() {
+    if (!processViewerAvailable || !psPath) {
+      return;
+    }
+    if (psProcess.running) {
+      return;
+    }
+    psProcess.running = true;
+  }
+
+  Component.onCompleted: psCheck.running = true
+
+  Timer {
+    id: processRefreshTimer
+    interval: 2000
+    repeat: true
+    running: processViewerAvailable
+    triggeredOnStart: true
+    onTriggered: refreshProcessList()
+  }
+
+  Process {
+    id: psCheck
+    command: ["sh", "-c", "if command -v ps >/dev/null 2>&1; then command -v ps; elif [ -x /run/current-system/sw/bin/ps ]; then echo /run/current-system/sw/bin/ps; fi"]
+    running: false
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const path = text.trim();
+        psPath = path;
+        processViewerAvailable = path.length > 0;
+        if (!processViewerAvailable) {
+          topCpuProcesses = [];
+          topMemProcesses = [];
+        }
+      }
+    }
+  }
+
+  Process {
+    id: psProcess
+    command: [psPath || "ps", "-eo", "pid,comm,%cpu,%mem", "--no-headers"]
+    running: false
+    stdout: StdioCollector {
+      onStreamFinished: parseProcessOutput(text)
+    }
+  }
+
   component MetricRow: Item {
     id: metricRow
     property string label: ""
@@ -177,10 +268,18 @@ SmartPanel {
           anchors.margins: Style.marginM
           spacing: Style.marginM
 
-          NIcon {
-            icon: "performance"
-            pointSize: Style.fontSizeXXL
-            color: Color.mPrimary
+          Rectangle {
+            width: Style.baseWidgetSize
+            height: Style.baseWidgetSize
+            radius: Style.radiusM
+            color: Qt.alpha(Color.mPrimary, 0.15)
+
+            NIcon {
+              icon: "performance"
+              pointSize: Style.fontSizeL
+              color: Color.mPrimary
+              anchors.centerIn: parent
+            }
           }
 
           ColumnLayout {
@@ -233,10 +332,18 @@ SmartPanel {
                 Layout.fillWidth: true
                 spacing: Style.marginS
 
-                NIcon {
-                  icon: "cpu-usage"
-                  pointSize: Style.fontSizeL
-                  color: Color.mPrimary
+                Rectangle {
+                  width: Style.baseWidgetSize * 0.7
+                  height: Style.baseWidgetSize * 0.7
+                  radius: Style.radiusS
+                  color: Qt.alpha(root.cpuColor, 0.18)
+
+                  NIcon {
+                    icon: "cpu-usage"
+                    pointSize: Style.fontSizeM
+                    color: root.cpuColor
+                    anchors.centerIn: parent
+                  }
                 }
 
                 NText {
@@ -278,10 +385,18 @@ SmartPanel {
                 Layout.fillWidth: true
                 spacing: Style.marginS
 
-                NIcon {
-                  icon: "gpu-temperature"
-                  pointSize: Style.fontSizeL
-                  color: Color.mPrimary
+                Rectangle {
+                  width: Style.baseWidgetSize * 0.7
+                  height: Style.baseWidgetSize * 0.7
+                  radius: Style.radiusS
+                  color: Qt.alpha(root.gpuColor, 0.18)
+
+                  NIcon {
+                    icon: "gpu-temperature"
+                    pointSize: Style.fontSizeM
+                    color: root.gpuColor
+                    anchors.centerIn: parent
+                  }
                 }
 
                 NText {
@@ -305,7 +420,7 @@ SmartPanel {
                 label: I18n.tr("bar.widget-settings.system-monitor.gpu-usage.label")
                 value: root.formatPercent(SystemStatService.gpuUsage)
                 ratio: root.clampRatio(SystemStatService.gpuUsage / 100.0)
-                accent: Color.mPrimary
+                accent: root.gpuColor
               }
 
               MetricRow {
@@ -321,7 +436,7 @@ SmartPanel {
                 label: I18n.tr("bar.widget-settings.system-monitor.gpu-vram-usage.label")
                 value: root.formatVramLabel()
                 ratio: root.clampRatio(SystemStatService.gpuVramPercent / 100.0)
-                accent: Color.mPrimary
+                accent: root.gpuColor
               }
             }
           }
@@ -340,10 +455,18 @@ SmartPanel {
                 Layout.fillWidth: true
                 spacing: Style.marginS
 
-                NIcon {
-                  icon: "memory"
-                  pointSize: Style.fontSizeL
-                  color: Color.mPrimary
+                Rectangle {
+                  width: Style.baseWidgetSize * 0.7
+                  height: Style.baseWidgetSize * 0.7
+                  radius: Style.radiusS
+                  color: Qt.alpha(root.memoryColor, 0.18)
+
+                  NIcon {
+                    icon: "memory"
+                    pointSize: Style.fontSizeM
+                    color: root.memoryColor
+                    anchors.centerIn: parent
+                  }
                 }
 
                 NText {
@@ -377,10 +500,18 @@ SmartPanel {
                 Layout.fillWidth: true
                 spacing: Style.marginS
 
-                NIcon {
-                  icon: "storage"
-                  pointSize: Style.fontSizeL
-                  color: Color.mPrimary
+                Rectangle {
+                  width: Style.baseWidgetSize * 0.7
+                  height: Style.baseWidgetSize * 0.7
+                  radius: Style.radiusS
+                  color: Qt.alpha(root.storageColor, 0.18)
+
+                  NIcon {
+                    icon: "storage"
+                    pointSize: Style.fontSizeM
+                    color: root.storageColor
+                    anchors.centerIn: parent
+                  }
                 }
 
                 NText {
@@ -423,10 +554,18 @@ SmartPanel {
                 Layout.fillWidth: true
                 spacing: Style.marginS
 
-                NIcon {
-                  icon: "wifi"
-                  pointSize: Style.fontSizeL
-                  color: Color.mPrimary
+                Rectangle {
+                  width: Style.baseWidgetSize * 0.7
+                  height: Style.baseWidgetSize * 0.7
+                  radius: Style.radiusS
+                  color: Qt.alpha(root.networkColor, 0.18)
+
+                  NIcon {
+                    icon: "wifi"
+                    pointSize: Style.fontSizeM
+                    color: root.networkColor
+                    anchors.centerIn: parent
+                  }
                 }
 
                 NText {
@@ -447,6 +586,164 @@ SmartPanel {
                 label: "TX"
                 value: SystemStatService.formatSpeed(SystemStatService.txSpeed)
                 showBar: false
+              }
+            }
+          }
+
+          NBox {
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+            implicitHeight: processColumn.implicitHeight + Style.marginM * 2
+
+            ColumnLayout {
+              id: processColumn
+              anchors.fill: parent
+              anchors.margins: Style.marginM
+              spacing: Style.marginS
+
+              RowLayout {
+                Layout.fillWidth: true
+                spacing: Style.marginS
+
+                Rectangle {
+                  width: Style.baseWidgetSize * 0.7
+                  height: Style.baseWidgetSize * 0.7
+                  radius: Style.radiusS
+                  color: Qt.alpha(Color.mPrimary, 0.18)
+
+                  NIcon {
+                    icon: "activity"
+                    pointSize: Style.fontSizeM
+                    color: Color.mPrimary
+                    anchors.centerIn: parent
+                  }
+                }
+
+                NText {
+                  text: I18n.tr("settings.system-monitor.processes-section.label")
+                  pointSize: Style.fontSizeM
+                  font.weight: Style.fontWeightBold
+                  color: Color.mOnSurface
+                }
+              }
+
+              RowLayout {
+                Layout.fillWidth: true
+                spacing: Style.marginM
+                visible: processViewerAvailable
+
+                ColumnLayout {
+                  Layout.fillWidth: true
+                  spacing: Style.marginS
+
+                  NText {
+                    text: I18n.tr("settings.system-monitor.processes-section.cpu")
+                    pointSize: Style.fontSizeS
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  Repeater {
+                    model: topCpuProcesses
+                    delegate: RowLayout {
+                      Layout.fillWidth: true
+                      spacing: Style.marginS
+
+                      ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        NText {
+                          text: modelData.name
+                          pointSize: Style.fontSizeS
+                          font.weight: Style.fontWeightMedium
+                          color: Color.mOnSurface
+                          elide: Text.ElideRight
+                        }
+
+                        NText {
+                          text: `PID ${modelData.pid}`
+                          pointSize: Style.fontSizeXS
+                          color: Color.mOnSurfaceVariant
+                        }
+                      }
+
+                      NText {
+                        text: `${modelData.cpu.toFixed(1)}%`
+                        pointSize: Style.fontSizeS
+                        font.family: Settings.data.ui.fontFixed
+                        color: Color.mOnSurface
+                        Layout.alignment: Qt.AlignRight
+                      }
+                    }
+                  }
+
+                  NText {
+                    visible: topCpuProcesses.length === 0
+                    text: I18n.tr("settings.system-monitor.processes-section.empty")
+                    pointSize: Style.fontSizeS
+                    color: Color.mOnSurfaceVariant
+                  }
+                }
+
+                ColumnLayout {
+                  Layout.fillWidth: true
+                  spacing: Style.marginS
+
+                  NText {
+                    text: I18n.tr("settings.system-monitor.processes-section.memory")
+                    pointSize: Style.fontSizeS
+                    color: Color.mOnSurfaceVariant
+                  }
+
+                  Repeater {
+                    model: topMemProcesses
+                    delegate: RowLayout {
+                      Layout.fillWidth: true
+                      spacing: Style.marginS
+
+                      ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        NText {
+                          text: modelData.name
+                          pointSize: Style.fontSizeS
+                          font.weight: Style.fontWeightMedium
+                          color: Color.mOnSurface
+                          elide: Text.ElideRight
+                        }
+
+                        NText {
+                          text: `PID ${modelData.pid}`
+                          pointSize: Style.fontSizeXS
+                          color: Color.mOnSurfaceVariant
+                        }
+                      }
+
+                      NText {
+                        text: `${modelData.mem.toFixed(1)}%`
+                        pointSize: Style.fontSizeS
+                        font.family: Settings.data.ui.fontFixed
+                        color: Color.mOnSurface
+                        Layout.alignment: Qt.AlignRight
+                      }
+                    }
+                  }
+
+                  NText {
+                    visible: topMemProcesses.length === 0
+                    text: I18n.tr("settings.system-monitor.processes-section.empty")
+                    pointSize: Style.fontSizeS
+                    color: Color.mOnSurfaceVariant
+                  }
+                }
+              }
+
+              NText {
+                visible: !processViewerAvailable
+                text: I18n.tr("settings.system-monitor.processes-section.unavailable")
+                pointSize: Style.fontSizeS
+                color: Color.mOnSurfaceVariant
               }
             }
           }

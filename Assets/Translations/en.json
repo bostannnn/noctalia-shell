@@ -2334,6 +2334,13 @@
       "polling-interval": {
         "label": "Polling interval"
       },
+      "processes-section": {
+        "cpu": "CPU",
+        "empty": "No processes available.",
+        "label": "Top processes",
+        "memory": "Memory",
+        "unavailable": "Process list unavailable."
+      },
       "temperature-section": {
         "label": "CPU temperature"
       },
