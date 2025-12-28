@@ -61,7 +61,7 @@ Singleton {
           "path": "~/.config/gtk-4.0/gtk.css"
         }
       ],
-      "postProcess": mode => `gsettings set org.gnome.desktop.interface color-scheme prefer-${mode}`
+      "postProcess": mode => `gsettings set org.gnome.desktop.interface color-scheme prefer-${mode}; gsettings set org.gnome.desktop.interface gtk-theme '${mode === "dark" ? "adw-gtk3-dark" : "adw-gtk3"}'`
     },
     {
       "id": "qt",
@@ -410,5 +410,4 @@ Singleton {
     }
   }
 }
-
 

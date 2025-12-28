@@ -1,191 +1,148 @@
 @define-color surface {{colors.surface.default.hex}};
 @define-color surfaceVariant {{colors.surface_variant.default.hex}};
-
 @define-color onSurface {{colors.on_surface.default.hex}};
 @define-color onSurfaceVariant {{colors.on_surface_variant.default.hex}};
-
 @define-color primary {{colors.primary.default.hex}};
 @define-color secondary {{colors.secondary.default.hex}};
 @define-color error {{colors.error.default.hex}};
 @define-color outline {{colors.outline.default.hex}};
 
-* {
+@define-color foreground @onSurface;
+@define-color background @surface;
+@define-color color1 @primary;
+
+#window,
+#box,
+#aiScroll,
+#aiList,
+#search,
+#password,
+#input,
+#prompt,
+#clear,
+#typeahead,
+#list,
+child,
+scrollbar,
+slider,
+#item,
+#text,
+#label,
+#bar,
+#sub,
+#activationlabel {
   all: unset;
 }
 
-.normal-icons {
-  -gtk-icon-size: 16px;
+#cfgerr {
+  background: alpha(@error, 0.4);
+  margin-top: 20px;
+  padding: 8px;
+  font-size: 1.2em;
 }
 
-.large-icons {
-  -gtk-icon-size: 36px;
+#window {
+  color: @foreground;
 }
 
-scrollbar {
-  opacity: 0;
-}
-
-.box-wrapper {
+#box {
+  border-radius: 20px;
+  background: @background;
+  padding: 20px;
+  border: 2px solid @outline;
   box-shadow:
     0 19px 38px rgba(0, 0, 0, 0.3),
     0 15px 12px rgba(0, 0, 0, 0.22);
-  background: @surface;
-  padding: 12px;
-  border-radius: 20px;
-  border: 2px solid @outline;
 }
 
-.preview-box,
-.elephant-hint,
-.placeholder {
-  color: @onSurface;
-}
-
-.box {
+#search {
   background: @surfaceVariant;
-  padding: 20px;
-  border-radius: 20px;
-  border: 2px solid @outline;
-}
-
-.search-container {
+  padding: 10px;
   border-radius: 10px;
   border: 2px solid @outline;
 }
 
-.input placeholder {
-  opacity: 0.5;
+#prompt {
+  margin-left: 4px;
+  margin-right: 12px;
+  color: @onSurfaceVariant;
+  opacity: 0.6;
 }
 
-.input {
-  background: @surface;
+#clear {
+  color: @onSurfaceVariant;
+  opacity: 0.9;
+}
+
+#password,
+#input,
+#typeahead {
+  border-radius: 10px;
+}
+
+#input {
+  background: none;
   color: @onSurface;
   caret-color: @onSurface;
-  padding: 10px;
 }
 
-.input:focus,
-.input:active {
+#spinner {
+  padding: 8px;
 }
 
-.content-container {
+#typeahead {
+  color: @onSurfaceVariant;
+  opacity: 0.8;
 }
 
-.placeholder {
-}
-
-.scroll {
-}
-
-.list {
-  color: @onSurface;
+#input placeholder {
+  opacity: 0.5;
 }
 
 child {
-}
-
-.item-box {
-  border-radius: 10px;
   padding: 10px;
+  border-radius: 10px;
 }
 
-.item-quick-activation {
+child:selected,
+child:hover {
+  background: alpha(@color1, 0.4);
+}
+
+#icon {
+  margin-right: 8px;
+}
+
+#label {
+  font-weight: 500;
+}
+
+#sub {
+  opacity: 0.6;
+  font-size: 0.8em;
+}
+
+#activationlabel {
   background: @secondary;
-  border-radius: 10px;
-  padding: 10px;
   color: @surface;
+  border-radius: 8px;
+  padding: 2px 6px;
 }
 
-child:hover .item-box,
-child:selected .item-box {
- background: alpha(@primary, 0.4);
-}
-
-.item-text-box {
-}
-
-.item-subtext {
-  font-size: 12px;
-  opacity: 0.5;
-}
-
-.providerlist .item-subtext {
-  font-size: unset;
-  opacity: 0.75;
-}
-
-.item-image-text {
-  font-size: 28px;
-}
-
-.preview {
-  border-top: 1px solid @primary;
+.aiItem {
   padding: 10px;
   border-radius: 10px;
-  color: @onSurface;
+  color: @foreground;
+  background: @background;
 }
 
-.calc .item-text {
-  font-size: 24px;
+.aiItem.user {
+  padding-left: 0;
+  padding-right: 0;
 }
 
-.calc .item-subtext {
+.aiItem.assistant {
+  background: @surfaceVariant;
 }
-
-.symbols .item-image {
-  font-size: 24px;
-}
-
-.todo.done .item-text-box {
-  opacity: 0.25;
-}
-
-.todo.urgent {
-  font-size: 24px;
-}
-
-.todo.active {
-  font-weight: bold;
-}
-
-.primarytooth.disconnected {
-  opacity: 0.5;
-}
-
-.preview .large-icons {
-  -gtk-icon-size: 64px;
-}
-
-.keybinds-wrapper {
-  border-top: 1px solid @primary;
-  font-size: 12px;
-  color: @primary;
-}
-
-.keybinds {
-}
-
-.keybind {
-  color: @onSurfaceVariant;
-}
-
-.keybind-bind {
-  font-weight: bold;
-  text-transform: lowercase;
-}
-
-.keybind-label {
-}
-
-.error {
-  padding: 10px;
-  background: @error;
-  color: @surface;
-}
-
-:not(.calc).current {
-  font-style: italic;
-}
-
 
 
