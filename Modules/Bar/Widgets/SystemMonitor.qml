@@ -38,7 +38,10 @@ Rectangle {
   readonly property bool usePrimaryColor: widgetSettings.usePrimaryColor !== undefined ? widgetSettings.usePrimaryColor : widgetMetadata.usePrimaryColor
   readonly property bool showCpuUsage: (widgetSettings.showCpuUsage !== undefined) ? widgetSettings.showCpuUsage : widgetMetadata.showCpuUsage
   readonly property bool showCpuTemp: (widgetSettings.showCpuTemp !== undefined) ? widgetSettings.showCpuTemp : widgetMetadata.showCpuTemp
+  readonly property bool showGpuUsage: (widgetSettings.showGpuUsage !== undefined) ? widgetSettings.showGpuUsage : widgetMetadata.showGpuUsage
   readonly property bool showGpuTemp: (widgetSettings.showGpuTemp !== undefined) ? widgetSettings.showGpuTemp : widgetMetadata.showGpuTemp
+  readonly property bool showGpuVram: (widgetSettings.showGpuVram !== undefined) ? widgetSettings.showGpuVram : widgetMetadata.showGpuVram
+  readonly property bool showGpuVramAsPercent: (widgetSettings.showGpuVramAsPercent !== undefined) ? widgetSettings.showGpuVramAsPercent : widgetMetadata.showGpuVramAsPercent
   readonly property bool showMemoryUsage: (widgetSettings.showMemoryUsage !== undefined) ? widgetSettings.showMemoryUsage : widgetMetadata.showMemoryUsage
   readonly property bool showMemoryAsPercent: (widgetSettings.showMemoryAsPercent !== undefined) ? widgetSettings.showMemoryAsPercent : widgetMetadata.showMemoryAsPercent
   readonly property bool showNetworkStats: (widgetSettings.showNetworkStats !== undefined) ? widgetSettings.showNetworkStats : widgetMetadata.showNetworkStats
@@ -355,6 +358,64 @@ Rectangle {
       }
     }
 
+    // GPU Usage Component
+    Item {
+      id: gpuUsageContainer
+      Layout.preferredWidth: isVertical ? root.width : iconSize + percentTextWidth + (Style.marginXXS)
+      Layout.preferredHeight: Style.capsuleHeight
+      Layout.alignment: isVertical ? Qt.AlignHCenter : Qt.AlignVCenter
+      visible: showGpuUsage && SystemStatService.gpuUsageAvailable
+
+      GridLayout {
+        id: gpuUsageContent
+        anchors.centerIn: parent
+        flow: isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+        rows: isVertical ? 2 : 1
+        columns: isVertical ? 1 : 2
+        rowSpacing: Style.marginXXS
+        columnSpacing: Style.marginXXS
+
+        Item {
+          Layout.alignment: Qt.AlignCenter
+          Layout.row: isVertical ? 1 : 0
+          Layout.column: 0
+          Layout.fillWidth: isVertical
+          implicitWidth: iconSize
+          implicitHeight: iconSize
+
+          NIcon {
+            icon: "performance"
+            pointSize: iconSize
+            applyUiScale: false
+            anchors.centerIn: parent
+          }
+        }
+
+        NText {
+          text: {
+            let usage = Math.round(SystemStatService.gpuUsage);
+            if (usage < 100) {
+              return `${usage}%`;
+            } else {
+              return usage;
+            }
+          }
+          family: Settings.data.ui.fontFixed
+          pointSize: textSize
+          applyUiScale: false
+          font.weight: Style.fontWeightMedium
+          Layout.alignment: Qt.AlignCenter
+          Layout.preferredWidth: isVertical ? -1 : percentTextWidth
+          horizontalAlignment: isVertical ? Text.AlignHCenter : Text.AlignRight
+          verticalAlignment: Text.AlignVCenter
+          color: textColor
+          Layout.row: isVertical ? 0 : 0
+          Layout.column: isVertical ? 0 : 1
+          scale: isVertical ? Math.min(1.0, root.width / implicitWidth) : 1.0
+        }
+      }
+    }
+
     // GPU Temperature Component
     Item {
       id: gpuTempContainer
@@ -416,6 +477,67 @@ Rectangle {
           verticalAlignment: Text.AlignVCenter
           // Use highlight colors in vertical bar; otherwise invert text color to bar background when GPU temp indicator active
           color: isVertical ? (gpuCritical ? criticalColor : (gpuWarning ? warningColor : textColor)) : ((gpuWarning || gpuCritical) ? Color.mSurfaceVariant : textColor)
+          Layout.row: isVertical ? 0 : 0
+          Layout.column: isVertical ? 0 : 1
+          scale: isVertical ? Math.min(1.0, root.width / implicitWidth) : 1.0
+        }
+      }
+    }
+
+    // GPU VRAM Usage Component
+    Item {
+      id: gpuVramContainer
+      Layout.preferredWidth: isVertical ? root.width : iconSize + (showGpuVramAsPercent ? percentTextWidth : memTextWidth) + (Style.marginXXS)
+      Layout.preferredHeight: Style.capsuleHeight
+      Layout.alignment: isVertical ? Qt.AlignHCenter : Qt.AlignVCenter
+      visible: showGpuVram && SystemStatService.gpuVramAvailable
+
+      GridLayout {
+        id: gpuVramContent
+        anchors.centerIn: parent
+        flow: isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+        rows: isVertical ? 2 : 1
+        columns: isVertical ? 1 : 2
+        rowSpacing: Style.marginXXS
+        columnSpacing: Style.marginXXS
+
+        Item {
+          Layout.alignment: Qt.AlignCenter
+          Layout.row: isVertical ? 1 : 0
+          Layout.column: 0
+          Layout.fillWidth: isVertical
+          implicitWidth: iconSize
+          implicitHeight: iconSize
+
+          NIcon {
+            icon: "memory"
+            pointSize: iconSize
+            applyUiScale: false
+            anchors.centerIn: parent
+          }
+        }
+
+        NText {
+          text: {
+            if (showGpuVramAsPercent) {
+              let percent = Math.round(SystemStatService.gpuVramPercent);
+              if (percent < 100) {
+                return `${percent}%`;
+              }
+              return percent;
+            }
+            const usedGb = SystemStatService.gpuVramUsedMb / 1024.0;
+            return SystemStatService.formatMemoryGb(usedGb.toFixed(1));
+          }
+          family: Settings.data.ui.fontFixed
+          pointSize: textSize
+          applyUiScale: false
+          font.weight: Style.fontWeightMedium
+          Layout.alignment: Qt.AlignCenter
+          Layout.preferredWidth: isVertical ? -1 : (showGpuVramAsPercent ? percentTextWidth : memTextWidth)
+          horizontalAlignment: isVertical ? Text.AlignHCenter : Text.AlignRight
+          verticalAlignment: Text.AlignVCenter
+          color: textColor
           Layout.row: isVertical ? 0 : 0
           Layout.column: isVertical ? 0 : 1
           scale: isVertical ? Math.min(1.0, root.width / implicitWidth) : 1.0
@@ -672,5 +794,3 @@ Rectangle {
     }
   }
 }
-
-

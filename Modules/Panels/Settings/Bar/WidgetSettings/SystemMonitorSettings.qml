@@ -17,7 +17,10 @@ ColumnLayout {
   property bool valueUsePrimaryColor: widgetData.usePrimaryColor !== undefined ? widgetData.usePrimaryColor : widgetMetadata.usePrimaryColor
   property bool valueShowCpuUsage: widgetData.showCpuUsage !== undefined ? widgetData.showCpuUsage : widgetMetadata.showCpuUsage
   property bool valueShowCpuTemp: widgetData.showCpuTemp !== undefined ? widgetData.showCpuTemp : widgetMetadata.showCpuTemp
+  property bool valueShowGpuUsage: widgetData.showGpuUsage !== undefined ? widgetData.showGpuUsage : widgetMetadata.showGpuUsage
   property bool valueShowGpuTemp: widgetData.showGpuTemp !== undefined ? widgetData.showGpuTemp : widgetMetadata.showGpuTemp
+  property bool valueShowGpuVram: widgetData.showGpuVram !== undefined ? widgetData.showGpuVram : widgetMetadata.showGpuVram
+  property bool valueShowGpuVramAsPercent: widgetData.showGpuVramAsPercent !== undefined ? widgetData.showGpuVramAsPercent : widgetMetadata.showGpuVramAsPercent
   property bool valueShowMemoryUsage: widgetData.showMemoryUsage !== undefined ? widgetData.showMemoryUsage : widgetMetadata.showMemoryUsage
   property bool valueShowMemoryAsPercent: widgetData.showMemoryAsPercent !== undefined ? widgetData.showMemoryAsPercent : widgetMetadata.showMemoryAsPercent
   property bool valueShowNetworkStats: widgetData.showNetworkStats !== undefined ? widgetData.showNetworkStats : widgetMetadata.showNetworkStats
@@ -29,7 +32,10 @@ ColumnLayout {
     settings.usePrimaryColor = valueUsePrimaryColor;
     settings.showCpuUsage = valueShowCpuUsage;
     settings.showCpuTemp = valueShowCpuTemp;
+    settings.showGpuUsage = valueShowGpuUsage;
     settings.showGpuTemp = valueShowGpuTemp;
+    settings.showGpuVram = valueShowGpuVram;
+    settings.showGpuVramAsPercent = valueShowGpuVramAsPercent;
     settings.showMemoryUsage = valueShowMemoryUsage;
     settings.showMemoryAsPercent = valueShowMemoryAsPercent;
     settings.showNetworkStats = valueShowNetworkStats;
@@ -66,6 +72,16 @@ ColumnLayout {
   }
 
   NToggle {
+    id: showGpuUsage
+    Layout.fillWidth: true
+    label: I18n.tr("bar.widget-settings.system-monitor.gpu-usage.label")
+    description: I18n.tr("bar.widget-settings.system-monitor.gpu-usage.description")
+    checked: valueShowGpuUsage
+    onToggled: checked => valueShowGpuUsage = checked
+    visible: SystemStatService.gpuUsageAvailable
+  }
+
+  NToggle {
     id: showGpuTemp
     Layout.fillWidth: true
     label: I18n.tr("bar.widget-settings.system-monitor.gpu-temperature.label")
@@ -73,6 +89,26 @@ ColumnLayout {
     checked: valueShowGpuTemp
     onToggled: checked => valueShowGpuTemp = checked
     visible: SystemStatService.gpuAvailable
+  }
+
+  NToggle {
+    id: showGpuVram
+    Layout.fillWidth: true
+    label: I18n.tr("bar.widget-settings.system-monitor.gpu-vram-usage.label")
+    description: I18n.tr("bar.widget-settings.system-monitor.gpu-vram-usage.description")
+    checked: valueShowGpuVram
+    onToggled: checked => valueShowGpuVram = checked
+    visible: SystemStatService.gpuVramAvailable
+  }
+
+  NToggle {
+    id: showGpuVramAsPercent
+    Layout.fillWidth: true
+    label: I18n.tr("bar.widget-settings.system-monitor.gpu-vram-percentage.label")
+    description: I18n.tr("bar.widget-settings.system-monitor.gpu-vram-percentage.description")
+    checked: valueShowGpuVramAsPercent
+    onToggled: checked => valueShowGpuVramAsPercent = checked
+    visible: valueShowGpuVram
   }
 
   NToggle {
@@ -129,5 +165,3 @@ ColumnLayout {
     onSelected: key => valueDiskPath = key
   }
 }
-
-

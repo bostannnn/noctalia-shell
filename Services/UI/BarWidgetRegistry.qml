@@ -193,14 +193,17 @@ Singleton {
                                     "width": 20
                                   },
                                   "SystemMonitor": {
-                                    "allowUserSettings": true,
-                                    "usePrimaryColor": false,
-                                    "showCpuUsage": true,
-                                    "showCpuTemp": true,
-                                    "showGpuTemp": false,
-                                    "showMemoryUsage": true,
-                                    "showMemoryAsPercent": false,
-                                    "showNetworkStats": false,
+                                  "allowUserSettings": true,
+                                  "usePrimaryColor": false,
+                                  "showCpuUsage": true,
+                                  "showCpuTemp": true,
+                                  "showGpuUsage": false,
+                                  "showGpuTemp": false,
+                                  "showGpuVram": false,
+                                  "showGpuVramAsPercent": false,
+                                  "showMemoryUsage": true,
+                                  "showMemoryAsPercent": false,
+                                  "showNetworkStats": false,
                                     "showDiskUsage": false,
                                     "diskPath": "/"
                                   },
@@ -434,5 +437,4 @@ Singleton {
     return Object.keys(pluginWidgets);
   }
 }
-
 

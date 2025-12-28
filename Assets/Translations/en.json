@@ -315,6 +315,18 @@
           "description": "Show GPU temperature readings if available.",
           "label": "GPU temperature"
         },
+        "gpu-usage": {
+          "description": "Display current GPU usage percentage.",
+          "label": "GPU usage"
+        },
+        "gpu-vram-percentage": {
+          "description": "Show VRAM usage as a percentage instead of absolute values.",
+          "label": "VRAM as percentage"
+        },
+        "gpu-vram-usage": {
+          "description": "Display current GPU VRAM usage information.",
+          "label": "VRAM usage"
+        },
         "memory-percentage": {
           "description": "Show memory usage as a percentage instead of absolute values.",
           "label": "Memory as percentage"
@@ -3100,4 +3112,3 @@
     }
   }
 }
-

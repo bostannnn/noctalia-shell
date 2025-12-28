@@ -21,7 +21,13 @@ Singleton {
   property real cpuUsage: 0
   property real cpuTemp: 0
   property real gpuTemp: 0
+  property real gpuUsage: 0
+  property real gpuVramUsedMb: 0
+  property real gpuVramTotalMb: 0
+  property real gpuVramPercent: 0
   property bool gpuAvailable: false
+  property bool gpuUsageAvailable: false
+  property bool gpuVramAvailable: false
   property string gpuType: "" // "amd", "intel", "nvidia"
   property real memGb: 0
   property real memPercent: 0
@@ -56,6 +62,7 @@ Singleton {
   property string gpuTempHwmonPath: ""
   property var foundGpuSensors: [] // [{hwmonPath, type, hasDedicatedVram}]
   property int gpuVramCheckIndex: 0
+  property string nvidiaSmiPath: ""
 
   // --------------------------------------------
   Component.onCompleted: {
@@ -72,7 +79,7 @@ Singleton {
   Connections {
     target: Settings.data.systemMonitor
     function onEnableNvidiaGpuChanged() {
-      Logger.i("SystemStat", "NVIDIA opt-in setting changed, re-detecting GPUs");
+      Logger.i("SystemStat", `NVIDIA opt-in setting changed to ${Settings.data.systemMonitor.enableNvidiaGpu}, re-detecting GPUs`);
       restartGpuDetection();
     }
   }
@@ -83,8 +90,15 @@ Singleton {
     root.gpuType = "";
     root.gpuTempHwmonPath = "";
     root.gpuTemp = 0;
+    root.gpuUsage = 0;
+    root.gpuVramUsedMb = 0;
+    root.gpuVramTotalMb = 0;
+    root.gpuVramPercent = 0;
     root.foundGpuSensors = [];
     root.gpuVramCheckIndex = 0;
+    root.gpuUsageAvailable = false;
+    root.gpuVramAvailable = false;
+    root.nvidiaSmiPath = "";
 
     // Restart GPU detection
     gpuTempNameReader.currentIndex = 0;
@@ -381,11 +395,16 @@ Singleton {
   // #3 - Check if nvidia-smi is available (for NVIDIA GPUs)
   Process {
     id: nvidiaSmiCheck
-    command: ["which", "nvidia-smi"]
+    command: ["sh", "-c", "if command -v nvidia-smi >/dev/null 2>&1; then command -v nvidia-smi; elif [ -x /run/current-system/sw/bin/nvidia-smi ]; then echo /run/current-system/sw/bin/nvidia-smi; fi"]
     running: false
+    onExited: function(exitCode, exitStatus) {
+      Logger.i("SystemStat", `nvidia-smi check exited with code ${exitCode} (status ${exitStatus})`);
+    }
     stdout: StdioCollector {
       onStreamFinished: {
-        if (text.trim().length > 0) {
+        const path = text.trim();
+        if (path.length > 0) {
+          root.nvidiaSmiPath = path;
           // Add NVIDIA as a GPU option (always discrete, highest priority)
           root.foundGpuSensors.push({
                                       "hwmonPath": "",
@@ -393,7 +412,11 @@ Singleton {
                                       "hasDedicatedVram": true // NVIDIA is always discrete
                                     });
           Logger.d("SystemStat", "Found NVIDIA GPU (nvidia-smi available)");
+        } else {
+          root.nvidiaSmiPath = "";
+          Logger.i("SystemStat", "NVIDIA GPU not detected (nvidia-smi missing)");
         }
+        Logger.i("SystemStat", `NVIDIA opt-in: ${Settings.data.systemMonitor.enableNvidiaGpu}, nvidia-smi path: ${root.nvidiaSmiPath || "none"}`);
         // After NVIDIA check, check VRAM for AMD GPUs to distinguish dGPU from iGPU
         root.gpuVramCheckIndex = 0;
         checkNextGpuVram();
@@ -432,16 +455,38 @@ Singleton {
   }
 
   // ----
-  // #4 - Read GPU temperature via nvidia-smi (NVIDIA only)
+  // #4 - Read NVIDIA GPU stats via nvidia-smi
   Process {
-    id: nvidiaTempProcess
-    command: ["nvidia-smi", "--query-gpu=temperature.gpu", "--format=csv,noheader,nounits"]
+    id: nvidiaStatsProcess
+    command: [root.nvidiaSmiPath || "nvidia-smi", "--query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"]
     running: false
     stdout: StdioCollector {
       onStreamFinished: {
-        const temp = parseInt(text.trim());
+        const trimmed = text.trim();
+        if (!trimmed) {
+          return;
+        }
+        const line = trimmed.split("\n")[0].trim();
+        const parts = line.split(",").map(part => part.trim());
+        const temp = parseInt(parts[0], 10);
+        const usage = parseInt(parts[1], 10);
+        const vramUsed = parseInt(parts[2], 10);
+        const vramTotal = parseInt(parts[3], 10);
+
         if (!isNaN(temp)) {
           root.gpuTemp = temp;
+        }
+        if (!isNaN(usage)) {
+          root.gpuUsage = usage;
+        }
+        if (!isNaN(vramUsed)) {
+          root.gpuVramUsedMb = vramUsed;
+        }
+        if (!isNaN(vramTotal)) {
+          root.gpuVramTotalMb = vramTotal;
+        }
+        if (!isNaN(vramUsed) && !isNaN(vramTotal) && vramTotal > 0) {
+          root.gpuVramPercent = Math.round((vramUsed / vramTotal) * 100);
         }
       }
     }
@@ -728,6 +773,16 @@ Singleton {
   // Function to select the best GPU based on priority
   // Priority: NVIDIA > AMD dGPU > Intel Arc > AMD iGPU
   function selectBestGpu() {
+    if (Settings.data.systemMonitor.enableNvidiaGpu && root.nvidiaSmiPath) {
+      root.gpuTempHwmonPath = "";
+      root.gpuType = "nvidia";
+      root.gpuAvailable = true;
+      root.gpuUsageAvailable = true;
+      root.gpuVramAvailable = true;
+      Logger.i("SystemStat", `Selected NVIDIA for monitoring via nvidia-smi at ${root.nvidiaSmiPath}`);
+      return;
+    }
+
     if (root.foundGpuSensors.length === 0) {
       Logger.d("SystemStat", "No GPU temperature sensor found");
       return;
@@ -765,9 +820,12 @@ Singleton {
       root.gpuTempHwmonPath = best.hwmonPath;
       root.gpuType = best.type;
       root.gpuAvailable = true;
+      root.gpuUsageAvailable = best.type === "nvidia";
+      root.gpuVramAvailable = best.type === "nvidia";
 
       const gpuDesc = best.type === "nvidia" ? "NVIDIA" : (best.type === "intel" ? "Intel Arc" : (best.hasDedicatedVram ? "AMD dGPU" : "AMD iGPU"));
       Logger.i("SystemStat", `Selected ${gpuDesc} for temperature monitoring at ${best.hwmonPath || "nvidia-smi"}`);
+      Logger.i("SystemStat", `GPU availability: temp=${root.gpuAvailable} usage=${root.gpuUsageAvailable} vram=${root.gpuVramAvailable} nvidiaSmiPath=${root.nvidiaSmiPath || "none"}`);
     }
   }
 
@@ -775,12 +833,14 @@ Singleton {
   // Function to update GPU temperature
   function updateGpuTemperature() {
     if (root.gpuType === "nvidia") {
-      nvidiaTempProcess.running = true;
+      if (!root.nvidiaSmiPath) {
+        Logger.d("SystemStat", "Skipping NVIDIA stats update: nvidia-smi path missing");
+        return;
+      }
+      nvidiaStatsProcess.running = true;
     } else if (root.gpuType === "amd" || root.gpuType === "intel") {
       gpuTempReader.path = `${root.gpuTempHwmonPath}/temp1_input`;
       gpuTempReader.reload();
     }
   }
 }
-
-
