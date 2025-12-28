@@ -137,6 +137,13 @@ Item {
           backgroundColor: panelBackgroundColor
         }
 
+        // System Monitor
+        PanelBackground {
+          panel: root.windowRoot.systemMonitorPanelPlaceholder
+          shapeContainer: backgroundsShape
+          backgroundColor: panelBackgroundColor
+        }
+
         // Setup Wizard
         PanelBackground {
           panel: root.windowRoot.setupWizardPanelPlaceholder

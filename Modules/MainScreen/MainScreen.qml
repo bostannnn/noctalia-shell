@@ -24,6 +24,7 @@ import qs.Modules.Panels.Plugins
 import qs.Modules.Panels.SessionMenu
 import qs.Modules.Panels.Settings
 import qs.Modules.Panels.SetupWizard
+import qs.Modules.Panels.SystemMonitor
 import qs.Modules.Panels.Tray
 import qs.Modules.Panels.TodoList
 import qs.Modules.Panels.Wallpaper
@@ -51,6 +52,7 @@ NLayerShellWindow {
   readonly property alias sessionMenuPanel: sessionMenuPanel
   readonly property alias settingsPanel: settingsPanel
   readonly property alias setupWizardPanel: setupWizardPanel
+  readonly property alias systemMonitorPanel: systemMonitorPanel
   readonly property alias todoPanel: todoPanel
   readonly property alias trayDrawerPanel: trayDrawerPanel
   readonly property alias wallpaperPanel: wallpaperPanel
@@ -71,6 +73,7 @@ NLayerShellWindow {
   readonly property var sessionMenuPanelPlaceholder: sessionMenuPanel.panelRegion
   readonly property var settingsPanelPlaceholder: settingsPanel.panelRegion
   readonly property var setupWizardPanelPlaceholder: setupWizardPanel.panelRegion
+  readonly property var systemMonitorPanelPlaceholder: systemMonitorPanel.panelRegion
   readonly property var todoPanelPlaceholder: todoPanel.panelRegion
   readonly property var trayDrawerPanelPlaceholder: trayDrawerPanel.panelRegion
   readonly property var wallpaperPanelPlaceholder: wallpaperPanel.panelRegion
@@ -271,6 +274,12 @@ NLayerShellWindow {
     SettingsPanel {
       id: settingsPanel
       objectName: "settingsPanel-" + (root.screen?.name || "unknown")
+      screen: root.screen
+    }
+
+    SystemMonitorPanel {
+      id: systemMonitorPanel
+      objectName: "systemMonitorPanel-" + (root.screen?.name || "unknown")
       screen: root.screen
     }
 

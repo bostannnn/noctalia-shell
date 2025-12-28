@@ -148,9 +148,19 @@ Rectangle {
 
   MouseArea {
     anchors.fill: parent
-    acceptedButtons: Qt.RightButton
+    acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: mouse => {
-                 if (mouse.button === Qt.RightButton) {
+                 if (mouse.button === Qt.LeftButton) {
+                   var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
+                   if (popupMenuWindow) {
+                     popupMenuWindow.close();
+                   }
+                   var panel = PanelService.getPanel("systemMonitorPanel", screen);
+                   if (panel) {
+                     panel.sourceWidget = root;
+                     panel.toggle(root);
+                   }
+                 } else if (mouse.button === Qt.RightButton) {
                    var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
                    if (popupMenuWindow) {
                      popupMenuWindow.showContextMenu(contextMenu);
