@@ -31,6 +31,9 @@ SmartPanel {
   property var topMemProcesses: []
   property int processMaxRows: 8
   property int processRefreshIntervalMs: 2000
+  property string expandedProcessPid: ""
+  property string expandedProcessMetric: ""
+  property var killTarget: null
 
   property int historyMaxPoints: 40
   property int historyIntervalMs: 1000
@@ -174,6 +177,34 @@ SmartPanel {
     return next;
   }
 
+  function toggleProcessDetails(process, metricLabel) {
+    if (!process || !process.pid) {
+      return;
+    }
+    if (expandedProcessPid === process.pid && expandedProcessMetric === metricLabel) {
+      expandedProcessPid = "";
+      expandedProcessMetric = "";
+    } else {
+      expandedProcessPid = process.pid;
+      expandedProcessMetric = metricLabel;
+    }
+  }
+
+  function cancelProcessAction() {
+    expandedProcessPid = "";
+    expandedProcessMetric = "";
+  }
+
+  function requestProcessKill(process) {
+    if (!process || !process.pid || killProcess.running) {
+      return;
+    }
+    killTarget = process;
+    killProcess.command = ["kill", "-TERM", process.pid];
+    killProcess.running = true;
+    cancelProcessAction();
+  }
+
   Component.onCompleted: psCheck.running = true
 
   Timer {
@@ -223,6 +254,22 @@ SmartPanel {
           topMemProcesses = [];
         }
       }
+    }
+  }
+
+  Process {
+    id: killProcess
+    running: false
+    stdout: StdioCollector {}
+    stderr: StdioCollector {}
+    onExited: function(exitCode) {
+      if (exitCode === 0) {
+        ToastService.showNotice(I18n.tr("settings.system-monitor.processes-section.kill-success"), killTarget ? killTarget.name : "", "trash");
+      } else {
+        const desc = stderr.text && stderr.text.trim() ? stderr.text.trim() : `Exit code ${exitCode}`;
+        ToastService.showError(I18n.tr("settings.system-monitor.processes-section.kill-failed"), desc);
+      }
+      killTarget = null;
     }
   }
 
@@ -347,6 +394,139 @@ SmartPanel {
         ctx.fill();
       }
     }
+  }
+
+  component ProcessRow: Rectangle {
+    id: processRow
+
+    required property var process
+    required property string metricLabel
+    required property real metricValue
+    required property color accent
+
+    readonly property bool expanded: root.expandedProcessPid === process.pid && root.expandedProcessMetric === metricLabel
+
+    Layout.fillWidth: true
+    radius: Style.radiusS
+    color: expanded ? Qt.alpha(accent, 0.08) : Qt.alpha(Color.mSurface, 0.35)
+    border.width: Style.borderS
+    border.color: expanded ? accent : Qt.alpha(Color.mOutline, 0.5)
+    implicitHeight: rowColumn.implicitHeight + Style.marginS * 2
+
+    ColumnLayout {
+      id: rowColumn
+      anchors.fill: parent
+      anchors.margins: Style.marginS
+      spacing: Style.marginXS
+
+      RowLayout {
+        Layout.fillWidth: true
+        spacing: Style.marginS
+
+        ColumnLayout {
+          Layout.fillWidth: true
+          spacing: 0
+
+          NText {
+            text: process.name
+            pointSize: Style.fontSizeS
+            font.weight: expanded ? Style.fontWeightBold : Style.fontWeightMedium
+            color: Color.mOnSurface
+            elide: Text.ElideRight
+          }
+
+          NText {
+            text: `PID ${process.pid}`
+            pointSize: Style.fontSizeXS
+            color: Color.mOnSurfaceVariant
+          }
+        }
+
+        NText {
+          text: `${metricValue.toFixed(1)}%`
+          pointSize: Style.fontSizeS
+          font.family: Settings.data.ui.fontFixed
+          font.weight: Style.fontWeightMedium
+          color: Color.mOnSurface
+          Layout.alignment: Qt.AlignRight
+          Layout.preferredWidth: Math.round(56 * Style.uiScaleRatio)
+        }
+
+        NIcon {
+          icon: "chevron-down"
+          pointSize: Style.fontSizeS
+          color: Color.mOnSurfaceVariant
+          rotation: expanded ? 180 : 0
+          Layout.alignment: Qt.AlignVCenter
+
+          Behavior on rotation {
+            NumberAnimation {
+              duration: Style.animationFast
+              easing.type: Easing.OutCubic
+            }
+          }
+        }
+
+        MouseArea {
+          anchors.fill: parent
+          acceptedButtons: Qt.LeftButton
+          onClicked: root.toggleProcessDetails(process, metricLabel)
+        }
+      }
+
+      Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: Math.max(3, Math.round(3 * Style.uiScaleRatio))
+        radius: Math.round(implicitHeight / 2)
+        color: Qt.alpha(Color.mOnSurfaceVariant, 0.2)
+
+        Rectangle {
+          width: Math.max(2, Math.round(parent.width * root.clampRatio(metricValue / 100.0)))
+          height: parent.height
+          radius: parent.radius
+          color: accent
+        }
+      }
+
+      ColumnLayout {
+        Layout.fillWidth: true
+        spacing: Style.marginXS
+        visible: expanded
+
+        NText {
+          text: I18n.tr("settings.system-monitor.processes-section.confirm", {
+                           "name": process.name,
+                           "pid": process.pid
+                         })
+          pointSize: Style.fontSizeS
+          color: Color.mOnSurfaceVariant
+        }
+
+        RowLayout {
+          Layout.fillWidth: true
+          spacing: Style.marginS
+
+          NButton {
+            text: I18n.tr("settings.system-monitor.processes-section.kill")
+            icon: "trash"
+            backgroundColor: Color.mError
+            hoverColor: Color.mError
+            textColor: Color.mOnError
+            onClicked: root.requestProcessKill(process)
+          }
+
+          NButton {
+            text: I18n.tr("settings.system-monitor.processes-section.cancel")
+            icon: "x"
+            outlined: true
+            backgroundColor: Color.mOutline
+            textColor: Color.mOnSurface
+            onClicked: root.cancelProcessAction()
+          }
+        }
+      }
+    }
+
   }
 
   panelContent: Item {
@@ -753,38 +933,33 @@ SmartPanel {
                     color: Color.mOnSurfaceVariant
                   }
 
+                  RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.marginS
+
+                    NText {
+                      text: I18n.tr("settings.system-monitor.processes-section.process")
+                      pointSize: Style.fontSizeXS
+                      color: Color.mOnSurfaceVariant
+                      Layout.fillWidth: true
+                    }
+
+                    NText {
+                      text: I18n.tr("settings.system-monitor.processes-section.cpu")
+                      pointSize: Style.fontSizeXS
+                      color: Color.mOnSurfaceVariant
+                      Layout.preferredWidth: Math.round(56 * Style.uiScaleRatio)
+                      horizontalAlignment: Text.AlignRight
+                    }
+                  }
+
                   Repeater {
                     model: topCpuProcesses
-                    delegate: RowLayout {
-                      Layout.fillWidth: true
-                      spacing: Style.marginS
-
-                      ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-
-                        NText {
-                          text: modelData.name
-                          pointSize: Style.fontSizeS
-                          font.weight: Style.fontWeightMedium
-                          color: Color.mOnSurface
-                          elide: Text.ElideRight
-                        }
-
-                        NText {
-                          text: `PID ${modelData.pid}`
-                          pointSize: Style.fontSizeXS
-                          color: Color.mOnSurfaceVariant
-                        }
-                      }
-
-                      NText {
-                        text: `${modelData.cpu.toFixed(1)}%`
-                        pointSize: Style.fontSizeS
-                        font.family: Settings.data.ui.fontFixed
-                        color: Color.mOnSurface
-                        Layout.alignment: Qt.AlignRight
-                      }
+                    delegate: ProcessRow {
+                      process: modelData
+                      metricLabel: "cpu"
+                      metricValue: modelData.cpu
+                      accent: root.cpuColor
                     }
                   }
 
@@ -806,38 +981,33 @@ SmartPanel {
                     color: Color.mOnSurfaceVariant
                   }
 
+                  RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.marginS
+
+                    NText {
+                      text: I18n.tr("settings.system-monitor.processes-section.process")
+                      pointSize: Style.fontSizeXS
+                      color: Color.mOnSurfaceVariant
+                      Layout.fillWidth: true
+                    }
+
+                    NText {
+                      text: I18n.tr("settings.system-monitor.processes-section.memory")
+                      pointSize: Style.fontSizeXS
+                      color: Color.mOnSurfaceVariant
+                      Layout.preferredWidth: Math.round(56 * Style.uiScaleRatio)
+                      horizontalAlignment: Text.AlignRight
+                    }
+                  }
+
                   Repeater {
                     model: topMemProcesses
-                    delegate: RowLayout {
-                      Layout.fillWidth: true
-                      spacing: Style.marginS
-
-                      ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-
-                        NText {
-                          text: modelData.name
-                          pointSize: Style.fontSizeS
-                          font.weight: Style.fontWeightMedium
-                          color: Color.mOnSurface
-                          elide: Text.ElideRight
-                        }
-
-                        NText {
-                          text: `PID ${modelData.pid}`
-                          pointSize: Style.fontSizeXS
-                          color: Color.mOnSurfaceVariant
-                        }
-                      }
-
-                      NText {
-                        text: `${modelData.mem.toFixed(1)}%`
-                        pointSize: Style.fontSizeS
-                        font.family: Settings.data.ui.fontFixed
-                        color: Color.mOnSurface
-                        Layout.alignment: Qt.AlignRight
-                      }
+                    delegate: ProcessRow {
+                      process: modelData
+                      metricLabel: "mem"
+                      metricValue: modelData.mem
+                      accent: root.memoryColor
                     }
                   }
 

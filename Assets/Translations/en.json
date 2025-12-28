@@ -2336,7 +2336,13 @@
       },
       "processes-section": {
         "cpu": "CPU",
+        "process": "Process",
         "empty": "No processes available.",
+        "cancel": "Cancel",
+        "confirm": "Kill {name} (PID {pid})?",
+        "kill": "Kill",
+        "kill-failed": "Failed to terminate process",
+        "kill-success": "Process terminated",
         "label": "Top processes",
         "memory": "Memory",
         "unavailable": "Process list unavailable."
